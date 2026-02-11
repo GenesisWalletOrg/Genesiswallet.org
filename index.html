@@ -524,20 +524,27 @@
         .mining-title .blink { display: inline-block; width: 6px; height: 6px; background: #4ade80; border-radius: 50%; box-shadow: 0 0 6px rgba(74,222,128,0.6); animation: mBlink 1s ease-in-out infinite; }
         @keyframes mBlink { 0%,100%{opacity:1;} 50%{opacity:.2;} }
 
-        .chain-viewport { position: relative; width: 100%; height: 250px; overflow: hidden; border-radius: 16px; background: rgba(8,8,8,0.7); border: 1px solid rgba(255,255,255,0.04); margin-top: 1.5rem; cursor: grab; user-select: none; -webkit-user-select: none; }
+        .chain-viewport { position: relative; width: 100%; height: 280px; overflow: hidden; border-radius: 16px; background: rgba(8,8,8,0.7); border: 1px solid rgba(255,255,255,0.04); margin-top: 1.5rem; cursor: grab; user-select: none; -webkit-user-select: none; }
         .chain-viewport.dragging { cursor: grabbing; }
         .chain-viewport::before { content:''; position:absolute; bottom:0; left:50%; transform:translateX(-50%); width:60%; height:100px; background:radial-gradient(ellipse,rgba(247,147,26,0.04),transparent 70%); pointer-events:none; filter:blur(20px); z-index:1; }
         .chain-scanlines { position:absolute; top:0; left:0; width:100%; height:100%; background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,0.02) 3px,rgba(0,0,0,0.02) 4px); pointer-events:none; z-index:5; }
         .chain-mask { position:absolute; top:0; height:100%; width:120px; z-index:4; pointer-events:none; }
-        .chain-mask.left { left:0; background:linear-gradient(90deg,var(--bg2),transparent); }
+        .chain-mask.left { left:0; background:linear-gradient(90deg,var(--bg2),transparent); width:40px; }
         .chain-mask.right { right:0; background:linear-gradient(-90deg,var(--bg2),transparent); }
-        .chain-track { position:absolute; top:50%; left:0; transform:translateY(-50%); display:flex; align-items:center; animation:chainScroll 300s linear infinite; will-change:transform; }
-        @keyframes chainScroll { 0%{transform:translateY(-50%) translateX(0);} 100%{transform:translateY(-50%) translateX(-50%);} }
+        .chain-track { position:absolute; top:50%; left:0; transform:translateY(-50%); display:flex; align-items:center; will-change:transform; padding-left:20px; }
 
-        .chain-block { flex-shrink:0; width:165px; height:180px; background:linear-gradient(165deg,#111,#090909); border:1px solid rgba(247,147,26,0.07); border-radius:12px; padding:1rem; position:relative; overflow:hidden; display:flex; flex-direction:column; justify-content:space-between; transition:border-color .3s,box-shadow .3s; cursor:pointer; }
+        .chain-block { flex-shrink:0; width:165px; height:215px; background:linear-gradient(165deg,#111,#090909); border:1px solid rgba(247,147,26,0.07); border-radius:12px; padding:1rem; position:relative; overflow:hidden; display:flex; flex-direction:column; justify-content:space-between; transition:border-color .3s,box-shadow .3s; cursor:pointer; }
         .chain-block:hover { border-color:rgba(247,147,26,0.25); box-shadow:0 0 40px rgba(247,147,26,0.06); }
         .chain-block:active { transform:scale(0.97); }
-        .chain-track.paused { animation-play-state:paused !important; }
+        .block-miner { font-size:0.52rem; color:var(--t2); margin-top:0.2rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; opacity:0.8; }
+        .block-miner span { color:var(--gold); font-weight:500; }
+        .block-fullness { margin-top:0.35rem; }
+        .block-fullness-bar { width:100%; height:4px; background:rgba(255,255,255,0.05); border-radius:2px; overflow:hidden; }
+        .block-fullness-fill { height:100%; border-radius:2px; transition:width 0.3s; }
+        .block-fullness-fill.full-low { background:linear-gradient(90deg,#4ade80,#22c55e); }
+        .block-fullness-fill.full-med { background:linear-gradient(90deg,#facc15,#eab308); }
+        .block-fullness-fill.full-high { background:linear-gradient(90deg,#f97316,#ef4444); }
+        .block-fullness-label { display:flex; justify-content:space-between; font-size:0.44rem; color:var(--t3); margin-top:0.15rem; }
         .chain-block .block-view-hint { position:absolute; bottom:8px; right:10px; font-size:0.48rem; color:var(--gold); opacity:0; transition:opacity .3s; text-transform:uppercase; letter-spacing:0.06em; }
         .chain-block:hover .block-view-hint { opacity:0.7; }
         .chain-block::before { content:''; position:absolute; top:0; left:10%; width:80%; height:2px; background:linear-gradient(90deg,transparent,var(--gold),transparent); opacity:.2; box-shadow:0 0 8px rgba(247,147,26,0.25); }
@@ -551,6 +558,9 @@
         .block-size { font-size:0.54rem; color:var(--t3); margin-top:0.1rem; }
         .block-status { position:absolute; top:8px; right:8px; display:flex; align-items:center; gap:0.25rem; font-size:0.48rem; text-transform:uppercase; letter-spacing:0.06em; font-weight:600; color:#4ade80; }
         .block-status .sdot { width:4px; height:4px; background:#4ade80; border-radius:50%; box-shadow:0 0 5px rgba(74,222,128,0.5); animation:mBlink 1s ease-in-out infinite; }
+        .chain-block.latest-block { border-color: rgba(74,222,128,0.25); box-shadow: 0 0 30px rgba(74,222,128,0.08), inset 0 0 20px rgba(74,222,128,0.03); }
+        .chain-block.latest-block::before { background: linear-gradient(90deg,transparent,#4ade80,transparent); opacity: 0.35; }
+        .chain-block.latest-block:hover { border-color: rgba(74,222,128,0.4); box-shadow: 0 0 50px rgba(74,222,128,0.12); }
         .chain-block.entrance { animation:blockIn .7s cubic-bezier(.16,1,.3,1) both; }
         @keyframes blockIn { 0%{opacity:0;transform:scale(.8);box-shadow:0 0 60px rgba(247,147,26,0.25);} 100%{opacity:1;transform:scale(1);box-shadow:none;} }
         .block-flash { position:absolute; inset:0; background:radial-gradient(ellipse,rgba(247,147,26,0.1),transparent 60%); border-radius:12px; pointer-events:none; opacity:0; }
@@ -852,7 +862,7 @@
             <div class="chain-header reveal">
                 <div>
                     <div class="section-label"><span class="chain-badge"><span class="chain-badge-dot"></span>BC2 Blockchain</span></div>
-                    <h2 class="section-title">Last 100 Blocks</h2>
+                    <h2 class="section-title">Last 200 Blocks</h2>
                     <p class="section-desc" style="margin-bottom:0;">Recent confirmed blocks from the BC2 network, powered by <a href="https://bc2.live" target="_blank" style="color:var(--gold);text-decoration:none;">BC2.Live</a>.</p>
                 </div>
                 <div class="chain-cta">
@@ -891,7 +901,7 @@
                 <div class="chain-track" id="chainTrack" style="opacity:0;"></div>
             </div>
 
-            <div class="chain-note reveal" id="chainNote">Showing the last <strong id="blockCountLabel">100</strong> confirmed blocks &mdash; explore all blocks at <a href="https://bc2.live" target="_blank">BC2.Live</a> or <a href="https://bc2explorer.com" target="_blank">BC2Explorer</a></div>
+            <div class="chain-note reveal" id="chainNote">Showing the last <strong id="blockCountLabel">200</strong> confirmed blocks &mdash; explore all blocks at <a href="https://bc2.live" target="_blank">BC2.Live</a> or <a href="https://bc2explorer.com" target="_blank">BC2Explorer</a></div>
         </div>
     </section>
 
@@ -1103,17 +1113,34 @@
         // ── DOM builders ──
         function mkBlock(b, latest) {
             var el = document.createElement('div');
-            el.className = 'chain-block';
+            el.className = 'chain-block' + (latest ? ' latest-block' : '');
             el.setAttribute('data-hash', b.id || '');
             el.setAttribute('data-height', b.height || '');
+
+            // Miner/pool name
+            var miner = (b.extras && b.extras.pool && b.extras.pool.name) ? b.extras.pool.name : 'Unknown';
+
+            // Block fullness: weight / 4,000,000 (max block weight)
+            var maxWeight = 4000000;
+            var weight = b.weight || (b.size ? b.size * 4 : 0);
+            var pct = Math.min(100, Math.round((weight / maxWeight) * 100));
+            var fillClass = pct < 50 ? 'full-low' : (pct < 85 ? 'full-med' : 'full-high');
+
             el.innerHTML =
                 '<div><div class="block-height">#' + b.height.toLocaleString() + '</div>' +
-                '<div class="block-hash">' + fmtH(b.id) + '</div></div>' +
-                '<div><div class="block-meta"><div>' +
+                '<div class="block-hash">' + fmtH(b.id) + '</div>' +
+                '<div class="block-miner">Miner: <span>' + miner + '</span></div></div>' +
+                '<div>' +
+                '<div class="block-meta"><div>' +
                 '<div class="block-txns"><span>' + b.tx_count + '</span> txns</div>' +
                 '<div class="block-size">' + fmtS(b.size) + '</div></div>' +
                 '<div class="block-time">' + fmtT(b.timestamp) + '</div>' +
-                '</div></div><div class="block-flash"></div>' +
+                '</div>' +
+                '<div class="block-fullness">' +
+                '<div class="block-fullness-bar"><div class="block-fullness-fill ' + fillClass + '" style="width:' + pct + '%"></div></div>' +
+                '<div class="block-fullness-label"><span>' + pct + '% full</span><span>' + fmtS(weight) + '</span></div>' +
+                '</div>' +
+                '</div><div class="block-flash"></div>' +
                 '<div class="block-view-hint">View block &rarr;</div>' +
                 (latest ? '<div class="block-status"><span class="sdot"></span>Latest</div>' : '');
             return el;
@@ -1127,98 +1154,127 @@
 
         function renderBlocks(blocks) {
             chainTrack.innerHTML = '';
-            for (var r = 0; r < 2; r++) {
-                for (var i = 0; i < blocks.length; i++) {
-                    chainTrack.appendChild(mkBlock(blocks[i], i === 0 && r === 0));
-                    if (!(r === 1 && i === blocks.length - 1)) {
-                        chainTrack.appendChild(mkLink((i * 0.25 + r * blocks.length * 0.25) % 2.5));
-                    }
+            // Render once — latest (index 0) on left, oldest on right
+            for (var i = 0; i < blocks.length; i++) {
+                chainTrack.appendChild(mkBlock(blocks[i], i === 0));
+                if (i < blocks.length - 1) {
+                    chainTrack.appendChild(mkLink((i * 0.25) % 2.5));
                 }
             }
-            // Slower scroll — ~3s per block
-            chainTrack.style.animationDuration = Math.max(120, blocks.length * 3) + 's';
             chainLoading.style.display = 'none';
             chainTrack.style.opacity = '1';
             chainTrack.style.transition = 'opacity .6s ease';
+
+            // Reset scroll state
+            trackOffset = 0;
+            applyTransform(0);
+            // Start auto-scroll after a brief pause
+            setTimeout(startAutoScroll, 1500);
         }
 
-        // ── Drag-to-scroll + click-to-view blocks ──
+        // ── Scroll engine (JS-driven, no CSS animation) ──
         var viewport = document.getElementById('chainViewport');
         var track = document.getElementById('chainTrack');
         var explorerBase = 'https://bc2.live/block/';
+
+        var trackOffset = 0;         // current X offset (<=0, scrolls left)
         var isDragging = false;
         var dragStartX = 0;
-        var trackOffset = 0;       // current manual offset in px
-        var animWasPaused = false;
-        var dragMoved = false;      // distinguish click from drag
+        var dragMoved = false;
         var resumeTimer = null;
-        var trackWidth = 0;         // half the track (one full set of blocks)
+        var autoScrollRAF = null;
+        var autoScrollActive = false;
+        var lastFrameTime = 0;
+        var scrollSpeed = 30;        // pixels per second
 
-        function getComputedOffset() {
-            // Get the current animated translateX so we can freeze position
-            var style = window.getComputedStyle(track);
-            var matrix = style.transform || style.webkitTransform;
-            if (matrix && matrix !== 'none') {
-                var vals = matrix.match(/matrix.*\((.+)\)/);
-                if (vals) {
-                    var parts = vals[1].split(',');
-                    return parseFloat(parts[4]) || 0;
+        function getMinOffset() {
+            // Max you can scroll right (into older blocks)
+            var vw = viewport.offsetWidth;
+            var tw = track.scrollWidth;
+            if (tw <= vw) return 0;
+            return -(tw - vw);
+        }
+
+        function clampOffset(x) {
+            // Can't go right of 0 (latest block stays on left edge)
+            // Can't go past the end of the track
+            return Math.min(0, Math.max(getMinOffset(), x));
+        }
+
+        function applyTransform(x) {
+            track.style.transform = 'translateY(-50%) translateX(' + x + 'px)';
+        }
+
+        // ── Auto-scroll: slowly scrolls left (revealing older blocks) ──
+        function autoScrollStep(time) {
+            if (!autoScrollActive) return;
+            if (lastFrameTime === 0) { lastFrameTime = time; }
+            var dt = (time - lastFrameTime) / 1000;
+            lastFrameTime = time;
+
+            trackOffset -= scrollSpeed * dt;
+            trackOffset = clampOffset(trackOffset);
+            applyTransform(trackOffset);
+
+            // If we've hit the end, pause a moment then reverse back
+            if (trackOffset <= getMinOffset() + 1) {
+                stopAutoScroll();
+                // Slowly scroll back to start after 3s
+                resumeTimer = setTimeout(function() {
+                    scrollBackToStart();
+                }, 3000);
+                return;
+            }
+
+            autoScrollRAF = requestAnimationFrame(autoScrollStep);
+        }
+
+        function startAutoScroll() {
+            if (isDragging) return;
+            autoScrollActive = true;
+            lastFrameTime = 0;
+            autoScrollRAF = requestAnimationFrame(autoScrollStep);
+        }
+
+        function stopAutoScroll() {
+            autoScrollActive = false;
+            if (autoScrollRAF) { cancelAnimationFrame(autoScrollRAF); autoScrollRAF = null; }
+            lastFrameTime = 0;
+        }
+
+        function scrollBackToStart() {
+            // Animate back to offset 0 over ~2s
+            var start = trackOffset;
+            var startTime = null;
+            var dur = 2000;
+            function step(time) {
+                if (!startTime) startTime = time;
+                var p = Math.min(1, (time - startTime) / dur);
+                // Ease out cubic
+                var ease = 1 - Math.pow(1 - p, 3);
+                trackOffset = start * (1 - ease);
+                applyTransform(trackOffset);
+                if (p < 1) {
+                    autoScrollRAF = requestAnimationFrame(step);
+                } else {
+                    trackOffset = 0;
+                    applyTransform(0);
+                    // Restart forward scroll after a pause
+                    resumeTimer = setTimeout(startAutoScroll, 2000);
                 }
             }
-            return 0;
+            autoScrollActive = true;
+            autoScrollRAF = requestAnimationFrame(step);
         }
 
-        function pauseTrack() {
-            // Freeze the track at its current visual position
-            var currentX = getComputedOffset();
-            track.style.animation = 'none';
-            track.style.transform = 'translateY(-50%) translateX(' + currentX + 'px)';
-            trackOffset = currentX;
-        }
-
-        function resumeTrack() {
-            // Calculate how far through the scroll cycle we are and resume
-            trackWidth = track.scrollWidth / 2;
-            if (trackWidth <= 0) return;
-
-            // Normalize offset to be within [-trackWidth, 0]
-            var normalizedX = trackOffset % trackWidth;
-            if (normalizedX > 0) normalizedX -= trackWidth;
-
-            // Figure out remaining duration proportionally
-            var totalDur = Math.max(120, allBlocks.length * 3);
-            var progress = Math.abs(normalizedX) / trackWidth;
-            var remainDur = totalDur * (1 - progress);
-            if (remainDur < 5) remainDur = totalDur;
-
-            // Re-enable animation from current position
-            track.style.animation = 'none';
-            track.offsetHeight; // force reflow
-            track.style.transform = '';
-            track.style.animation = 'chainScroll ' + totalDur + 's linear infinite';
-            track.style.animationDelay = '-' + (progress * totalDur).toFixed(2) + 's';
-        }
-
-        function clampOffset() {
-            trackWidth = track.scrollWidth / 2;
-            if (trackWidth > 0) {
-                // Wrap around so it never scrolls past the duplicate set
-                trackOffset = trackOffset % trackWidth;
-                if (trackOffset > 0) trackOffset -= trackWidth;
-            }
-        }
-
-        // Mouse events
+        // ── Mouse drag ──
         viewport.addEventListener('mousedown', function(e) {
             if (e.target.closest('.chain-loading')) return;
             isDragging = true;
             dragMoved = false;
             dragStartX = e.clientX;
             viewport.classList.add('dragging');
-
-            // Freeze at current position
-            pauseTrack();
-
+            stopAutoScroll();
             if (resumeTimer) { clearTimeout(resumeTimer); resumeTimer = null; }
             e.preventDefault();
         });
@@ -1227,8 +1283,8 @@
             if (!isDragging) return;
             var dx = e.clientX - dragStartX;
             if (Math.abs(dx) > 3) dragMoved = true;
-            var newX = trackOffset + dx;
-            track.style.transform = 'translateY(-50%) translateX(' + newX + 'px)';
+            var newX = clampOffset(trackOffset + dx);
+            applyTransform(newX);
         });
 
         document.addEventListener('mouseup', function(e) {
@@ -1237,11 +1293,10 @@
             viewport.classList.remove('dragging');
 
             var dx = e.clientX - dragStartX;
-            trackOffset += dx;
-            clampOffset();
-            track.style.transform = 'translateY(-50%) translateX(' + trackOffset + 'px)';
+            trackOffset = clampOffset(trackOffset + dx);
+            applyTransform(trackOffset);
 
-            // If it was just a click (not a drag), handle block click
+            // Click (not drag) → open block
             if (!dragMoved) {
                 var block = e.target.closest('.chain-block');
                 if (block) {
@@ -1258,33 +1313,29 @@
                 }
             }
 
-            // Resume auto-scroll after 4 seconds of no interaction
+            // Resume auto-scroll after 5s idle
             resumeTimer = setTimeout(function() {
-                resumeTrack();
+                startAutoScroll();
                 resumeTimer = null;
-            }, 4000);
+            }, 5000);
         });
 
-        // Touch events for mobile
-        var touchStartX = 0;
-        var touchMoved = false;
-
+        // ── Touch drag (mobile) ──
         viewport.addEventListener('touchstart', function(e) {
             if (e.target.closest('.chain-loading')) return;
             isDragging = true;
-            touchMoved = false;
-            touchStartX = e.touches[0].clientX;
-            dragStartX = touchStartX;
+            dragMoved = false;
+            dragStartX = e.touches[0].clientX;
             viewport.classList.add('dragging');
-            pauseTrack();
+            stopAutoScroll();
             if (resumeTimer) { clearTimeout(resumeTimer); resumeTimer = null; }
         }, { passive: true });
 
         viewport.addEventListener('touchmove', function(e) {
             if (!isDragging) return;
             var dx = e.touches[0].clientX - dragStartX;
-            if (Math.abs(dx) > 3) touchMoved = true;
-            track.style.transform = 'translateY(-50%) translateX(' + (trackOffset + dx) + 'px)';
+            if (Math.abs(dx) > 3) dragMoved = true;
+            applyTransform(clampOffset(trackOffset + dx));
         }, { passive: true });
 
         viewport.addEventListener('touchend', function(e) {
@@ -1292,34 +1343,38 @@
             isDragging = false;
             viewport.classList.remove('dragging');
 
-            var touch = e.changedTouches[0];
-            var dx = touch.clientX - dragStartX;
-            trackOffset += dx;
-            clampOffset();
-            track.style.transform = 'translateY(-50%) translateX(' + trackOffset + 'px)';
+            var dx = e.changedTouches[0].clientX - dragStartX;
+            trackOffset = clampOffset(trackOffset + dx);
+            applyTransform(trackOffset);
 
-            if (!touchMoved) {
-                var block = touch.target.closest ? touch.target.closest('.chain-block') : null;
+            if (!dragMoved) {
+                var block = e.changedTouches[0].target.closest ? e.changedTouches[0].target.closest('.chain-block') : null;
                 if (block) {
                     var hash = block.getAttribute('data-hash');
-                    if (hash && hash.length > 10) {
-                        window.open(explorerBase + hash, '_blank');
-                    }
+                    if (hash && hash.length > 10) window.open(explorerBase + hash, '_blank');
                 }
             }
 
             resumeTimer = setTimeout(function() {
-                resumeTrack();
+                startAutoScroll();
                 resumeTimer = null;
-            }, 4000);
+            }, 5000);
         });
 
-        // Pause on hover (no drag), resume on leave
+        // Pause on hover, resume on leave
         viewport.addEventListener('mouseenter', function() {
-            if (!isDragging && !resumeTimer) pauseTrack();
+            if (!isDragging) {
+                stopAutoScroll();
+                if (resumeTimer) { clearTimeout(resumeTimer); resumeTimer = null; }
+            }
         });
         viewport.addEventListener('mouseleave', function() {
-            if (!isDragging && !resumeTimer) resumeTrack();
+            if (!isDragging) {
+                resumeTimer = setTimeout(function() {
+                    startAutoScroll();
+                    resumeTimer = null;
+                }, 2000);
+            }
         });
 
         // ── Mining stats updater ──
@@ -1365,7 +1420,7 @@
 
                 // Paginate for ~100
                 var attempts = 0;
-                while (allBlocks.length < 100 && attempts < 8) {
+                while (allBlocks.length < 200 && attempts < 15) {
                     var lastH = allBlocks[allBlocks.length - 1].height;
                     var more = await apiFetch('/blocks/' + (lastH - 1));
                     if (!more || !more.length) break;
@@ -1425,7 +1480,7 @@
                         var msg = JSON.parse(evt.data);
                         if (msg.block) {
                             allBlocks.unshift(msg.block);
-                            if (allBlocks.length > 120) allBlocks = allBlocks.slice(0, 100);
+                            if (allBlocks.length > 220) allBlocks = allBlocks.slice(0, 200);
                             var ct = document.getElementById('blockCountLabel');
                             if (ct) ct.textContent = allBlocks.length;
                             renderBlocks(allBlocks);
@@ -1447,10 +1502,12 @@
             var now = Math.floor(Date.now() / 1000);
             var hex = '0123456789abcdef';
             var fb = [];
-            for (var i = 0; i < 100; i++) {
+            var simMiners = ['BC2Pool','SoloMiner','HashForge','BlockSmith','AntPool','F2Pool','ViaBTC','Unknown'];
+            for (var i = 0; i < 200; i++) {
                 var h = '0000';
                 for (var j = 0; j < 60; j++) h += hex[Math.floor(Math.random() * 16)];
-                fb.push({ height: base - i, id: h, tx_count: Math.floor(Math.random() * 200) + 3, size: Math.floor(Math.random() * 900000) + 50000, timestamp: now - i * 600 - Math.floor(Math.random() * 300) });
+                var sz = Math.floor(Math.random() * 900000) + 50000;
+                fb.push({ height: base - i, id: h, tx_count: Math.floor(Math.random() * 200) + 3, size: sz, weight: sz * 4, timestamp: now - i * 600 - Math.floor(Math.random() * 300), extras: { pool: { name: simMiners[Math.floor(Math.random() * simMiners.length)] } } });
             }
             return fb;
         }
