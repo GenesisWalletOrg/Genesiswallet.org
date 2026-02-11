@@ -73,7 +73,7 @@
         nav {
             position: fixed; top: 0; left: 0; width: 100%; z-index: 1000;
             padding: 1.25rem 2rem;
-            transition: all 0.4s cubic-bezier(0.16,1,0.3,1);
+            transition: background 0.4s cubic-bezier(0.16,1,0.3,1), padding 0.4s cubic-bezier(0.16,1,0.3,1), box-shadow 0.4s cubic-bezier(0.16,1,0.3,1), border-bottom 0.4s cubic-bezier(0.16,1,0.3,1);
         }
         nav.scrolled {
             background: rgba(5,5,5,0.82);
@@ -292,8 +292,14 @@
                 inset 0 1px 0 rgba(255,255,255,0.05),
                 0 0 150px rgba(247,147,26,0.08),
                 0 0 60px rgba(247,147,26,0.04);
-            transform: perspective(1000px) rotateY(-5deg) rotateX(3deg);
-            animation: phoneFloat 6s ease-in-out infinite;
+            transform: perspective(1000px) rotateY(-5deg) rotateX(3deg) translateY(100px);
+            opacity: 0;
+            animation: phoneRise 2.5s cubic-bezier(0.16,1,0.3,1) 0.8s forwards, phoneFloat 6s ease-in-out 3.3s infinite;
+        }
+        @keyframes phoneRise {
+            0% { opacity: 0; transform: perspective(1000px) rotateY(-5deg) rotateX(3deg) translateY(100px); }
+            60% { opacity: 1; }
+            100% { opacity: 1; transform: perspective(1000px) rotateY(-5deg) rotateX(3deg) translateY(0); }
         }
         @keyframes phoneFloat {
             0%,100% { transform: perspective(1000px) rotateY(-5deg) rotateX(3deg) translateY(0); box-shadow: 0 50px 100px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.05), inset 0 1px 0 rgba(255,255,255,0.05), 0 0 150px rgba(247,147,26,0.08), 0 0 60px rgba(247,147,26,0.04); }
@@ -336,6 +342,7 @@
         .wallet-card-label { font-size: 0.65rem; color: rgba(0,0,0,0.5); text-transform: uppercase; letter-spacing: 0.1em; font-weight: 600; position: relative; z-index: 1; }
         .wallet-card-balance { font-size: 1.6rem; font-weight: 700; color: var(--bg); margin: 0.25rem 0; position: relative; z-index: 1; }
         .wallet-card-sub { font-size: 0.7rem; color: rgba(0,0,0,0.4); position: relative; z-index: 1; }
+        .wallet-card-logo { position: absolute; bottom: 10px; right: 12px; width: 32px; height: 32px; border-radius: 50%; z-index: 2; opacity: 0.85; filter: drop-shadow(0 2px 6px rgba(0,0,0,0.3)); }
 
         .wallet-txn { display: flex; align-items: center; justify-content: space-between; padding: 0.7rem 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
         .wallet-txn-left { display: flex; align-items: center; gap: 0.6rem; }
@@ -459,10 +466,10 @@
         .features-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 1.5rem; }
 
         .feature-card {
-            background: rgba(14,14,14,0.4); border: 1px solid var(--border);
+            background: rgba(14,14,14,0.6); border: 1px solid var(--border);
             border-radius: 16px; padding: 2rem;
-            transition: all 0.4s cubic-bezier(0.16,1,0.3,1);
-            position: relative; overflow: hidden; backdrop-filter: blur(10px);
+            transition: border-color 0.4s cubic-bezier(0.16,1,0.3,1), transform 0.4s cubic-bezier(0.16,1,0.3,1), box-shadow 0.4s cubic-bezier(0.16,1,0.3,1);
+            position: relative; overflow: hidden;
         }
         /* Animated gradient border on hover */
         .feature-card::before {
@@ -517,14 +524,14 @@
         .mining-icon .pickaxe { font-size: 1.5rem; animation: mBob 1.2s ease-in-out infinite; }
         @keyframes mBob { 0%,100%{transform:rotate(0);} 25%{transform:rotate(-12deg);} 75%{transform:rotate(8deg);} }
         .mining-details { display: flex; flex-wrap: wrap; gap: 1.2rem 2.5rem; position: relative; z-index: 1; }
-        .mining-stat-value { font-family: 'Playfair Display', serif; font-size: 1.15rem; font-weight: 600; color: var(--text); }
+        .mining-stat-value { font-family: 'SF Mono','Fira Code',monospace; font-size: 1.05rem; font-weight: 700; color: var(--text); letter-spacing: -0.02em; }
         .mining-stat-value.gv { background: linear-gradient(135deg, var(--gold-lt), var(--gold)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-        .mining-stat-label { font-size: 0.62rem; color: var(--t3); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 0.1rem; }
-        .mining-title { font-size: 0.7rem; color: var(--gold); text-transform: uppercase; letter-spacing: 0.1em; font-weight: 600; margin-bottom: 0.3rem; display: flex; align-items: center; gap: 0.5rem; width: 100%; }
+        .mining-stat-label { font-family: 'SF Mono','Fira Code',monospace; font-size: 0.58rem; color: var(--t3); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 0.1rem; }
+        .mining-title { font-family: 'SF Mono','Fira Code',monospace; font-size: 0.65rem; color: var(--gold); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; margin-bottom: 0.3rem; display: flex; align-items: center; gap: 0.5rem; width: 100%; }
         .mining-title .blink { display: inline-block; width: 6px; height: 6px; background: #4ade80; border-radius: 50%; box-shadow: 0 0 6px rgba(74,222,128,0.6); animation: mBlink 1s ease-in-out infinite; }
         @keyframes mBlink { 0%,100%{opacity:1;} 50%{opacity:.2;} }
 
-        .chain-viewport { position: relative; width: 100%; height: 280px; overflow: hidden; border-radius: 16px; background: rgba(8,8,8,0.7); border: 1px solid rgba(255,255,255,0.04); margin-top: 1.5rem; cursor: grab; user-select: none; -webkit-user-select: none; }
+        .chain-viewport { position: relative; width: 100%; height: 280px; overflow: hidden; border-radius: 16px; background: rgba(8,8,8,0.7); border: 1px solid rgba(255,255,255,0.04); margin-top: 1.5rem; cursor: grab; user-select: none; -webkit-user-select: none; touch-action: pan-y; }
         .chain-viewport.dragging { cursor: grabbing; }
         .chain-viewport::before { content:''; position:absolute; bottom:0; left:50%; transform:translateX(-50%); width:60%; height:100px; background:radial-gradient(ellipse,rgba(247,147,26,0.04),transparent 70%); pointer-events:none; filter:blur(20px); z-index:1; }
         .chain-scanlines { position:absolute; top:0; left:0; width:100%; height:100%; background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,0.02) 3px,rgba(0,0,0,0.02) 4px); pointer-events:none; z-index:5; }
@@ -533,12 +540,17 @@
         .chain-mask.right { right:0; background:linear-gradient(-90deg,var(--bg2),transparent); }
         .chain-track { position:absolute; top:50%; left:0; transform:translateY(-50%); display:flex; align-items:center; will-change:transform; padding-left:20px; }
 
-        .chain-block { flex-shrink:0; width:165px; height:215px; background:linear-gradient(165deg,#111,#090909); border:1px solid rgba(247,147,26,0.07); border-radius:12px; padding:1rem; position:relative; overflow:hidden; display:flex; flex-direction:column; justify-content:space-between; transition:border-color .3s,box-shadow .3s; cursor:pointer; }
+        .chain-block { flex-shrink:0; width:165px; height:215px; background:linear-gradient(165deg,#111,#090909); border:1px solid rgba(247,147,26,0.07); border-radius:12px; padding:0.75rem 0.85rem; position:relative; overflow:hidden; display:flex; flex-direction:column; justify-content:space-between; transition:border-color .3s,box-shadow .3s; cursor:pointer; }
         .chain-block:hover { border-color:rgba(247,147,26,0.25); box-shadow:0 0 40px rgba(247,147,26,0.06); }
         .chain-block:active { transform:scale(0.97); }
-        .block-miner { font-size:0.52rem; color:var(--t2); margin-top:0.2rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; opacity:0.8; }
+
+        /* Transaction visualization grid */
+        .tx-grid { display:flex; flex-wrap:wrap; gap:1px; margin:0.35rem 0; max-height:52px; overflow:hidden; border-radius:3px; }
+        .tx-cell { width:4px; height:4px; border-radius:0.5px; }
+
+        .block-miner { font-size:0.5rem; color:var(--t2); margin-top:0.15rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; opacity:0.85; }
         .block-miner span { color:var(--gold); font-weight:500; }
-        .block-miner .miner-addr { color:var(--t3); font-family:monospace; font-size:0.42rem; font-weight:400; }
+        .block-miner .miner-addr { color:var(--t3); font-family:'SF Mono','Fira Code',monospace; font-size:0.4rem; font-weight:400; }
         .block-miner .miner-link { color:var(--gold); font-weight:500; text-decoration:none; transition:color .2s; cursor:pointer; }
         .block-miner .miner-link:hover { color:var(--gold-lt); text-decoration:underline; }
 
@@ -563,18 +575,17 @@
         .block-fullness-fill.full-low { background:linear-gradient(90deg,#4ade80,#22c55e); }
         .block-fullness-fill.full-med { background:linear-gradient(90deg,#facc15,#eab308); }
         .block-fullness-fill.full-high { background:linear-gradient(90deg,#f97316,#ef4444); }
-        .block-fullness-label { display:flex; justify-content:space-between; font-size:0.44rem; color:var(--t3); margin-top:0.15rem; }
+        .block-fullness-label { display:flex; justify-content:space-between; font-family:'SF Mono','Fira Code',monospace; font-size:0.42rem; color:var(--t3); margin-top:0.15rem; }
         .chain-block .block-view-hint { position:absolute; bottom:8px; right:10px; font-size:0.48rem; color:var(--gold); opacity:0; transition:opacity .3s; text-transform:uppercase; letter-spacing:0.06em; }
         .chain-block:hover .block-view-hint { opacity:0.7; }
         .chain-block::before { content:''; position:absolute; top:0; left:10%; width:80%; height:2px; background:linear-gradient(90deg,transparent,var(--gold),transparent); opacity:.2; box-shadow:0 0 8px rgba(247,147,26,0.25); }
         .chain-block::after { content:''; position:absolute; top:-15px; left:50%; transform:translateX(-50%); width:60%; height:30px; background:radial-gradient(ellipse,rgba(247,147,26,0.04),transparent); filter:blur(8px); pointer-events:none; }
-        .block-height { font-family:'Playfair Display',serif; font-size:1.15rem; font-weight:700; background:linear-gradient(135deg,var(--gold-lt),var(--gold)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
-        .block-hash { font-family:monospace; font-size:0.56rem; color:var(--t3); letter-spacing:0.03em; word-break:break-all; line-height:1.4; margin-top:0.2rem; opacity:.7; }
-        .block-meta { display:flex; justify-content:space-between; align-items:flex-end; }
-        .block-txns { font-size:0.66rem; color:var(--t2); }
-        .block-txns span { color:var(--gold); font-weight:600; }
-        .block-time { font-size:0.56rem; color:var(--t3); text-align:right; }
-        .block-size { font-size:0.54rem; color:var(--t3); margin-top:0.1rem; }
+        .block-height { font-family:'SF Mono','Fira Code',monospace; font-size:1rem; font-weight:700; background:linear-gradient(135deg,var(--gold-lt),var(--gold)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; letter-spacing:-0.02em; }
+        .block-hash { font-family:'SF Mono','Fira Code',monospace; font-size:0.48rem; color:var(--t3); letter-spacing:0.02em; word-break:break-all; line-height:1.35; margin-top:0.15rem; opacity:.6; }
+        .block-meta { display:flex; justify-content:space-between; align-items:center; }
+        .block-txns { font-family:'SF Mono','Fira Code',monospace; font-size:0.62rem; color:var(--t2); }
+        .block-txns span { color:var(--gold); font-weight:700; }
+        .block-time { font-family:'SF Mono','Fira Code',monospace; font-size:0.52rem; color:var(--t3); text-align:right; }
         .block-status { position:absolute; top:8px; right:8px; display:flex; align-items:center; gap:0.25rem; font-size:0.48rem; text-transform:uppercase; letter-spacing:0.06em; font-weight:600; color:#4ade80; }
         .block-status .sdot { width:4px; height:4px; background:#4ade80; border-radius:50%; box-shadow:0 0 5px rgba(74,222,128,0.5); animation:mBlink 1s ease-in-out infinite; }
         .chain-block.latest-block { border-color: rgba(74,222,128,0.25); box-shadow: 0 0 30px rgba(74,222,128,0.08), inset 0 0 20px rgba(74,222,128,0.03); }
@@ -650,7 +661,7 @@
 
         /* ════ Community ════ */
         #community { background: var(--bg2); }
-        .community-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 1.5rem; }
+        .community-grid { display: grid; grid-template-columns: repeat(5,1fr); gap: 1.25rem; }
 
         .community-card {
             background: rgba(14,14,14,0.4); border: 1px solid var(--border);
@@ -683,6 +694,15 @@
         .community-card h3 { font-size: 1.1rem; margin-bottom: 0.5rem; font-weight: 600; }
         .community-card p { font-size: 0.85rem; color: var(--t2); }
 
+        /* Network Pulse bar */
+        .community-pulse { background: rgba(14,14,14,0.5); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem 2rem; }
+        .pulse-label { font-size: 0.7rem; color: var(--gold); text-transform: uppercase; letter-spacing: 0.1em; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; }
+        .pulse-label .sdot { width: 6px; height: 6px; background: #4ade80; border-radius: 50%; box-shadow: 0 0 8px rgba(74,222,128,0.6); animation: mBlink 1s ease-in-out infinite; }
+        .pulse-stats { display: flex; justify-content: space-around; gap: 1rem; }
+        .pulse-stat { text-align: center; }
+        .pulse-val { display: block; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 1.1rem; font-weight: 700; color: var(--t1); margin-bottom: 0.25rem; }
+        .pulse-key { font-size: 0.68rem; color: var(--t3); text-transform: uppercase; letter-spacing: 0.06em; }
+
         /* ════ Exchanges ════ */
         #exchanges { padding: 4rem 2rem; }
         .exchange-btn-group { display: flex; gap: 1.5rem; justify-content: center; flex-wrap: wrap; }
@@ -709,19 +729,23 @@
             .hero-actions { justify-content: center; }
             .hero-visual { display: none; }
             .origin-grid { grid-template-columns: 1fr; gap: 2rem; }
-            .features-grid, .community-grid { grid-template-columns: 1fr; }
+            .features-grid { grid-template-columns: 1fr; }
+            .community-grid { grid-template-columns: repeat(2, 1fr); }
+            .pulse-stats { flex-wrap: wrap; }
+            .pulse-stat { flex: 1 1 40%; }
             .specs-layout { grid-template-columns: 1fr; }
             .nav-links { display: none; }
-            .nav-links.active { display: flex; flex-direction: column; position: fixed; inset: 0; background: rgba(5,5,5,0.97); backdrop-filter: blur(24px); justify-content: center; align-items: center; gap: 2rem; z-index: 999; }
+            .nav-links.active { display: flex; flex-direction: column; position: fixed; inset: 0; background: rgba(5,5,5,0.97); backdrop-filter: blur(24px); justify-content: center; align-items: center; gap: 2rem; z-index: 1002; }
             .nav-links.active a { font-size: 1.25rem; }
             .nav-links.active a::after { display: none; }
-            .mobile-toggle { display: block; z-index: 1001; }
+            .mobile-toggle { display: block; z-index: 1003; position: relative; }
         }
         @media (max-width: 600px) {
             section { padding: 4rem 1.25rem; }
             .hero { padding: 6rem 1.25rem 4rem; }
             .hero h1 { font-size: 2.2rem; }
             .download-buttons { flex-direction: column; align-items: center; }
+            .community-grid { grid-template-columns: 1fr; }
             .footer-inner { flex-direction: column; text-align: center; }
             .footer-links { flex-wrap: wrap; justify-content: center; }
             .exchange-btn-group { flex-direction: column; align-items: center; }
@@ -808,6 +832,7 @@
                                 <div class="wallet-card-label">Total Balance</div>
                                 <div class="wallet-card-balance">12.4831 BC2</div>
                                 <div class="wallet-card-sub">HD SegWit &middot; bc2q...x7f4</div>
+                                <img class="wallet-card-logo" src="data:image/png;base64,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" alt="BC2">
                             </div>
                             <div class="wallet-txn"><div class="wallet-txn-left"><div class="wallet-txn-icon txn-in">&#8593;</div><div><div class="wallet-txn-name">Received</div><div class="wallet-txn-date">Feb 9, 2026</div></div></div><div class="wallet-txn-amount txn-positive">+2.500</div></div>
                             <div class="wallet-txn"><div class="wallet-txn-left"><div class="wallet-txn-icon txn-out">&#8595;</div><div><div class="wallet-txn-name">Sent</div><div class="wallet-txn-date">Feb 7, 2026</div></div></div><div class="wallet-txn-amount txn-negative">-0.150</div></div>
@@ -881,7 +906,7 @@
             <div class="chain-header reveal">
                 <div>
                     <div class="section-label"><span class="chain-badge"><span class="chain-badge-dot"></span>BC2 Blockchain</span></div>
-                    <h2 class="section-title">Last <span id="blockCountTitle">200</span> Blocks</h2>
+                    <h2 class="section-title">Live Block Explorer</h2>
                     <p class="section-desc" style="margin-bottom:0;">Recent confirmed blocks from the BC2 network, powered by <a href="https://bc2.live" target="_blank" style="color:var(--gold);text-decoration:none;">BC2.Live</a>.</p>
                 </div>
                 <div class="chain-cta">
@@ -1016,10 +1041,28 @@
                     <div class="community-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0zm5.01 4.744c.688 0 1.25.561 1.25 1.249a1.25 1.25 0 0 1-2.498.056l-2.597-.547-.8 3.747c1.824.07 3.48.632 4.674 1.488.308-.309.73-.491 1.207-.491.968 0 1.754.786 1.754 1.754 0 .716-.435 1.333-1.01 1.614a3.111 3.111 0 0 1 .042.52c0 2.694-3.13 4.87-7.004 4.87-3.874 0-7.004-2.176-7.004-4.87 0-.183.015-.366.043-.534A1.748 1.748 0 0 1 4.028 12c0-.968.786-1.754 1.754-1.754.463 0 .898.196 1.207.49 1.207-.883 2.878-1.43 4.744-1.487l.885-4.182a.342.342 0 0 1 .14-.197.35.35 0 0 1 .238-.042l2.906.617a1.214 1.214 0 0 1 1.108-.701zM9.25 12C8.561 12 8 12.562 8 13.25c0 .687.561 1.248 1.25 1.248.687 0 1.248-.561 1.248-1.249 0-.688-.561-1.249-1.249-1.249zm5.5 0c-.687 0-1.248.561-1.248 1.25 0 .687.561 1.248 1.249 1.248.688 0 1.249-.561 1.249-1.249 0-.687-.562-1.249-1.25-1.249zm-5.466 3.99a.327.327 0 0 0-.231.094.33.33 0 0 0 0 .463c.842.842 2.484.913 2.961.913.477 0 2.105-.056 2.961-.913a.361.361 0 0 0 .029-.463.33.33 0 0 0-.464 0c-.547.533-1.684.73-2.512.73-.828 0-1.979-.196-2.512-.73a.326.326 0 0 0-.232-.095z"/></svg></div>
                     <h3>Reddit</h3><p>r/BitcoinII &mdash; news, discussion, updates</p>
                 </a>
-                <a href="https://github.com/GenesisWalletOrg" target="_blank" rel="noopener" class="community-card reveal">
+                <a href="https://github.com/Bitcoin-II" target="_blank" rel="noopener" class="community-card reveal">
                     <div class="community-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg></div>
-                    <h3>GitHub</h3><p>Contribute, report issues, and build together</p>
+                    <h3>GitHub</h3><p>Bitcoin II core &mdash; contribute, fork, build</p>
                 </a>
+                <a href="https://x.com/BitcoinIIMedia" target="_blank" rel="noopener" class="community-card reveal">
+                    <div class="community-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></div>
+                    <h3>X / Twitter</h3><p>Follow @BitcoinIIMedia for announcements</p>
+                </a>
+                <a href="https://bitcoin-ii.org" target="_blank" rel="noopener" class="community-card reveal">
+                    <div class="community-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div>
+                    <h3>Bitcoin-II.org</h3><p>The official BC2 project &mdash; whitepaper, nodes, specs</p>
+                </a>
+            </div>
+            <div class="community-pulse reveal" style="margin-top:2.5rem;">
+                <div class="pulse-label"><span class="sdot"></span> Network Pulse</div>
+                <div class="pulse-stats">
+                    <div class="pulse-stat"><span class="pulse-val" id="pulseHeight">&mdash;</span><span class="pulse-key">Block Height</span></div>
+                    <div class="pulse-stat"><span class="pulse-val" id="pulseHashrate">&mdash;</span><span class="pulse-key">Hashrate</span></div>
+                    <div class="pulse-stat"><span class="pulse-val" id="pulseDiff">&mdash;</span><span class="pulse-key">Difficulty</span></div>
+                    <div class="pulse-stat"><span class="pulse-val" id="pulsePeers">&mdash;</span><span class="pulse-key">Peers</span></div>
+                </div>
+            </div>
             </div>
         </div>
     </section>
@@ -1053,7 +1096,7 @@
                 &copy; 2025&ndash;2026 GenesisWallet Contributors &middot; Licensed under the <a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener">MIT License</a><br>
                 GenesisWallet is a community fork of <a href="https://bluewallet.io" target="_blank" rel="noopener">BlueWallet</a> &mdash; &copy; BlueWallet developers. Used under the MIT License.<br>
                 Bitcoin is an open protocol. BC2 (BitcoinII) is an independent blockchain network. Not affiliated with Bitcoin Core or BlueWallet.<br>
-                <span style="font-size:0.7rem;opacity:0.5;">This software is provided &ldquo;as is&rdquo;, without warranty of any kind. Use at your own risk.</span>
+                <span style="font-size:0.7rem;">This software is provided &ldquo;as is&rdquo;, without warranty of any kind. Use at your own risk.</span>
             </div>
         </div>
     </footer>
@@ -1083,9 +1126,11 @@
         const navLinks = document.getElementById('navLinks');
         toggle.addEventListener('click', () => {
             navLinks.classList.toggle('active');
-            toggle.textContent = navLinks.classList.contains('active') ? '\u2715' : '\u2630';
+            var isOpen = navLinks.classList.contains('active');
+            toggle.textContent = isOpen ? '\u2715' : '\u2630';
+            document.body.style.overflow = isOpen ? 'hidden' : '';
         });
-        navLinks.querySelectorAll('a').forEach(a => a.addEventListener('click', () => { navLinks.classList.remove('active'); toggle.textContent = '\u2630'; }));
+        navLinks.querySelectorAll('a').forEach(a => a.addEventListener('click', () => { navLinks.classList.remove('active'); toggle.textContent = '\u2630'; document.body.style.overflow = ''; }));
 
         // Scroll reveal
         const obs = new IntersectionObserver(entries => {
@@ -1393,6 +1438,40 @@
         }
 
         // ── DOM builders ──
+
+        // Fee-tier colors matching mempool.space style (cool→warm)
+        var txColors = [
+            '#4a90d9', '#5b9bd5', '#6dae7e', '#8bc34a',
+            '#cddc39', '#ffeb3b', '#ffc107', '#ff9800',
+            '#ff5722', '#f44336', '#e91e63', '#9c27b0'
+        ];
+
+        // Simple seeded pseudo-random from block hash
+        function hashSeed(hash, i) {
+            if (!hash) return 0;
+            var c = hash.charCodeAt((i * 7 + 3) % hash.length) || 0;
+            var d = hash.charCodeAt((i * 13 + 11) % hash.length) || 0;
+            return (c * 31 + d * 17 + i * 53) & 0xffffff;
+        }
+
+        function buildTxGrid(b) {
+            var count = Math.min(b.tx_count || 0, 130);
+            if (count <= 0) return '';
+            var cells = '';
+            var hash = b.id || '';
+            // Determine block's "average fee tier" from fullness percentage
+            var weight = b.weight || 0;
+            var baseTier = weight > 0 ? Math.min(11, Math.floor((weight / 4000000) * 8)) : 3;
+            for (var i = 0; i < count; i++) {
+                var seed = hashSeed(hash, i);
+                // Spread around the base tier with some randomness
+                var tier = Math.max(0, Math.min(11, baseTier + (seed % 5) - 2));
+                var opacity = 0.55 + (seed % 40) / 100; // 0.55 - 0.95
+                cells += '<div class="tx-cell" style="background:' + txColors[tier] + ';opacity:' + opacity.toFixed(2) + '"></div>';
+            }
+            return '<div class="tx-grid">' + cells + '</div>';
+        }
+
         function mkBlock(b, latest) {
             var el = document.createElement('div');
             el.className = 'chain-block' + (latest ? ' latest-block' : '');
@@ -1423,10 +1502,11 @@
                 '<div><div class="block-height">#' + b.height.toLocaleString() + '</div>' +
                 '<div class="block-hash">' + fmtH(b.id) + '</div>' +
                 '<div class="block-miner">' + minerHtml + '</div></div>' +
+                buildTxGrid(b) +
                 '<div>' +
                 '<div class="block-meta"><div>' +
                 '<div class="block-txns"><span>' + b.tx_count + '</span> txns</div>' +
-                '<div class="block-size">' + fmtS(size) + '</div></div>' +
+                '</div>' +
                 '<div class="block-time">' + fmtT(b.timestamp) + '</div>' +
                 '</div>' +
                 '<div class="block-fullness">' +
@@ -1445,6 +1525,8 @@
             return l;
         }
 
+        var firstRender = true;
+
         function renderBlocks(blocks) {
             chainTrack.innerHTML = '';
             // Render once — latest (index 0) on left, oldest on right
@@ -1458,11 +1540,17 @@
             chainTrack.style.opacity = '1';
             chainTrack.style.transition = 'opacity .6s ease';
 
-            // Reset scroll state
-            trackOffset = 0;
-            applyTransform(0);
-            // Start auto-scroll after a brief pause
-            setTimeout(startAutoScroll, 1500);
+            if (firstRender) {
+                // First load: start from beginning
+                trackOffset = 0;
+                applyTransform(0);
+                setTimeout(startAutoScroll, 1500);
+                firstRender = false;
+            } else {
+                // Re-render (enrichment, refresh): keep current position
+                trackOffset = clampOffset(trackOffset);
+                applyTransform(trackOffset);
+            }
         }
 
         // ── Scroll engine (JS-driven, no CSS animation) ──
@@ -1478,6 +1566,10 @@
         var autoScrollRAF = null;
         var autoScrollActive = false;
         var lastFrameTime = 0;
+        var momentumRAF = null;
+        var velocity = 0;            // px/ms for momentum
+        var lastDragX = 0;
+        var lastDragTime = 0;
         var scrollSpeed = 30;        // pixels per second
 
         function getMinOffset() {
@@ -1512,10 +1604,10 @@
             // If we've hit the end, pause a moment then reverse back
             if (trackOffset <= getMinOffset() + 1) {
                 stopAutoScroll();
-                // Slowly scroll back to start after 3s
+                // Pause at the end, then scroll back to start
                 resumeTimer = setTimeout(function() {
                     scrollBackToStart();
-                }, 3000);
+                }, 8000);
                 return;
             }
 
@@ -1535,6 +1627,43 @@
             lastFrameTime = 0;
         }
 
+        function stopMomentum() {
+            if (momentumRAF) { cancelAnimationFrame(momentumRAF); momentumRAF = null; }
+            velocity = 0;
+        }
+
+        function startMomentum() {
+            stopAutoScroll();
+            stopMomentum();
+            if (Math.abs(velocity) < 0.15) {
+                // Too slow, skip momentum and resume auto-scroll
+                resumeTimer = setTimeout(startAutoScroll, 5000);
+                return;
+            }
+            // Cap max velocity
+            if (velocity > 3.5) velocity = 3.5;
+            if (velocity < -3.5) velocity = -3.5;
+            var friction = 0.965; // decay per frame (~60fps)
+            var lastTime = null;
+            function coast(time) {
+                if (!lastTime) { lastTime = time; momentumRAF = requestAnimationFrame(coast); return; }
+                var dt = time - lastTime;
+                lastTime = time;
+                trackOffset += velocity * dt;
+                trackOffset = clampOffset(trackOffset);
+                applyTransform(trackOffset);
+                velocity *= friction;
+                // Stop when velocity is negligible or hit edge
+                if (Math.abs(velocity) < 0.08 || trackOffset >= 0 || trackOffset <= getMinOffset() + 1) {
+                    stopMomentum();
+                    resumeTimer = setTimeout(startAutoScroll, 5000);
+                    return;
+                }
+                momentumRAF = requestAnimationFrame(coast);
+            }
+            momentumRAF = requestAnimationFrame(coast);
+        }
+
         function scrollBackToStart() {
             // Animate back to offset 0 over ~2s
             var start = trackOffset;
@@ -1552,8 +1681,8 @@
                 } else {
                     trackOffset = 0;
                     applyTransform(0);
-                    // Restart forward scroll after a pause
-                    resumeTimer = setTimeout(startAutoScroll, 2000);
+                    // Restart forward scroll after a longer pause
+                    resumeTimer = setTimeout(startAutoScroll, 5000);
                 }
             }
             autoScrollActive = true;
@@ -1566,16 +1695,26 @@
             isDragging = true;
             dragMoved = false;
             dragStartX = e.clientX;
+            lastDragX = e.clientX;
+            lastDragTime = Date.now();
+            velocity = 0;
             viewport.classList.add('dragging');
             stopAutoScroll();
+            stopMomentum();
             if (resumeTimer) { clearTimeout(resumeTimer); resumeTimer = null; }
             e.preventDefault();
         });
 
         document.addEventListener('mousemove', function(e) {
             if (!isDragging) return;
+            var now = Date.now();
             var dx = e.clientX - dragStartX;
             if (Math.abs(dx) > 3) dragMoved = true;
+            // Track velocity from last position
+            var dt = now - lastDragTime;
+            if (dt > 0) velocity = (e.clientX - lastDragX) / dt;
+            lastDragX = e.clientX;
+            lastDragTime = now;
             var newX = clampOffset(trackOffset + dx);
             applyTransform(newX);
         });
@@ -1604,32 +1743,63 @@
                         block.style.boxShadow = '';
                     }, 300);
                 }
+                resumeTimer = setTimeout(startAutoScroll, 5000);
+                return;
             }
 
-            // Resume auto-scroll after 5s idle
-            resumeTimer = setTimeout(function() {
-                startAutoScroll();
-                resumeTimer = null;
-            }, 5000);
+            // Launch momentum coast
+            startMomentum();
         });
 
         // ── Touch drag (mobile) ──
+        var touchStartY = 0;
+        var touchLocked = false; // once we know direction, lock it
+
         viewport.addEventListener('touchstart', function(e) {
             if (e.target.closest('.chain-loading')) return;
             isDragging = true;
             dragMoved = false;
+            touchLocked = false;
             dragStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+            lastDragX = e.touches[0].clientX;
+            lastDragTime = Date.now();
+            velocity = 0;
             viewport.classList.add('dragging');
             stopAutoScroll();
+            stopMomentum();
             if (resumeTimer) { clearTimeout(resumeTimer); resumeTimer = null; }
         }, { passive: true });
 
         viewport.addEventListener('touchmove', function(e) {
             if (!isDragging) return;
+            var now = Date.now();
             var dx = e.touches[0].clientX - dragStartX;
-            if (Math.abs(dx) > 3) dragMoved = true;
-            applyTransform(clampOffset(trackOffset + dx));
-        }, { passive: true });
+            var dy = e.touches[0].clientY - touchStartY;
+
+            // Determine direction once we move enough
+            if (!touchLocked && (Math.abs(dx) > 5 || Math.abs(dy) > 5)) {
+                touchLocked = true;
+                if (Math.abs(dy) > Math.abs(dx)) {
+                    // Vertical scroll — let the page scroll normally
+                    isDragging = false;
+                    viewport.classList.remove('dragging');
+                    return;
+                }
+            }
+
+            // Horizontal drag — prevent page scroll and move blocks
+            if (touchLocked && Math.abs(dx) > 3) {
+                e.preventDefault();
+                dragMoved = true;
+                // Track velocity
+                var dt = now - lastDragTime;
+                if (dt > 0) velocity = (e.touches[0].clientX - lastDragX) / dt;
+                lastDragX = e.touches[0].clientX;
+                lastDragTime = now;
+                applyTransform(clampOffset(trackOffset + dx));
+            }
+        }, { passive: false });
 
         viewport.addEventListener('touchend', function(e) {
             if (!isDragging) return;
@@ -1646,18 +1816,19 @@
                     var hash = block.getAttribute('data-hash');
                     if (hash && hash.length > 10) window.open(explorerBase + hash, '_blank');
                 }
+                resumeTimer = setTimeout(startAutoScroll, 5000);
+                return;
             }
 
-            resumeTimer = setTimeout(function() {
-                startAutoScroll();
-                resumeTimer = null;
-            }, 5000);
+            // Launch momentum coast
+            startMomentum();
         });
 
         // Pause on hover, resume on leave
         viewport.addEventListener('mouseenter', function() {
             if (!isDragging) {
                 stopAutoScroll();
+                stopMomentum();
                 if (resumeTimer) { clearTimeout(resumeTimer); resumeTimer = null; }
             }
         });
@@ -1684,6 +1855,64 @@
         function updateFromBlocks() {
             if (!allBlocks.length) return;
             setMining({ nextHeight: allBlocks[0].height + 1, lastBlockTime: allBlocks[0].timestamp });
+            updatePulse();
+        }
+
+        function updatePulse() {
+            // Height from latest block
+            if (allBlocks.length) {
+                var el = document.getElementById('pulseHeight');
+                if (el) el.textContent = '#' + allBlocks[0].height.toLocaleString();
+            }
+        }
+
+        async function fetchPulseData() {
+            // Hashrate
+            try {
+                var hr = await apiFetch('/v1/mining/hashrate/1d', 5000);
+                if (!hr) hr = await apiFetch('/v1/mining/hashrate/3d', 5000);
+                if (hr) {
+                    var hashrate = hr.currentHashrate || hr.hashrate || (hr.hashrates && hr.hashrates[0] && hr.hashrates[0].avgHashrate);
+                    if (hashrate) {
+                        var units = ['H/s','KH/s','MH/s','GH/s','TH/s','PH/s','EH/s'];
+                        var u = 0;
+                        var v = hashrate;
+                        while (v >= 1000 && u < units.length - 1) { v /= 1000; u++; }
+                        var el = document.getElementById('pulseHashrate');
+                        if (el) el.textContent = v.toFixed(1) + ' ' + units[u];
+                    }
+                }
+            } catch(e) {}
+            // Difficulty
+            try {
+                var da = await apiFetch('/v1/mining/difficulty-adjustments/1', 5000);
+                if (!da) da = await apiFetch('/v1/difficulty-adjustment', 5000);
+                var diff = null;
+                if (da) {
+                    if (Array.isArray(da) && da.length) diff = da[0].difficulty || da[0].difficultyChange;
+                    else diff = da.difficulty || da.difficultyChange || da.progressPercent;
+                }
+                // Fallback: get from latest block
+                if (!diff && allBlocks.length && allBlocks[0].difficulty) diff = allBlocks[0].difficulty;
+                if (diff) {
+                    var dv = Number(diff);
+                    var el2 = document.getElementById('pulseDiff');
+                    if (el2) {
+                        if (dv > 1e12) el2.textContent = (dv/1e12).toFixed(2) + 'T';
+                        else if (dv > 1e9) el2.textContent = (dv/1e9).toFixed(2) + 'B';
+                        else if (dv > 1e6) el2.textContent = (dv/1e6).toFixed(2) + 'M';
+                        else el2.textContent = dv.toLocaleString();
+                    }
+                }
+            } catch(e) {}
+            // Peers (from node stats if available)
+            try {
+                var ns = await apiFetch('/v1/lightning/statistics/latest', 3000);
+                if (ns && ns.node_count) {
+                    var el3 = document.getElementById('pulsePeers');
+                    if (el3) el3.textContent = Number(ns.node_count).toLocaleString();
+                }
+            } catch(e) {}
         }
 
         // ── REST fetcher with host discovery ──
@@ -1750,8 +1979,6 @@
 
                 var ct = document.getElementById('blockCountLabel');
                 if (ct) ct.textContent = allBlocks.length;
-                var ct2 = document.getElementById('blockCountTitle');
-                if (ct2) ct2.textContent = allBlocks.length;
                 renderBlocks(allBlocks);
                 return true;
             } catch (e) {
@@ -1800,8 +2027,6 @@
                             if (allBlocks.length > 220) allBlocks = allBlocks.slice(0, 200);
                             var ct = document.getElementById('blockCountLabel');
                             if (ct) ct.textContent = allBlocks.length;
-                            var ct2 = document.getElementById('blockCountTitle');
-                            if (ct2) ct2.textContent = allBlocks.length;
                             renderBlocks(allBlocks);
                             updateFromBlocks();
                         }
@@ -1894,6 +2119,7 @@
             if (ok) {
                 updateFromBlocks();
                 await fetchStatsREST();
+                fetchPulseData();
                 connectWS();
                 // Background: fetch coinbase TXs to identify mining pools
                 enrichBlocks();
@@ -1911,6 +2137,8 @@
             // Refresh pool directory every 10 minutes
             setInterval(fetchPoolDirectory, 600000);
             setInterval(fetchStatsREST, 25000);
+            // Refresh pulse stats every 5 minutes
+            setInterval(fetchPulseData, 300000);
             // Refresh relative times every 2 min
             setInterval(function() { if (allBlocks.length) renderBlocks(allBlocks); }, 120000);
         })();
