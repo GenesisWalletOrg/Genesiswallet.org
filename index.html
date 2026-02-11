@@ -1057,6 +1057,21 @@
         </div>
     </footer>
 
+    <!-- External Link Warning Modal -->
+    <div class="ext-modal-overlay" id="extModal">
+        <div class="ext-modal">
+            <div class="ext-modal-icon">&#9888;&#65039;</div>
+            <h3>Leaving GenesisWallet</h3>
+            <p>You are about to visit a third-party website. GenesisWallet is not affiliated with this site and cannot guarantee its safety.</p>
+            <code class="ext-url" id="extUrl"></code>
+            <p class="ext-warn">Never enter your seed phrase or private keys on any external website. Always verify URLs before interacting.</p>
+            <div class="ext-modal-btns">
+                <button class="ext-btn-cancel" id="extCancel">Go Back</button>
+                <button class="ext-btn-go" id="extGo">Continue</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Nav scroll
         const nav = document.getElementById('navbar');
@@ -1721,20 +1736,6 @@
             }
         });
     </script>
-    <!-- External Link Warning Modal -->
-    <div class="ext-modal-overlay" id="extModal">
-        <div class="ext-modal">
-            <div class="ext-modal-icon">&#9888;&#65039;</div>
-            <h3>Leaving GenesisWallet</h3>
-            <p>You are about to visit a third-party website. GenesisWallet is not affiliated with this site and cannot guarantee its safety.</p>
-            <code class="ext-url" id="extUrl"></code>
-            <p class="ext-warn">Never enter your seed phrase or private keys on any external website. Always verify URLs before interacting.</p>
-            <div class="ext-modal-btns">
-                <button class="ext-btn-cancel" id="extCancel">Go Back</button>
-                <button class="ext-btn-go" id="extGo">Continue</button>
-            </div>
-        </div>
-    </div>
 
 </body>
 </html>
