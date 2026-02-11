@@ -1219,21 +1219,29 @@
                     return { name: ep.name, link: link };
                 }
             }
-            // 2. Cached coinbase address (set by enrichBlocks)
+            // 2. Cached pool resolution (set by enrichBlocks)
             if (block._poolResolved) {
                 return block._poolResolved;
             }
-            // 3. Check coinbase output address against our directory
-            if (block.extras && block.extras.coinbaseAddress) {
-                var match = poolByAddr[block.extras.coinbaseAddress];
-                if (match) return { name: match.name, link: match.link || null };
+            // 3. Check coinbase address against our directory
+            var cbAddr = block._coinbaseAddr
+                || (block.extras && (block.extras.coinbaseAddress || block.extras.coinbase_address))
+                || null;
+            if (cbAddr) {
+                block._coinbaseAddr = cbAddr; // cache it
+                if (poolByAddr[cbAddr]) {
+                    return { name: poolByAddr[cbAddr].name, link: poolByAddr[cbAddr].link || null };
+                }
             }
             // 4. Check first vout address
             if (block.tx && block.tx[0] && block.tx[0].vout) {
                 var v = block.tx[0].vout[0];
-                if (v.scriptpubkey_address && poolByAddr[v.scriptpubkey_address]) {
-                    var m = poolByAddr[v.scriptpubkey_address];
-                    return { name: m.name, link: m.link || null };
+                if (v.scriptpubkey_address) {
+                    block._coinbaseAddr = v.scriptpubkey_address;
+                    if (poolByAddr[v.scriptpubkey_address]) {
+                        var m = poolByAddr[v.scriptpubkey_address];
+                        return { name: m.name, link: m.link || null };
+                    }
                 }
             }
             return { name: 'Unknown', link: null };
@@ -1285,40 +1293,90 @@
                 }
             } catch(e) { console.log('[GW] Mining pools API unavailable'); }
 
-            // Method 2: Fetch coinbase TX for ALL blocks missing addresses
+            // Method 2: Fetch coinbase address for ALL blocks missing it
             var needAddr = allBlocks.filter(function(b) { return !b._coinbaseAddr; });
             if (needAddr.length > 0) {
                 console.log('[GW] Fetching coinbase for ' + needAddr.length + ' blocks');
+                var fetched = 0;
+                var failed = 0;
+
                 for (var i = 0; i < needAddr.length; i += 5) {
                     var batch = needAddr.slice(i, i + 5);
                     var promises = batch.map(function(block) {
-                        var url = activeHost + '/api/block/' + block.id + '/txs/0';
-                        var controller = new AbortController();
-                        var timer = setTimeout(function() { controller.abort(); }, 4000);
-                        return fetch(url, { signal: controller.signal })
-                            .then(function(r) { clearTimeout(timer); return r.ok ? r.json() : null; })
-                            .then(function(txs) {
-                                if (!txs || !txs.length) return;
-                                var coinbase = txs[0];
-                                if (!coinbase || !coinbase.vout) return;
-                                // Always store the first output address as coinbase addr
-                                if (coinbase.vout[0] && coinbase.vout[0].scriptpubkey_address) {
-                                    block._coinbaseAddr = coinbase.vout[0].scriptpubkey_address;
-                                }
-                                // Check all outputs against pool directory
-                                for (var v = 0; v < coinbase.vout.length; v++) {
-                                    var addr = coinbase.vout[v].scriptpubkey_address;
-                                    if (addr && poolByAddr[addr]) {
-                                        heightMap[block.height] = { name: poolByAddr[addr].name, link: poolByAddr[addr].link || null };
-                                        block._coinbaseAddr = addr; // use the matched address
-                                        return;
+                        // Try multiple endpoint patterns
+                        var endpoints = [
+                            activeHost + '/api/block/' + block.id + '/txs/0',
+                            activeHost + '/api/block/' + block.id + '/txs'
+                        ];
+
+                        return (async function() {
+                            for (var e = 0; e < endpoints.length; e++) {
+                                try {
+                                    var controller = new AbortController();
+                                    var timer = setTimeout(function() { controller.abort(); }, 4000);
+                                    var r = await fetch(endpoints[e], { signal: controller.signal });
+                                    clearTimeout(timer);
+                                    if (!r.ok) continue;
+                                    var txs = await r.json();
+                                    if (!txs || !Array.isArray(txs) || !txs.length) continue;
+                                    var coinbase = txs[0];
+                                    if (!coinbase || !coinbase.vout || !coinbase.vout.length) continue;
+
+                                    // Store the first output address
+                                    for (var v = 0; v < coinbase.vout.length; v++) {
+                                        var addr = coinbase.vout[v].scriptpubkey_address;
+                                        if (addr) {
+                                            block._coinbaseAddr = addr;
+                                            // Check pool directory
+                                            if (poolByAddr[addr]) {
+                                                heightMap[block.height] = { name: poolByAddr[addr].name, link: poolByAddr[addr].link || null };
+                                            }
+                                            fetched++;
+                                            return;
+                                        }
+                                    }
+                                } catch(ex) { /* try next endpoint */ }
+                            }
+
+                            // Fallback: try fetching txids then first tx individually
+                            try {
+                                var controller2 = new AbortController();
+                                var timer2 = setTimeout(function() { controller2.abort(); }, 4000);
+                                var r2 = await fetch(activeHost + '/api/block/' + block.id + '/txids', { signal: controller2.signal });
+                                clearTimeout(timer2);
+                                if (r2.ok) {
+                                    var txids = await r2.json();
+                                    if (txids && txids.length > 0) {
+                                        var controller3 = new AbortController();
+                                        var timer3 = setTimeout(function() { controller3.abort(); }, 4000);
+                                        var r3 = await fetch(activeHost + '/api/tx/' + txids[0], { signal: controller3.signal });
+                                        clearTimeout(timer3);
+                                        if (r3.ok) {
+                                            var tx = await r3.json();
+                                            if (tx && tx.vout) {
+                                                for (var v2 = 0; v2 < tx.vout.length; v2++) {
+                                                    var addr2 = tx.vout[v2].scriptpubkey_address;
+                                                    if (addr2) {
+                                                        block._coinbaseAddr = addr2;
+                                                        if (poolByAddr[addr2]) {
+                                                            heightMap[block.height] = { name: poolByAddr[addr2].name, link: poolByAddr[addr2].link || null };
+                                                        }
+                                                        fetched++;
+                                                        return;
+                                                    }
+                                                }
+                                            }
+                                        }
                                     }
                                 }
-                            })
-                            .catch(function() {});
+                            } catch(ex2) { /* last resort failed */ }
+
+                            failed++;
+                        })();
                     });
                     await Promise.all(promises);
                 }
+                console.log('[GW] Coinbase fetch: ' + fetched + ' succeeded, ' + failed + ' failed');
             }
 
             // Apply heightMap to allBlocks
@@ -1675,6 +1733,21 @@
                 }
 
                 allBlocks.sort(function(a, b) { return b.height - a.height; });
+
+                // Extract coinbase addresses from initial API data if available
+                allBlocks.forEach(function(b) {
+                    if (b.extras) {
+                        // Try various fields where mempool might store the coinbase address
+                        var addr = b.extras.coinbaseAddress
+                            || b.extras.coinbase_address
+                            || (b.extras.coinbaseTx && b.extras.coinbaseTx.vout && b.extras.coinbaseTx.vout[0] && b.extras.coinbaseTx.vout[0].scriptpubkey_address)
+                            || null;
+                        if (addr) b._coinbaseAddr = addr;
+                    }
+                });
+                // Debug: log first block structure so we can see what fields are available
+                if (allBlocks[0]) console.log('[GW] Block data sample:', JSON.stringify(Object.keys(allBlocks[0])), 'extras:', allBlocks[0].extras ? JSON.stringify(Object.keys(allBlocks[0].extras)) : 'none');
+
                 var ct = document.getElementById('blockCountLabel');
                 if (ct) ct.textContent = allBlocks.length;
                 var ct2 = document.getElementById('blockCountTitle');
