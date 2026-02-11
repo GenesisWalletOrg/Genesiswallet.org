@@ -538,6 +538,7 @@
         .chain-block:active { transform:scale(0.97); }
         .block-miner { font-size:0.52rem; color:var(--t2); margin-top:0.2rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; opacity:0.8; }
         .block-miner span { color:var(--gold); font-weight:500; }
+        .block-miner .miner-addr { color:var(--t3); font-family:monospace; font-size:0.42rem; font-weight:400; }
         .block-miner .miner-link { color:var(--gold); font-weight:500; text-decoration:none; transition:color .2s; cursor:pointer; }
         .block-miner .miner-link:hover { color:var(--gold-lt); text-decoration:underline; }
 
@@ -1284,16 +1285,12 @@
                 }
             } catch(e) { console.log('[GW] Mining pools API unavailable'); }
 
-            // Method 2: For any blocks still unmapped, try fetching coinbase TX
-            var unmapped = allBlocks.filter(function(b) {
-                return !heightMap[b.height] && !(b._poolResolved && b._poolResolved.name !== 'Unknown');
-            });
-
-            // Only fetch coinbase for first 50 unmapped to avoid hammering API
-            var coinbaseBatch = unmapped.slice(0, 50);
-            if (coinbaseBatch.length > 0) {
-                for (var i = 0; i < coinbaseBatch.length; i += 5) {
-                    var batch = coinbaseBatch.slice(i, i + 5);
+            // Method 2: Fetch coinbase TX for ALL blocks missing addresses
+            var needAddr = allBlocks.filter(function(b) { return !b._coinbaseAddr; });
+            if (needAddr.length > 0) {
+                console.log('[GW] Fetching coinbase for ' + needAddr.length + ' blocks');
+                for (var i = 0; i < needAddr.length; i += 5) {
+                    var batch = needAddr.slice(i, i + 5);
                     var promises = batch.map(function(block) {
                         var url = activeHost + '/api/block/' + block.id + '/txs/0';
                         var controller = new AbortController();
@@ -1304,16 +1301,18 @@
                                 if (!txs || !txs.length) return;
                                 var coinbase = txs[0];
                                 if (!coinbase || !coinbase.vout) return;
+                                // Always store the first output address as coinbase addr
+                                if (coinbase.vout[0] && coinbase.vout[0].scriptpubkey_address) {
+                                    block._coinbaseAddr = coinbase.vout[0].scriptpubkey_address;
+                                }
+                                // Check all outputs against pool directory
                                 for (var v = 0; v < coinbase.vout.length; v++) {
                                     var addr = coinbase.vout[v].scriptpubkey_address;
                                     if (addr && poolByAddr[addr]) {
                                         heightMap[block.height] = { name: poolByAddr[addr].name, link: poolByAddr[addr].link || null };
+                                        block._coinbaseAddr = addr; // use the matched address
                                         return;
                                     }
-                                }
-                                // Store address even if no match
-                                if (coinbase.vout[0] && coinbase.vout[0].scriptpubkey_address) {
-                                    block._coinbaseAddr = coinbase.vout[0].scriptpubkey_address;
                                 }
                             })
                             .catch(function() {});
@@ -1330,10 +1329,9 @@
                 }
             });
 
-            if (enriched > 0) {
-                console.log('[GW] Enriched ' + enriched + ' blocks with pool names');
-                renderBlocks(allBlocks);
-            }
+            // Always re-render — even if no pools matched, we now have coinbase addresses
+            console.log('[GW] Enriched ' + enriched + ' blocks with pool names, ' + needAddr.length + ' with coinbase addresses');
+            renderBlocks(allBlocks);
         }
 
         // ── DOM builders ──
@@ -1351,9 +1349,7 @@
             } else if (pool.name !== 'Unknown') {
                 minerHtml = 'Miner: <span>' + pool.name + '</span>';
             } else if (b._coinbaseAddr) {
-                // Show truncated payout address for unidentified miners
-                var a = b._coinbaseAddr;
-                minerHtml = 'Miner: <span title="' + a + '">' + a.substring(0, 8) + '\u2026' + a.slice(-4) + '</span>';
+                minerHtml = 'Miner: <span class="miner-addr">' + b._coinbaseAddr + '</span>';
             } else {
                 minerHtml = 'Miner: <span>Unknown</span>';
             }
