@@ -538,6 +538,24 @@
         .chain-block:active { transform:scale(0.97); }
         .block-miner { font-size:0.52rem; color:var(--t2); margin-top:0.2rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; opacity:0.8; }
         .block-miner span { color:var(--gold); font-weight:500; }
+        .block-miner .miner-link { color:var(--gold); font-weight:500; text-decoration:none; transition:color .2s; cursor:pointer; }
+        .block-miner .miner-link:hover { color:var(--gold-lt); text-decoration:underline; }
+
+        /* External link warning modal */
+        .ext-modal-overlay { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); z-index:9999; display:none; align-items:center; justify-content:center; opacity:0; transition:opacity .25s; }
+        .ext-modal-overlay.active { display:flex; opacity:1; }
+        .ext-modal { background:linear-gradient(165deg,#161616,#0c0c0c); border:1px solid rgba(247,147,26,0.15); border-radius:16px; padding:2rem; max-width:420px; width:90%; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,0.5), 0 0 40px rgba(247,147,26,0.05); }
+        .ext-modal-icon { font-size:2rem; margin-bottom:0.75rem; }
+        .ext-modal h3 { font-family:'Playfair Display',serif; font-size:1.15rem; color:var(--t1); margin-bottom:0.5rem; }
+        .ext-modal p { font-size:0.82rem; color:var(--t2); line-height:1.6; margin-bottom:0.5rem; }
+        .ext-modal .ext-url { font-family:monospace; font-size:0.75rem; color:var(--gold); background:rgba(247,147,26,0.06); border:1px solid rgba(247,147,26,0.1); border-radius:8px; padding:0.5rem 0.75rem; margin:0.75rem 0; word-break:break-all; display:block; }
+        .ext-modal .ext-warn { font-size:0.7rem; color:var(--t3); margin-bottom:1.25rem; }
+        .ext-modal-btns { display:flex; gap:0.75rem; justify-content:center; }
+        .ext-modal-btns button { padding:0.6rem 1.5rem; border-radius:8px; font-size:0.82rem; font-weight:600; cursor:pointer; border:none; transition:all .2s; }
+        .ext-btn-cancel { background:rgba(255,255,255,0.06); color:var(--t2); border:1px solid rgba(255,255,255,0.08) !important; }
+        .ext-btn-cancel:hover { background:rgba(255,255,255,0.1); color:var(--t1); }
+        .ext-btn-go { background:var(--gold); color:#0a0a0a; }
+        .ext-btn-go:hover { background:var(--gold-lt); box-shadow:0 4px 20px rgba(247,147,26,0.3); }
         .block-fullness { margin-top:0.35rem; }
         .block-fullness-bar { width:100%; height:4px; background:rgba(255,255,255,0.05); border-radius:2px; overflow:hidden; }
         .block-fullness-fill { height:100%; border-radius:2px; transition:width 0.3s; }
@@ -1110,6 +1128,89 @@
             return b + ' B';
         }
 
+        // ── BC2 Mining Pool Directory (hardcoded fallback + live API) ──
+        var bc2Pools = [
+          {name:"Mining-Dutch",addresses:["1J3KUhokRps1joHaqm78wj2PJmEUNs9spR"],link:"https://www.mining-dutch.nl/"},
+          {name:"1Miner",addresses:["13WMNLMU8RpWpuEa7dFxLskYNNSwzQMGFk","18QveDJqWmBdTvZt8A7BEmHjPqSyoiengY"],link:"https://1miner.net/"},
+          {name:"JellyFC",addresses:["16Xi1RaVjN9rcUw99eVJ2QnNY3gNsGBThM","13HwyRiReAtVDxuiFDhCnhT8tiFtjxe2vr","bc1qqjdk55n229hmrqdquh8tz3mvsqgrvvsl2x2d4h"],link:"https://jellyfc.com"},
+          {name:"Letsmine",addresses:["bc1qu5euj3ac7l5f57gtzcfmc74wjg2qzplc6wkz5v"],link:"https://letsmine.it"},
+          {name:"UgPool",addresses:["1Cj67ZRt9hxqFXR64fjR12vbr65Fvi9ond","1Gp7D9CbqndxHJ9Qvg7attUeQYMLB84AMj"],link:"https://ugpool.org"},
+          {name:"Zpool",addresses:["1QHmuZcwLi8aHLLHDXYye1SJmqoDTZppnW"],link:"https://zpool.ca"},
+          {name:"AltcoinsPool",addresses:["1g7xn9JFVQputkPTrEW7G2FDMMo2VpZXt"],link:"https://AltcoinsPool.cc"},
+          {name:"NerdPool",addresses:["1NeMusT3aBLR4qd57TZBiRLz52Ave7oLP1"],link:"https://nerdpool.xyz/#bitcoin-ii"},
+          {name:"Hash-Hut",addresses:["bc1qu0x54shkqzae8986xk8arm5j5qsukrazyuye6j"],link:"https://hash-hut.net"},
+          {name:"NitoPool",addresses:["bc1q744mxn4paq02uv09x20jpe26mqdk29y0886kak"],link:"https://pool.nitopool.fr"},
+          {name:"SmilingPool",addresses:["12c9XHZ5F88B5DHXnti15FM3kML3Bg6dE2"],link:"https://smilingpool.xyz/#bciisolo"},
+          {name:"ZergPool",addresses:["bc1qjgtk456ge3gwvpf7c60f697syqhl8my0nn54pm"],link:"https://zergpool.com"},
+          {name:"NitroPool",addresses:["1LSHpwmHT9x78f59rVqoXPxWQPhXAo3PP8"],link:"https://nitropool.net"},
+          {name:"SoloHash",addresses:["bc1qcm464wax2wtu0vtf4jwqscngx2dv38lzl2dg0r","bc1q4k5j7m8jggscys8dc4dyw09uz28c74du9m9z2u"],link:"https://solohash.co.uk"},
+          {name:"Kryptex",addresses:["16H61tkeGUQsUjmStKFAVeCj52A7SEug3G"],link:"https://pool.kryptex.com/bc2"},
+          {name:"Hash3030",addresses:["1Mftq4JnmERCEwr8Du4ZMgGht8HU5YJaaY"],link:"https://hash3030.xyz/l1/#bc2solo"},
+          {name:"Koinium",addresses:["1L5SdQyU1n78UnnZ842QzbQjExfoKm8qB3"],link:null},
+          {name:"MolePool",addresses:["bc1qpv3makzaslp564wn2m8j7jhx7pjxyds304wl8d"],link:"https://bc2.molepool.com"},
+          {name:"Solo Pool",addresses:["1JjZ568RjapLV7pBaU12AydCk4vyZJSpWQ"],link:"https://bc2.solopool.org"},
+          {name:"OneClickMiner",addresses:["1AaoWQy84Hnakyrmn2BHF3bhXN1dpVHSt2"],link:"https://oneclickminer.com"},
+          {name:"GO-MiningPool",addresses:["1CQs8j9jPnGTippAv97yKpdeni8pQBBy5V"],link:"https://go-poolmining.com"},
+          {name:"Satooshi\u2019s Private Pool",addresses:["13Fcr9v7nFD8CPXxizyBLGJWJgcyaXCkGs"],link:"https://bitcoin-ii.org"}
+        ];
+
+        // Build fast address→pool lookup map
+        var poolByAddr = {};
+        bc2Pools.forEach(function(p) {
+            p.addresses.forEach(function(a) { poolByAddr[a] = p; });
+        });
+
+        // Slug→pool map for matching API data
+        var poolBySlug = {};
+
+        // Fetch live pool directory from BC2.Live's mining API and merge
+        async function fetchPoolDirectory() {
+            try {
+                var data = await apiFetch('/v1/mining/pools');
+                if (data && data.pools) {
+                    data.pools.forEach(function(p) {
+                        poolBySlug[p.slug] = { name: p.name, link: p.link || null, slug: p.slug };
+                        // Merge any new addresses into our lookup
+                        if (p.addresses) {
+                            p.addresses.forEach(function(a) {
+                                if (!poolByAddr[a]) {
+                                    poolByAddr[a] = { name: p.name, link: p.link || null, addresses: p.addresses };
+                                }
+                            });
+                        }
+                    });
+                    console.log('[GW] Loaded ' + data.pools.length + ' pools from API');
+                }
+            } catch(e) { console.log('[GW] Pool directory API unavailable, using hardcoded list'); }
+        }
+
+        function resolvePool(block) {
+            // 1. Mempool API extras.pool (most reliable — server-side attribution)
+            if (block.extras && block.extras.pool) {
+                var ep = block.extras.pool;
+                if (ep.name && ep.name !== 'Unknown') {
+                    // Cross-reference slug for link if available
+                    var slugPool = ep.slug ? poolBySlug[ep.slug] : null;
+                    var link = ep.link || (slugPool && slugPool.link) || null;
+                    return { name: ep.name, link: link };
+                }
+            }
+            // 2. Check coinbase output address against our directory
+            if (block.extras && block.extras.coinbaseAddress) {
+                var match = poolByAddr[block.extras.coinbaseAddress];
+                if (match) return { name: match.name, link: match.link || null };
+            }
+            // 3. Check first vout address
+            if (block.tx && block.tx[0] && block.tx[0].vout) {
+                var v = block.tx[0].vout[0];
+                if (v.scriptpubkey_address && poolByAddr[v.scriptpubkey_address]) {
+                    var m = poolByAddr[v.scriptpubkey_address];
+                    return { name: m.name, link: m.link || null };
+                }
+            }
+            return { name: 'Unknown', link: null };
+        }
+
         // ── DOM builders ──
         function mkBlock(b, latest) {
             var el = document.createElement('div');
@@ -1117,8 +1218,11 @@
             el.setAttribute('data-hash', b.id || '');
             el.setAttribute('data-height', b.height || '');
 
-            // Miner/pool name
-            var miner = (b.extras && b.extras.pool && b.extras.pool.name) ? b.extras.pool.name : 'Unknown';
+            // Resolve miner/pool
+            var pool = resolvePool(b);
+            var minerHtml = pool.link
+                ? 'Miner: <a href="#" data-exturl="' + pool.link + '" class="miner-link" onclick="event.stopPropagation();event.preventDefault();showExtModal(this.dataset.exturl)">' + pool.name + '</a>'
+                : 'Miner: <span>' + pool.name + '</span>';
 
             // Block fullness: weight / 4,000,000 (max block weight)
             var maxWeight = 4000000;
@@ -1129,7 +1233,7 @@
             el.innerHTML =
                 '<div><div class="block-height">#' + b.height.toLocaleString() + '</div>' +
                 '<div class="block-hash">' + fmtH(b.id) + '</div>' +
-                '<div class="block-miner">Miner: <span>' + miner + '</span></div></div>' +
+                '<div class="block-miner">' + minerHtml + '</div></div>' +
                 '<div>' +
                 '<div class="block-meta"><div>' +
                 '<div class="block-txns"><span>' + b.tx_count + '</span> txns</div>' +
@@ -1502,18 +1606,53 @@
             var now = Math.floor(Date.now() / 1000);
             var hex = '0123456789abcdef';
             var fb = [];
-            var simMiners = ['BC2Pool','SoloMiner','HashForge','BlockSmith','AntPool','F2Pool','ViaBTC','Unknown'];
+            var simPoolNames = bc2Pools.map(function(p) { return p.name; });
             for (var i = 0; i < 200; i++) {
                 var h = '0000';
                 for (var j = 0; j < 60; j++) h += hex[Math.floor(Math.random() * 16)];
                 var sz = Math.floor(Math.random() * 900000) + 50000;
-                fb.push({ height: base - i, id: h, tx_count: Math.floor(Math.random() * 200) + 3, size: sz, weight: sz * 4, timestamp: now - i * 600 - Math.floor(Math.random() * 300), extras: { pool: { name: simMiners[Math.floor(Math.random() * simMiners.length)] } } });
+                fb.push({ height: base - i, id: h, tx_count: Math.floor(Math.random() * 200) + 3, size: sz, weight: sz * 4, timestamp: now - i * 600 - Math.floor(Math.random() * 300), extras: { pool: { name: simPoolNames[Math.floor(Math.random() * simPoolNames.length)] } } });
             }
             return fb;
         }
 
+        // ── External link warning modal ──
+        var extPendingUrl = null;
+        var extOverlay = document.getElementById('extModal');
+        var extUrlEl = document.getElementById('extUrl');
+        var extGoBtn = document.getElementById('extGo');
+        var extCancelBtn = document.getElementById('extCancel');
+
+        function showExtModal(url) {
+            extPendingUrl = url;
+            extUrlEl.textContent = url;
+            extOverlay.classList.add('active');
+        }
+
+        function hideExtModal() {
+            extOverlay.classList.remove('active');
+            extPendingUrl = null;
+        }
+
+        extGoBtn.addEventListener('click', function() {
+            if (extPendingUrl) window.open(extPendingUrl, '_blank', 'noopener,noreferrer');
+            hideExtModal();
+        });
+
+        extCancelBtn.addEventListener('click', hideExtModal);
+
+        extOverlay.addEventListener('click', function(e) {
+            if (e.target === extOverlay) hideExtModal();
+        });
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && extOverlay.classList.contains('active')) hideExtModal();
+        });
+
         // ── Boot ──
         (async function() {
+            // Fetch live pool directory first (non-blocking, falls back to hardcoded)
+            await fetchPoolDirectory();
             var ok = await fetchBlocksREST();
             if (ok) {
                 updateFromBlocks();
@@ -1530,6 +1669,8 @@
             }
             // Periodic REST refresh
             setInterval(async function() { var r = await fetchBlocksREST(); if (r) { updateFromBlocks(); fetchStatsREST(); } }, 60000);
+            // Refresh pool directory every 10 minutes
+            setInterval(fetchPoolDirectory, 600000);
             setInterval(fetchStatsREST, 25000);
             // Refresh relative times every 2 min
             setInterval(function() { if (allBlocks.length) renderBlocks(allBlocks); }, 120000);
@@ -1551,5 +1692,20 @@
             }
         });
     </script>
+    <!-- External Link Warning Modal -->
+    <div class="ext-modal-overlay" id="extModal">
+        <div class="ext-modal">
+            <div class="ext-modal-icon">&#9888;&#65039;</div>
+            <h3>Leaving GenesisWallet</h3>
+            <p>You are about to visit a third-party website. GenesisWallet is not affiliated with this site and cannot guarantee its safety.</p>
+            <code class="ext-url" id="extUrl"></code>
+            <p class="ext-warn">Never enter your seed phrase or private keys on any external website. Always verify URLs before interacting.</p>
+            <div class="ext-modal-btns">
+                <button class="ext-btn-cancel" id="extCancel">Go Back</button>
+                <button class="ext-btn-go" id="extGo">Continue</button>
+            </div>
+        </div>
+    </div>
+
 </body>
 </html>
