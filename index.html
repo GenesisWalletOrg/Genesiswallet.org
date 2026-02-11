@@ -914,7 +914,7 @@
                 <div class="chain-mask right"></div>
                 <div class="chain-loading" id="chainLoading">
                     <div class="chain-spinner"></div>
-                    <div class="chain-loading-text">Fetching blocks from BC2.Live&hellip;</div>
+                    <div class="chain-loading-text" id="chainLoadingText">Connecting to BC2 network&hellip;</div>
                 </div>
                 <div class="chain-track" id="chainTrack" style="opacity:0;"></div>
             </div>
@@ -1166,7 +1166,7 @@
         // Fetch live pool directory from BC2.Live's mining API and merge
         async function fetchPoolDirectory() {
             try {
-                var data = await apiFetch('/v1/mining/pools');
+                var data = await apiFetch('/v1/mining/pools', 5000);
                 if (data && data.pools) {
                     data.pools.forEach(function(p) {
                         poolBySlug[p.slug] = { name: p.name, link: p.link || null, slug: p.slug };
@@ -1498,14 +1498,17 @@
         }
 
         // ── REST fetcher with host discovery ──
-        async function apiFetch(path) {
-            // If we already found a working host, try it first
+        async function apiFetch(path, timeout) {
+            timeout = timeout || 8000;
             var order = activeHost ? [activeHost].concat(HOSTS.filter(function(h){return h !== activeHost;})) : HOSTS;
             for (var i = 0; i < order.length; i++) {
                 var urls = [order[i] + '/api' + path, order[i] + '/api/v1' + path];
                 for (var j = 0; j < urls.length; j++) {
                     try {
-                        var r = await fetch(urls[j]);
+                        var controller = new AbortController();
+                        var timer = setTimeout(function() { controller.abort(); }, timeout);
+                        var r = await fetch(urls[j], { signal: controller.signal });
+                        clearTimeout(timer);
                         if (r.ok) {
                             activeHost = order[i];
                             return await r.json();
@@ -1517,22 +1520,26 @@
         }
 
         async function fetchBlocksREST() {
+            var loadingText = document.querySelector('.chain-loading-text');
             try {
+                if (loadingText) loadingText.textContent = 'Connecting to BC2 network\u2026';
                 var blocks = await apiFetch('/blocks');
                 if (!blocks || !blocks.length) return false;
                 allBlocks = blocks.slice();
+                if (loadingText) loadingText.textContent = 'Loading blocks (' + allBlocks.length + ')\u2026';
 
-                // Paginate for ~100
+                // Paginate for ~200 blocks (use shorter timeout for pagination)
                 var attempts = 0;
                 while (allBlocks.length < 200 && attempts < 15) {
                     var lastH = allBlocks[allBlocks.length - 1].height;
-                    var more = await apiFetch('/blocks/' + (lastH - 1));
+                    var more = await apiFetch('/blocks/' + (lastH - 1), 5000);
                     if (!more || !more.length) break;
                     var seen = {};
                     allBlocks.forEach(function(b) { seen[b.height] = true; });
                     var fresh = more.filter(function(b) { return !seen[b.height]; });
                     if (!fresh.length) break;
                     allBlocks = allBlocks.concat(fresh);
+                    if (loadingText) loadingText.textContent = 'Loading blocks (' + allBlocks.length + ')\u2026';
                     attempts++;
                 }
 
@@ -1651,9 +1658,31 @@
 
         // ── Boot ──
         (async function() {
-            // Fetch live pool directory first (non-blocking, falls back to hardcoded)
-            await fetchPoolDirectory();
+            // Fetch live pool directory in background (don't block boot)
+            fetchPoolDirectory();
+
+            // Global safety timeout — if blocks don't load in 20s, show fallback
+            var bootDone = false;
+            var slowTimer = setTimeout(function() {
+                var lt = document.getElementById('chainLoadingText');
+                if (lt && !bootDone) lt.textContent = 'Taking longer than expected\u2026 trying backup host';
+            }, 10000);
+            var fallbackTimer = setTimeout(function() {
+                if (!bootDone && !allBlocks.length) {
+                    console.warn('[GW] Boot timeout, showing simulated blocks');
+                    allBlocks = genFallback();
+                    renderBlocks(allBlocks);
+                    updateFromBlocks();
+                    setMining({ txCount: 42, size: 215040, lowFee: 1, medFee: 2 });
+                    var note = document.getElementById('chainNote');
+                    if (note) note.innerHTML = 'Showing simulated blocks \u2014 <a href="https://bc2.live" target="_blank">view the real chain at BC2.Live</a>';
+                }
+            }, 20000);
+
             var ok = await fetchBlocksREST();
+            bootDone = true;
+            clearTimeout(fallbackTimer);
+            clearTimeout(slowTimer);
             if (ok) {
                 updateFromBlocks();
                 await fetchStatsREST();
