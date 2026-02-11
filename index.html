@@ -880,7 +880,7 @@
             <div class="chain-header reveal">
                 <div>
                     <div class="section-label"><span class="chain-badge"><span class="chain-badge-dot"></span>BC2 Blockchain</span></div>
-                    <h2 class="section-title">Last 200 Blocks</h2>
+                    <h2 class="section-title">Last <span id="blockCountTitle">200</span> Blocks</h2>
                     <p class="section-desc" style="margin-bottom:0;">Recent confirmed blocks from the BC2 network, powered by <a href="https://bc2.live" target="_blank" style="color:var(--gold);text-decoration:none;">BC2.Live</a>.</p>
                 </div>
                 <div class="chain-cta">
@@ -1180,23 +1180,32 @@
 
         // Fetch live pool directory from BC2.Live's mining API and merge
         async function fetchPoolDirectory() {
-            try {
-                var data = await apiFetch('/v1/mining/pools', 5000);
-                if (data && data.pools) {
-                    data.pools.forEach(function(p) {
-                        poolBySlug[p.slug] = { name: p.name, link: p.link || null, slug: p.slug };
-                        // Merge any new addresses into our lookup
-                        if (p.addresses) {
-                            p.addresses.forEach(function(a) {
+            // Try multiple endpoint variants — Mempool API format varies
+            var paths = ['/v1/mining/pools', '/v1/mining/pools/1y', '/v1/mining/pools/all', '/mining/pools'];
+            for (var p = 0; p < paths.length; p++) {
+                try {
+                    var data = await apiFetch(paths[p], 5000);
+                    if (!data) continue;
+                    // Response can be { pools: [...] } or just [...]
+                    var pools = Array.isArray(data) ? data : (data.pools || []);
+                    if (!pools.length) continue;
+                    pools.forEach(function(pool) {
+                        if (!pool.slug && !pool.name) return;
+                        var slug = pool.slug || pool.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+                        poolBySlug[slug] = { name: pool.name, link: pool.link || null, slug: slug };
+                        if (pool.addresses) {
+                            pool.addresses.forEach(function(a) {
                                 if (!poolByAddr[a]) {
-                                    poolByAddr[a] = { name: p.name, link: p.link || null, addresses: p.addresses };
+                                    poolByAddr[a] = { name: pool.name, link: pool.link || null, addresses: pool.addresses };
                                 }
                             });
                         }
                     });
-                    console.log('[GW] Loaded ' + data.pools.length + ' pools from API');
-                }
-            } catch(e) { console.log('[GW] Pool directory API unavailable, using hardcoded list'); }
+                    console.log('[GW] Loaded ' + pools.length + ' pools from API (' + paths[p] + ')');
+                    return; // success, stop trying
+                } catch(e) { /* try next path */ }
+            }
+            console.log('[GW] Pool directory API unavailable, using hardcoded list');
         }
 
         function resolvePool(block) {
@@ -1204,18 +1213,21 @@
             if (block.extras && block.extras.pool) {
                 var ep = block.extras.pool;
                 if (ep.name && ep.name !== 'Unknown') {
-                    // Cross-reference slug for link if available
                     var slugPool = ep.slug ? poolBySlug[ep.slug] : null;
                     var link = ep.link || (slugPool && slugPool.link) || null;
                     return { name: ep.name, link: link };
                 }
             }
-            // 2. Check coinbase output address against our directory
+            // 2. Cached coinbase address (set by enrichBlocks)
+            if (block._poolResolved) {
+                return block._poolResolved;
+            }
+            // 3. Check coinbase output address against our directory
             if (block.extras && block.extras.coinbaseAddress) {
                 var match = poolByAddr[block.extras.coinbaseAddress];
                 if (match) return { name: match.name, link: match.link || null };
             }
-            // 3. Check first vout address
+            // 4. Check first vout address
             if (block.tx && block.tx[0] && block.tx[0].vout) {
                 var v = block.tx[0].vout[0];
                 if (v.scriptpubkey_address && poolByAddr[v.scriptpubkey_address]) {
@@ -1224,6 +1236,104 @@
                 }
             }
             return { name: 'Unknown', link: null };
+        }
+
+        // ── Background pool enrichment ──
+        // Strategy: fetch pool list, then each pool's recent blocks → build height→pool map
+        async function enrichBlocks() {
+            if (!allBlocks.length || !activeHost) return;
+            var enriched = 0;
+            var heightMap = {}; // height → { name, link }
+
+            // Method 1: Mining pools API — get pool slugs, then their blocks
+            try {
+                var poolsData = null;
+                var poolPaths = ['/v1/mining/pools', '/v1/mining/pools/1y', '/v1/mining/pools/all'];
+                for (var pp = 0; pp < poolPaths.length; pp++) {
+                    poolsData = await apiFetch(poolPaths[pp], 6000);
+                    if (poolsData) break;
+                }
+                var poolsList = poolsData ? (Array.isArray(poolsData) ? poolsData : (poolsData.pools || [])) : [];
+                if (poolsList.length > 0) {
+                    var slugFetches = poolsList.slice(0, 30).map(function(pool) {
+                        var slug = pool.slug || pool.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+                        var pName = pool.name;
+                        // Find link from our directory or from API
+                        var pLink = null;
+                        for (var k = 0; k < bc2Pools.length; k++) {
+                            if (bc2Pools[k].name.toLowerCase() === pName.toLowerCase()) {
+                                pLink = bc2Pools[k].link; break;
+                            }
+                        }
+                        var url = activeHost + '/api/v1/mining/pool/' + slug + '/blocks';
+                        var controller = new AbortController();
+                        var timer = setTimeout(function() { controller.abort(); }, 5000);
+                        return fetch(url, { signal: controller.signal })
+                            .then(function(r) { clearTimeout(timer); return r.ok ? r.json() : null; })
+                            .then(function(blocks) {
+                                if (blocks && Array.isArray(blocks)) {
+                                    blocks.forEach(function(b) {
+                                        if (b.height) heightMap[b.height] = { name: pName, link: pLink };
+                                    });
+                                }
+                            })
+                            .catch(function() {});
+                    });
+                    await Promise.all(slugFetches);
+                    console.log('[GW] Pool blocks API: mapped ' + Object.keys(heightMap).length + ' blocks');
+                }
+            } catch(e) { console.log('[GW] Mining pools API unavailable'); }
+
+            // Method 2: For any blocks still unmapped, try fetching coinbase TX
+            var unmapped = allBlocks.filter(function(b) {
+                return !heightMap[b.height] && !(b._poolResolved && b._poolResolved.name !== 'Unknown');
+            });
+
+            // Only fetch coinbase for first 50 unmapped to avoid hammering API
+            var coinbaseBatch = unmapped.slice(0, 50);
+            if (coinbaseBatch.length > 0) {
+                for (var i = 0; i < coinbaseBatch.length; i += 5) {
+                    var batch = coinbaseBatch.slice(i, i + 5);
+                    var promises = batch.map(function(block) {
+                        var url = activeHost + '/api/block/' + block.id + '/txs/0';
+                        var controller = new AbortController();
+                        var timer = setTimeout(function() { controller.abort(); }, 4000);
+                        return fetch(url, { signal: controller.signal })
+                            .then(function(r) { clearTimeout(timer); return r.ok ? r.json() : null; })
+                            .then(function(txs) {
+                                if (!txs || !txs.length) return;
+                                var coinbase = txs[0];
+                                if (!coinbase || !coinbase.vout) return;
+                                for (var v = 0; v < coinbase.vout.length; v++) {
+                                    var addr = coinbase.vout[v].scriptpubkey_address;
+                                    if (addr && poolByAddr[addr]) {
+                                        heightMap[block.height] = { name: poolByAddr[addr].name, link: poolByAddr[addr].link || null };
+                                        return;
+                                    }
+                                }
+                                // Store address even if no match
+                                if (coinbase.vout[0] && coinbase.vout[0].scriptpubkey_address) {
+                                    block._coinbaseAddr = coinbase.vout[0].scriptpubkey_address;
+                                }
+                            })
+                            .catch(function() {});
+                    });
+                    await Promise.all(promises);
+                }
+            }
+
+            // Apply heightMap to allBlocks
+            allBlocks.forEach(function(b) {
+                if (heightMap[b.height]) {
+                    b._poolResolved = heightMap[b.height];
+                    enriched++;
+                }
+            });
+
+            if (enriched > 0) {
+                console.log('[GW] Enriched ' + enriched + ' blocks with pool names');
+                renderBlocks(allBlocks);
+            }
         }
 
         // ── DOM builders ──
@@ -1235,14 +1345,24 @@
 
             // Resolve miner/pool
             var pool = resolvePool(b);
-            var minerHtml = pool.link
-                ? 'Miner: <a href="#" data-exturl="' + pool.link + '" class="miner-link" onclick="event.stopPropagation();event.preventDefault();showExtModal(this.dataset.exturl)">' + pool.name + '</a>'
-                : 'Miner: <span>' + pool.name + '</span>';
+            var minerHtml;
+            if (pool.link) {
+                minerHtml = 'Miner: <a href="#" data-exturl="' + pool.link + '" class="miner-link" onclick="event.stopPropagation();event.preventDefault();showExtModal(this.dataset.exturl)">' + pool.name + '</a>';
+            } else if (pool.name !== 'Unknown') {
+                minerHtml = 'Miner: <span>' + pool.name + '</span>';
+            } else if (b._coinbaseAddr) {
+                // Show truncated payout address for unidentified miners
+                var a = b._coinbaseAddr;
+                minerHtml = 'Miner: <span title="' + a + '">' + a.substring(0, 8) + '\u2026' + a.slice(-4) + '</span>';
+            } else {
+                minerHtml = 'Miner: <span>Unknown</span>';
+            }
 
-            // Block fullness: weight / 4,000,000 (max block weight)
+            // Block fullness: use actual weight from API for percentage, actual size for display
             var maxWeight = 4000000;
-            var weight = b.weight || (b.size ? b.size * 4 : 0);
-            var pct = Math.min(100, Math.round((weight / maxWeight) * 100));
+            var weight = b.weight || 0;
+            var size = b.size || 0;
+            var pct = weight > 0 ? Math.min(100, Math.round((weight / maxWeight) * 100)) : (size > 0 ? Math.min(100, Math.round((size / 1000000) * 100)) : 0);
             var fillClass = pct < 50 ? 'full-low' : (pct < 85 ? 'full-med' : 'full-high');
 
             el.innerHTML =
@@ -1252,12 +1372,12 @@
                 '<div>' +
                 '<div class="block-meta"><div>' +
                 '<div class="block-txns"><span>' + b.tx_count + '</span> txns</div>' +
-                '<div class="block-size">' + fmtS(b.size) + '</div></div>' +
+                '<div class="block-size">' + fmtS(size) + '</div></div>' +
                 '<div class="block-time">' + fmtT(b.timestamp) + '</div>' +
                 '</div>' +
                 '<div class="block-fullness">' +
                 '<div class="block-fullness-bar"><div class="block-fullness-fill ' + fillClass + '" style="width:' + pct + '%"></div></div>' +
-                '<div class="block-fullness-label"><span>' + pct + '% full</span><span>' + fmtS(weight) + '</span></div>' +
+                '<div class="block-fullness-label"><span>' + pct + '% full</span><span>' + fmtS(size) + '</span></div>' +
                 '</div>' +
                 '</div><div class="block-flash"></div>' +
                 '<div class="block-view-hint">View block &rarr;</div>' +
@@ -1543,9 +1663,9 @@
                 allBlocks = blocks.slice();
                 if (loadingText) loadingText.textContent = 'Loading blocks (' + allBlocks.length + ')\u2026';
 
-                // Paginate for ~200 blocks (use shorter timeout for pagination)
+                // Paginate for ~200 blocks (bc2.live returns ~10/page, need ~20 pages)
                 var attempts = 0;
-                while (allBlocks.length < 200 && attempts < 15) {
+                while (allBlocks.length < 200 && attempts < 25) {
                     var lastH = allBlocks[allBlocks.length - 1].height;
                     var more = await apiFetch('/blocks/' + (lastH - 1), 5000);
                     if (!more || !more.length) break;
@@ -1561,6 +1681,8 @@
                 allBlocks.sort(function(a, b) { return b.height - a.height; });
                 var ct = document.getElementById('blockCountLabel');
                 if (ct) ct.textContent = allBlocks.length;
+                var ct2 = document.getElementById('blockCountTitle');
+                if (ct2) ct2.textContent = allBlocks.length;
                 renderBlocks(allBlocks);
                 return true;
             } catch (e) {
@@ -1609,6 +1731,8 @@
                             if (allBlocks.length > 220) allBlocks = allBlocks.slice(0, 200);
                             var ct = document.getElementById('blockCountLabel');
                             if (ct) ct.textContent = allBlocks.length;
+                            var ct2 = document.getElementById('blockCountTitle');
+                            if (ct2) ct2.textContent = allBlocks.length;
                             renderBlocks(allBlocks);
                             updateFromBlocks();
                         }
@@ -1702,6 +1826,8 @@
                 updateFromBlocks();
                 await fetchStatsREST();
                 connectWS();
+                // Background: fetch coinbase TXs to identify mining pools
+                enrichBlocks();
             } else {
                 // All REST failed, use simulated
                 allBlocks = genFallback();
@@ -1712,7 +1838,7 @@
                 if (note) note.innerHTML = 'Showing simulated blocks \u2014 <a href="https://bc2.live" target="_blank">view the real chain at BC2.Live</a>';
             }
             // Periodic REST refresh
-            setInterval(async function() { var r = await fetchBlocksREST(); if (r) { updateFromBlocks(); fetchStatsREST(); } }, 60000);
+            setInterval(async function() { var r = await fetchBlocksREST(); if (r) { updateFromBlocks(); fetchStatsREST(); enrichBlocks(); } }, 60000);
             // Refresh pool directory every 10 minutes
             setInterval(fetchPoolDirectory, 600000);
             setInterval(fetchStatsREST, 25000);
