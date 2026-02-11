@@ -1,0 +1,1293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GenesisWallet — BC2 BitcoinII Wallet</title>
+    <meta name="description" content="GenesisWallet is an open-source mobile wallet for BC2 (BitcoinII). A community-driven fork of BlueWallet, built on Satoshi's original code.">
+    <meta property="og:title" content="GenesisWallet — BC2 BitcoinII Wallet">
+    <meta property="og:description" content="An open-source mobile wallet for BC2. Community-driven. Secure. Built on Satoshi's original code.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://genesiswallet.org">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --gold: #F7931A;
+            --gold-sec: #D4790E;
+            --gold-lt: #FFB347;
+            --gold-pale: #FFF3E0;
+            --gold-deep: #B8860B;
+            --bg: #050505;
+            --bg2: #0A0A0A;
+            --card: #0E0E0E;
+            --border: #1A1A1A;
+            --brown: #3D2914;
+            --t1: #F5F0EB;
+            --t2: #9A9188;
+            --t3: #5C554E;
+        }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg);
+            color: var(--t1);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* ════ Grain ════ */
+        body::after {
+            content: ''; position: fixed; inset: -50%; width: 200%; height: 200%;
+            pointer-events: none; z-index: 9999; opacity: 0.015;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+            animation: grain 0.4s steps(1) infinite;
+        }
+        @keyframes grain {
+            0% { transform: translate(0,0); } 25% { transform: translate(-2%,3%); }
+            50% { transform: translate(1%,-2%); } 75% { transform: translate(3%,1%); }
+        }
+
+        /* ════ Global animated background mesh ════ */
+        .bg-mesh {
+            position: fixed; inset: 0; z-index: -1; pointer-events: none;
+            background:
+                radial-gradient(ellipse 600px 600px at 20% 20%, rgba(247,147,26,0.04), transparent),
+                radial-gradient(ellipse 500px 500px at 80% 80%, rgba(212,121,14,0.03), transparent),
+                radial-gradient(ellipse 400px 400px at 50% 50%, rgba(255,179,71,0.02), transparent);
+            animation: meshDrift 20s ease-in-out infinite;
+        }
+        @keyframes meshDrift {
+            0%,100% { background-position: 0% 0%, 100% 100%, 50% 50%; }
+            33% { background-position: 30% 10%, 70% 90%, 40% 60%; }
+            66% { background-position: 10% 30%, 90% 70%, 60% 40%; }
+        }
+
+        /* ════ Nav ════ */
+        nav {
+            position: fixed; top: 0; left: 0; width: 100%; z-index: 1000;
+            padding: 1.25rem 2rem;
+            transition: all 0.4s cubic-bezier(0.16,1,0.3,1);
+        }
+        nav.scrolled {
+            background: rgba(5,5,5,0.82);
+            backdrop-filter: blur(24px) saturate(1.4);
+            border-bottom: 1px solid rgba(247,147,26,0.06);
+            padding: 0.75rem 2rem;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+        }
+        .nav-inner { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; }
+        .nav-logo { display: flex; align-items: center; gap: 0.75rem; text-decoration: none; color: var(--t1); }
+        .nav-logo img { width: 36px; height: 36px; border-radius: 8px; filter: drop-shadow(0 0 10px rgba(247,147,26,0.35)); transition: filter 0.3s; }
+        .nav-logo:hover img { filter: drop-shadow(0 0 20px rgba(247,147,26,0.6)); }
+        .nav-logo span { font-family: 'Playfair Display', serif; font-size: 1.25rem; font-weight: 600; }
+        .nav-links { display: flex; align-items: center; gap: 2rem; list-style: none; }
+        .nav-links a { text-decoration: none; color: var(--t2); font-size: 0.9rem; transition: all 0.3s; position: relative; }
+        .nav-links a:not(.btn-nav)::after { content: ''; position: absolute; bottom: -4px; left: 0; width: 0; height: 1px; background: var(--gold); box-shadow: 0 0 8px rgba(247,147,26,0.5); transition: width 0.3s; }
+        .nav-links a:not(.btn-nav):hover::after { width: 100%; }
+        .nav-links a:hover { color: var(--gold); }
+        .nav-links .btn-nav { background: var(--gold); color: var(--bg); padding: 0.55rem 1.25rem; border-radius: 8px; font-weight: 600; font-size: 0.85rem; box-shadow: 0 2px 16px rgba(247,147,26,0.25); transition: all 0.3s; }
+        .nav-links .btn-nav:hover { background: var(--gold-lt); transform: translateY(-1px); box-shadow: 0 6px 24px rgba(247,147,26,0.4); }
+        .mobile-toggle { display: none; background: none; border: none; color: var(--t1); font-size: 1.5rem; cursor: pointer; }
+
+        /* ════ Hero ════ */
+        .hero {
+            min-height: 100vh; display: flex; align-items: center;
+            position: relative; overflow: hidden; padding: 8rem 2rem 6rem;
+        }
+
+        /* Animated aurora blobs */
+        .aurora { position: absolute; pointer-events: none; filter: blur(60px); border-radius: 50%; }
+        .aurora-1 {
+            top: -15%; right: -5%; width: 900px; height: 900px;
+            background: radial-gradient(circle, rgba(247,147,26,0.15) 0%, rgba(247,147,26,0.03) 40%, transparent 65%);
+            animation: aurora1 14s ease-in-out infinite;
+        }
+        .aurora-2 {
+            bottom: -20%; left: -8%; width: 700px; height: 700px;
+            background: radial-gradient(circle, rgba(212,121,14,0.1) 0%, transparent 60%);
+            animation: aurora2 18s ease-in-out infinite;
+        }
+        .aurora-3 {
+            top: 25%; left: 35%; width: 500px; height: 500px;
+            background: radial-gradient(circle, rgba(255,179,71,0.07) 0%, transparent 55%);
+            animation: aurora3 11s ease-in-out infinite;
+        }
+        .aurora-4 {
+            top: 60%; right: 20%; width: 350px; height: 350px;
+            background: radial-gradient(circle, rgba(247,147,26,0.06) 0%, transparent 60%);
+            animation: aurora4 9s ease-in-out infinite;
+        }
+        @keyframes aurora1 {
+            0%,100% { transform: translate(0,0) scale(1); opacity: 1; }
+            25% { transform: translate(-50px,40px) scale(1.2); opacity: 0.7; }
+            50% { transform: translate(30px,-20px) scale(0.9); opacity: 1; }
+            75% { transform: translate(-20px,-30px) scale(1.1); opacity: 0.85; }
+        }
+        @keyframes aurora2 {
+            0%,100% { transform: translate(0,0) scale(1); }
+            50% { transform: translate(60px,-40px) scale(1.25); }
+        }
+        @keyframes aurora3 {
+            0%,100% { transform: translate(0,0) scale(1); opacity: 0.8; }
+            40% { transform: translate(-40px,50px) scale(1.4); opacity: 1; }
+            70% { transform: translate(30px,-20px) scale(0.85); opacity: 0.6; }
+        }
+        @keyframes aurora4 {
+            0%,100% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.5); opacity: 0.9; }
+        }
+
+        /* Grid with shimmer */
+        .hero-grid {
+            position: absolute; inset: 0;
+            background-image: linear-gradient(rgba(247,147,26,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(247,147,26,0.02) 1px, transparent 1px);
+            background-size: 80px 80px;
+            mask-image: radial-gradient(ellipse at 65% 40%, black 15%, transparent 65%);
+            animation: gridPulse 6s ease-in-out infinite;
+        }
+        @keyframes gridPulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+        /* Scanning light beam */
+        .scan-beam {
+            position: absolute; top: 0; left: -300px;
+            width: 300px; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(247,147,26,0.015), rgba(255,179,71,0.04), rgba(247,147,26,0.015), transparent);
+            transform: skewX(-12deg);
+            animation: scanBeam 10s ease-in-out infinite;
+            pointer-events: none;
+        }
+        @keyframes scanBeam { 0%,100% { left: -300px; opacity: 1; } 50% { left: calc(100% + 300px); opacity: 0.6; } }
+
+        /* Vertical light rays */
+        .light-rays {
+            position: absolute; top: -200px; left: 50%; transform: translateX(-50%);
+            width: 100%; height: 600px; pointer-events: none;
+            background:
+                conic-gradient(from 180deg at 50% 0%, transparent 40%, rgba(247,147,26,0.02) 45%, transparent 50%, transparent 90%, rgba(255,179,71,0.015) 95%, transparent 100%);
+            animation: raysRotate 30s linear infinite;
+            opacity: 0.7;
+        }
+        @keyframes raysRotate { from { transform: translateX(-50%) rotate(0deg); } to { transform: translateX(-50%) rotate(360deg); } }
+
+        /* Particles */
+        .particles { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+        .particle {
+            position: absolute; border-radius: 50%; opacity: 0;
+            animation: particleRise linear infinite;
+        }
+        .particle-gold { background: var(--gold); box-shadow: 0 0 6px rgba(247,147,26,0.6); }
+        .particle-white { background: rgba(255,255,255,0.8); box-shadow: 0 0 4px rgba(255,255,255,0.4); }
+        @keyframes particleRise {
+            0% { opacity: 0; transform: translateY(100vh) translateX(0) scale(0); }
+            10% { opacity: 0.7; }
+            50% { transform: translateY(50vh) translateX(var(--drift)) scale(1); }
+            90% { opacity: 0.7; }
+            100% { opacity: 0; transform: translateY(-10vh) translateX(calc(var(--drift) * -1)) scale(0.5); }
+        }
+
+        .hero-inner { max-width: 1200px; margin: 0 auto; width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center; position: relative; z-index: 1; }
+        .hero-content { max-width: 560px; }
+
+        .hero-badge {
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            background: rgba(247,147,26,0.06); border: 1px solid rgba(247,147,26,0.15);
+            border-radius: 100px; padding: 0.4rem 1rem; font-size: 0.8rem;
+            color: var(--gold); margin-bottom: 2rem; letter-spacing: 0.05em;
+            text-transform: uppercase; font-weight: 500;
+            animation: fadeInUp 0.8s ease both;
+            position: relative; overflow: hidden;
+        }
+        .hero-badge::before {
+            content: ''; position: absolute; inset: -1px;
+            background: linear-gradient(90deg, transparent, rgba(247,147,26,0.3), transparent);
+            border-radius: inherit; z-index: -1;
+            animation: borderGlow 3s ease-in-out infinite;
+        }
+        @keyframes borderGlow { 0%,100% { opacity: 0; transform: translateX(-100%); } 50% { opacity: 1; transform: translateX(100%); } }
+        .hero-badge .dot {
+            width: 6px; height: 6px; background: var(--gold); border-radius: 50%;
+            box-shadow: 0 0 10px rgba(247,147,26,0.7), 0 0 20px rgba(247,147,26,0.3);
+            animation: dotPulse 2s ease-in-out infinite;
+        }
+        @keyframes dotPulse { 0%,100% { box-shadow: 0 0 10px rgba(247,147,26,0.7), 0 0 20px rgba(247,147,26,0.3); } 50% { box-shadow: 0 0 4px rgba(247,147,26,0.3), 0 0 8px rgba(247,147,26,0.1); } }
+
+        .hero h1 {
+            font-family: 'Playfair Display', serif; font-size: clamp(2.8rem,5vw,4.2rem);
+            font-weight: 700; line-height: 1.1; letter-spacing: -0.02em;
+            margin-bottom: 1.5rem; animation: fadeInUp 0.8s ease 0.1s both;
+        }
+        .hero h1 .gold {
+            background: linear-gradient(135deg, var(--gold-lt), var(--gold), var(--gold-sec), var(--gold-lt));
+            background-size: 300% 300%;
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+            animation: goldFlow 5s ease-in-out infinite;
+            filter: drop-shadow(0 0 30px rgba(247,147,26,0.2));
+        }
+        @keyframes goldFlow { 0%,100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+
+        .hero-desc { font-size: 1.1rem; color: var(--t2); line-height: 1.7; margin-bottom: 2.5rem; max-width: 460px; animation: fadeInUp 0.8s ease 0.2s both; }
+        .hero-actions { display: flex; gap: 1rem; flex-wrap: wrap; animation: fadeInUp 0.8s ease 0.3s both; }
+
+        /* ════ Buttons ════ */
+        .btn {
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            padding: 0.85rem 1.75rem; border-radius: 10px; font-size: 0.95rem;
+            font-weight: 600; text-decoration: none; cursor: pointer; border: none;
+            font-family: 'DM Sans', sans-serif; position: relative; overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.16,1,0.3,1);
+        }
+        .btn svg { width: 18px; height: 18px; }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--gold), var(--gold-sec));
+            color: var(--bg);
+            box-shadow: 0 4px 24px rgba(247,147,26,0.3), 0 0 0 0 rgba(247,147,26,0);
+        }
+        .btn-primary::before {
+            content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
+            transition: left 0.6s ease;
+        }
+        .btn-primary:hover::before { left: 100%; }
+        .btn-primary:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 16px 48px rgba(247,147,26,0.45), 0 0 80px rgba(247,147,26,0.12);
+        }
+
+        .btn-secondary {
+            background: rgba(255,255,255,0.03); color: var(--t1);
+            border: 1px solid var(--border); backdrop-filter: blur(10px);
+        }
+        .btn-secondary::before {
+            content: ''; position: absolute; inset: -1px; border-radius: inherit;
+            background: linear-gradient(135deg, transparent, rgba(247,147,26,0.2), transparent);
+            opacity: 0; transition: opacity 0.4s;
+        }
+        .btn-secondary:hover::before { opacity: 1; }
+        .btn-secondary:hover {
+            border-color: rgba(247,147,26,0.4); color: var(--gold);
+            transform: translateY(-3px);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.4), 0 0 40px rgba(247,147,26,0.06);
+            background: rgba(247,147,26,0.04);
+        }
+
+        /* ════ Phone mockup ════ */
+        .hero-visual { display: flex; justify-content: center; align-items: center; position: relative; animation: fadeInUp 1s ease 0.4s both; }
+
+        .phone-mockup {
+            width: 280px; height: 560px;
+            background: linear-gradient(160deg, #1A1A1A, #0D0D0D);
+            border-radius: 36px; border: 2px solid #2A2A2A; padding: 12px;
+            position: relative;
+            box-shadow:
+                0 50px 100px rgba(0,0,0,0.6),
+                0 0 0 1px rgba(255,255,255,0.05),
+                inset 0 1px 0 rgba(255,255,255,0.05),
+                0 0 150px rgba(247,147,26,0.08),
+                0 0 60px rgba(247,147,26,0.04);
+            transform: perspective(1000px) rotateY(-5deg) rotateX(3deg);
+            animation: phoneFloat 6s ease-in-out infinite;
+        }
+        @keyframes phoneFloat {
+            0%,100% { transform: perspective(1000px) rotateY(-5deg) rotateX(3deg) translateY(0); box-shadow: 0 50px 100px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.05), inset 0 1px 0 rgba(255,255,255,0.05), 0 0 150px rgba(247,147,26,0.08), 0 0 60px rgba(247,147,26,0.04); }
+            50% { transform: perspective(1000px) rotateY(-5deg) rotateX(3deg) translateY(-14px); box-shadow: 0 70px 120px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05), inset 0 1px 0 rgba(255,255,255,0.05), 0 0 200px rgba(247,147,26,0.1), 0 0 80px rgba(247,147,26,0.06); }
+        }
+
+        /* Phone reflection */
+        .phone-mockup::after {
+            content: ''; position: absolute; top: 12px; left: 12px; right: 12px;
+            height: 50%; border-radius: 24px 24px 0 0;
+            background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, transparent 100%);
+            pointer-events: none;
+        }
+
+        .phone-screen { width: 100%; height: 100%; background: linear-gradient(180deg, #0F0F0F, #1A1408); border-radius: 24px; overflow: hidden; position: relative; }
+        .phone-notch { width: 120px; height: 28px; background: #000; border-radius: 0 0 16px 16px; margin: 0 auto; position: relative; z-index: 2; }
+        .phone-status { display: flex; justify-content: space-between; padding: 0.5rem 1.25rem 0; font-size: 0.65rem; color: var(--t3); }
+        .wallet-ui { padding: 1.5rem 1rem; }
+        .wallet-greeting { font-size: 0.7rem; color: var(--t3); margin-bottom: 0.25rem; }
+        .wallet-label { font-family: 'Playfair Display', serif; font-size: 1rem; color: var(--t1); margin-bottom: 1.5rem; }
+
+        .wallet-card {
+            background: linear-gradient(135deg, var(--gold), var(--gold-sec));
+            border-radius: 16px; padding: 1.25rem; margin-bottom: 1rem; position: relative; overflow: hidden;
+        }
+        .wallet-card::before {
+            content: ''; position: absolute; top: -60%; right: -40%;
+            width: 180px; height: 180px; background: rgba(255,255,255,0.12);
+            border-radius: 50%; animation: cardOrb 8s linear infinite;
+        }
+        .wallet-card::after {
+            content: ''; position: absolute; top: 0; left: -100%;
+            width: 200%; height: 100%;
+            background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.06) 25%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.06) 75%, transparent 100%);
+            animation: cardSweep 5s ease-in-out infinite;
+        }
+        @keyframes cardOrb { from { transform: rotate(0deg) translateX(30px); } to { transform: rotate(360deg) translateX(30px); } }
+        @keyframes cardSweep { 0%,100% { transform: translateX(-50%); } 50% { transform: translateX(0%); } }
+
+        .wallet-card-label { font-size: 0.65rem; color: rgba(0,0,0,0.5); text-transform: uppercase; letter-spacing: 0.1em; font-weight: 600; position: relative; z-index: 1; }
+        .wallet-card-balance { font-size: 1.6rem; font-weight: 700; color: var(--bg); margin: 0.25rem 0; position: relative; z-index: 1; }
+        .wallet-card-sub { font-size: 0.7rem; color: rgba(0,0,0,0.4); position: relative; z-index: 1; }
+
+        .wallet-txn { display: flex; align-items: center; justify-content: space-between; padding: 0.7rem 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+        .wallet-txn-left { display: flex; align-items: center; gap: 0.6rem; }
+        .wallet-txn-icon { width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; }
+        .txn-in { background: rgba(247,147,26,0.1); color: var(--gold); }
+        .txn-out { background: rgba(255,255,255,0.05); color: var(--t3); }
+        .wallet-txn-name { font-size: 0.75rem; color: var(--t1); font-weight: 500; }
+        .wallet-txn-date { font-size: 0.6rem; color: var(--t3); }
+        .wallet-txn-amount { font-size: 0.75rem; font-weight: 600; }
+        .txn-positive { color: var(--gold); }
+        .txn-negative { color: var(--t2); }
+
+        /* Orbits */
+        .orbit { position: absolute; border-radius: 50%; top: 50%; left: 50%; transform: translate(-50%,-50%); }
+        .orbit-1 { width: 380px; height: 380px; border: 1px solid rgba(247,147,26,0.05); animation: orbitSpin 30s linear infinite; }
+        .orbit-2 { width: 510px; height: 510px; border: 1px dashed rgba(247,147,26,0.03); animation: orbitSpin 50s linear infinite reverse; }
+        .orbit-3 { width: 640px; height: 640px; border: 1px solid rgba(247,147,26,0.025); animation: orbitSpin 70s linear infinite; }
+
+        .orbit-dot {
+            position: absolute; border-radius: 50%; background: var(--gold);
+        }
+        .orbit-dot-1 { width: 6px; height: 6px; top: 0; left: 50%; transform: translateX(-50%); box-shadow: 0 0 14px rgba(247,147,26,0.6), 0 0 30px rgba(247,147,26,0.2); }
+        .orbit-dot-2 { width: 4px; height: 4px; bottom: 10%; right: 5%; box-shadow: 0 0 10px rgba(247,147,26,0.5); opacity: 0.8; }
+        .orbit-dot-3 { width: 3px; height: 3px; top: 25%; left: 2%; box-shadow: 0 0 8px rgba(247,147,26,0.4); opacity: 0.5; }
+        .orbit-dot-4 { width: 5px; height: 5px; bottom: 30%; left: 0; box-shadow: 0 0 12px rgba(255,179,71,0.5), 0 0 24px rgba(255,179,71,0.2); animation: dotFlicker 3s ease-in-out infinite; }
+        @keyframes dotFlicker { 0%,100% { opacity: 0.8; } 50% { opacity: 0.2; } }
+        @keyframes orbitSpin { from { transform: translate(-50%,-50%) rotate(0deg); } to { transform: translate(-50%,-50%) rotate(360deg); } }
+
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* ════ Glow Dividers ════ */
+        .glow-div {
+            width: 100%; height: 1px; position: relative;
+            background: linear-gradient(90deg, transparent 5%, rgba(247,147,26,0.08) 20%, var(--gold) 50%, rgba(247,147,26,0.08) 80%, transparent 95%);
+        }
+        .glow-div::before {
+            content: ''; position: absolute; top: -15px; left: 0; width: 100%; height: 31px;
+            background: linear-gradient(90deg, transparent 10%, rgba(247,147,26,0.03) 30%, rgba(247,147,26,0.08) 50%, rgba(247,147,26,0.03) 70%, transparent 90%);
+            filter: blur(8px);
+        }
+        .glow-div::after {
+            content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+            width: 200px; height: 3px;
+            background: radial-gradient(ellipse, rgba(247,147,26,0.4), transparent 70%);
+            filter: blur(2px);
+            animation: divPulse 4s ease-in-out infinite;
+        }
+        @keyframes divPulse { 0%,100% { width: 200px; opacity: 1; } 50% { width: 400px; opacity: 0.5; } }
+
+        /* ════ Section base ════ */
+        section { padding: 6rem 2rem; position: relative; }
+        .section-inner { max-width: 1200px; margin: 0 auto; }
+        .section-label {
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            font-size: 0.75rem; color: var(--gold); text-transform: uppercase;
+            letter-spacing: 0.12em; font-weight: 600; margin-bottom: 1rem;
+        }
+        .section-label::before {
+            content: ''; width: 24px; height: 1px;
+            background: linear-gradient(90deg, var(--gold), transparent);
+            box-shadow: 0 0 10px rgba(247,147,26,0.4);
+        }
+        .section-title {
+            font-family: 'Playfair Display', serif; font-size: clamp(2rem,3.5vw,2.8rem);
+            font-weight: 600; line-height: 1.2; margin-bottom: 1rem;
+        }
+        .section-desc { font-size: 1.05rem; color: var(--t2); max-width: 540px; line-height: 1.7; margin-bottom: 3rem; }
+
+        /* ════ About ════ */
+        #about { background: var(--bg2); overflow: hidden; }
+        .about-glow {
+            position: absolute; top: -150px; right: -100px; width: 500px; height: 500px;
+            background: radial-gradient(circle, rgba(247,147,26,0.05) 0%, transparent 60%);
+            filter: blur(60px); pointer-events: none; animation: aurora3 15s ease-in-out infinite;
+        }
+
+        .origin-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center; }
+        .origin-text p { color: var(--t2); line-height: 1.8; margin-bottom: 1.25rem; }
+        .origin-text strong { color: var(--gold); font-weight: 600; }
+        .origin-visual { display: flex; flex-direction: column; gap: 1.5rem; }
+
+        .origin-card {
+            background: rgba(14,14,14,0.6); border: 1px solid var(--border);
+            border-radius: 16px; padding: 1.75rem;
+            transition: all 0.4s cubic-bezier(0.16,1,0.3,1);
+            backdrop-filter: blur(10px); position: relative; overflow: hidden;
+        }
+        .origin-card::before {
+            content: ''; position: absolute; inset: 0;
+            background: radial-gradient(ellipse at top left, rgba(247,147,26,0.04), transparent 60%);
+            opacity: 0; transition: opacity 0.4s;
+        }
+        .origin-card::after {
+            content: ''; position: absolute; top: 0; left: 0; width: 60%; height: 1px;
+            background: linear-gradient(90deg, var(--gold), transparent);
+            opacity: 0; transition: all 0.5s; transform: scaleX(0); transform-origin: left;
+        }
+        .origin-card:hover { border-color: rgba(247,147,26,0.2); transform: translateY(-4px); box-shadow: 0 24px 64px rgba(0,0,0,0.35), 0 0 50px rgba(247,147,26,0.04); }
+        .origin-card:hover::before { opacity: 1; }
+        .origin-card:hover::after { opacity: 0.6; transform: scaleX(1); }
+
+        .origin-card-icon {
+            width: 44px; height: 44px;
+            background: rgba(247,147,26,0.06); border: 1px solid rgba(247,147,26,0.1);
+            border-radius: 12px; display: flex; align-items: center; justify-content: center;
+            margin-bottom: 1rem; color: var(--gold); z-index: 1; position: relative;
+            transition: all 0.4s;
+        }
+        .origin-card:hover .origin-card-icon { box-shadow: 0 0 20px rgba(247,147,26,0.2); border-color: rgba(247,147,26,0.3); }
+        .origin-card h4 { font-size: 1.05rem; font-weight: 600; margin-bottom: 0.5rem; position: relative; z-index: 1; }
+        .origin-card p { font-size: 0.9rem; color: var(--t2); line-height: 1.6; position: relative; z-index: 1; }
+
+        /* ════ Features ════ */
+        #features { overflow: hidden; }
+        .features-glow {
+            position: absolute; bottom: -150px; left: 50%; transform: translateX(-50%);
+            width: 700px; height: 350px;
+            background: radial-gradient(ellipse, rgba(247,147,26,0.04) 0%, transparent 65%);
+            filter: blur(50px); pointer-events: none;
+        }
+        .features-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 1.5rem; }
+
+        .feature-card {
+            background: rgba(14,14,14,0.4); border: 1px solid var(--border);
+            border-radius: 16px; padding: 2rem;
+            transition: all 0.4s cubic-bezier(0.16,1,0.3,1);
+            position: relative; overflow: hidden; backdrop-filter: blur(10px);
+        }
+        /* Animated gradient border on hover */
+        .feature-card::before {
+            content: ''; position: absolute; top: -1px; left: -1px; right: -1px;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--gold), transparent);
+            opacity: 0; transition: opacity 0.4s;
+        }
+        .feature-card::after {
+            content: ''; position: absolute; inset: 0;
+            background: radial-gradient(ellipse at top center, rgba(247,147,26,0.06), transparent 70%);
+            opacity: 0; transition: opacity 0.4s;
+        }
+        .feature-card:hover {
+            border-color: rgba(247,147,26,0.25); transform: translateY(-8px);
+            box-shadow: 0 30px 70px rgba(0,0,0,0.4), 0 0 100px rgba(247,147,26,0.05);
+        }
+        .feature-card:hover::before, .feature-card:hover::after { opacity: 1; }
+
+        .feature-icon {
+            width: 48px; height: 48px;
+            background: rgba(247,147,26,0.05); border: 1px solid rgba(247,147,26,0.08);
+            border-radius: 12px; display: flex; align-items: center; justify-content: center;
+            margin-bottom: 1.25rem; color: var(--gold); z-index: 1; position: relative;
+            transition: all 0.4s;
+        }
+        .feature-card:hover .feature-icon {
+            box-shadow: 0 0 24px rgba(247,147,26,0.2), 0 0 48px rgba(247,147,26,0.08);
+            border-color: rgba(247,147,26,0.3);
+            background: rgba(247,147,26,0.08);
+        }
+        .feature-card h3 { font-size: 1.1rem; font-weight: 600; margin-bottom: 0.65rem; position: relative; z-index: 1; }
+        .feature-card p { font-size: 0.9rem; color: var(--t2); line-height: 1.65; position: relative; z-index: 1; }
+
+        /* ════ BC2 Blockchain ════ */
+        #blockchain { background: var(--bg2); overflow: hidden; padding: 6rem 2rem; position: relative; }
+        .blockchain-glow { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 100%; height: 400px; background: radial-gradient(ellipse, rgba(247,147,26,0.03), transparent 60%); filter: blur(60px); pointer-events: none; }
+        .chain-header { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem; }
+        .chain-badge { display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; color: var(--gold); text-transform: uppercase; letter-spacing: 0.1em; font-weight: 600; }
+        .chain-badge-dot { width: 8px; height: 8px; background: var(--gold); border-radius: 50%; box-shadow: 0 0 8px rgba(247,147,26,0.6), 0 0 20px rgba(247,147,26,0.3); animation: cbPulse 2s ease-in-out infinite; }
+        @keyframes cbPulse { 0%,100%{opacity:1;transform:scale(1);} 50%{opacity:.3;transform:scale(.7);} }
+        .chain-cta { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+        .chain-cta a { font-size: 0.85rem; color: var(--gold); text-decoration: none; display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.45rem 1.1rem; border: 1px solid rgba(247,147,26,0.15); border-radius: 8px; background: rgba(247,147,26,0.04); transition: all .3s; }
+        .chain-cta a:hover { border-color: rgba(247,147,26,0.4); background: rgba(247,147,26,0.08); box-shadow: 0 0 24px rgba(247,147,26,0.1); }
+        .chain-cta a svg { width: 14px; height: 14px; }
+
+        .mining-now { margin-top: 2rem; padding: 1.2rem 1.5rem; border-radius: 14px; background: linear-gradient(135deg, rgba(247,147,26,0.04), rgba(10,10,10,0.6)); border: 1px solid rgba(247,147,26,0.1); position: relative; overflow: hidden; display: grid; grid-template-columns: auto 1fr; gap: 1.5rem; align-items: center; }
+        .mining-now::before { content:''; position:absolute; top:0; left:0; width:100%; height:2px; background:linear-gradient(90deg,transparent,var(--gold),transparent); opacity:.25; }
+        .mining-now::after { content:''; position:absolute; top:0; left:-100%; width:100%; height:100%; background:linear-gradient(90deg,transparent,rgba(247,147,26,0.03),transparent); animation: mShimmer 4s ease-in-out infinite; pointer-events:none; }
+        @keyframes mShimmer { 0%{left:-100%;} 50%{left:100%;} 100%{left:100%;} }
+        .mining-icon { width: 56px; height: 56px; border-radius: 14px; background: rgba(247,147,26,0.08); border: 1px solid rgba(247,147,26,0.12); display: flex; align-items: center; justify-content: center; position: relative; z-index: 1; }
+        .mining-icon .pickaxe { font-size: 1.5rem; animation: mBob 1.2s ease-in-out infinite; }
+        @keyframes mBob { 0%,100%{transform:rotate(0);} 25%{transform:rotate(-12deg);} 75%{transform:rotate(8deg);} }
+        .mining-details { display: flex; flex-wrap: wrap; gap: 1.2rem 2.5rem; position: relative; z-index: 1; }
+        .mining-stat-value { font-family: 'Playfair Display', serif; font-size: 1.15rem; font-weight: 600; color: var(--text); }
+        .mining-stat-value.gv { background: linear-gradient(135deg, var(--gold-lt), var(--gold)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .mining-stat-label { font-size: 0.62rem; color: var(--t3); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 0.1rem; }
+        .mining-title { font-size: 0.7rem; color: var(--gold); text-transform: uppercase; letter-spacing: 0.1em; font-weight: 600; margin-bottom: 0.3rem; display: flex; align-items: center; gap: 0.5rem; width: 100%; }
+        .mining-title .blink { display: inline-block; width: 6px; height: 6px; background: #4ade80; border-radius: 50%; box-shadow: 0 0 6px rgba(74,222,128,0.6); animation: mBlink 1s ease-in-out infinite; }
+        @keyframes mBlink { 0%,100%{opacity:1;} 50%{opacity:.2;} }
+
+        .chain-viewport { position: relative; width: 100%; height: 250px; overflow: hidden; border-radius: 16px; background: rgba(8,8,8,0.7); border: 1px solid rgba(255,255,255,0.04); margin-top: 1.5rem; }
+        .chain-viewport::before { content:''; position:absolute; bottom:0; left:50%; transform:translateX(-50%); width:60%; height:100px; background:radial-gradient(ellipse,rgba(247,147,26,0.04),transparent 70%); pointer-events:none; filter:blur(20px); z-index:1; }
+        .chain-scanlines { position:absolute; top:0; left:0; width:100%; height:100%; background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,0.02) 3px,rgba(0,0,0,0.02) 4px); pointer-events:none; z-index:5; }
+        .chain-mask { position:absolute; top:0; height:100%; width:120px; z-index:4; pointer-events:none; }
+        .chain-mask.left { left:0; background:linear-gradient(90deg,var(--bg2),transparent); }
+        .chain-mask.right { right:0; background:linear-gradient(-90deg,var(--bg2),transparent); }
+        .chain-track { position:absolute; top:50%; left:0; transform:translateY(-50%); display:flex; align-items:center; animation:chainScroll 300s linear infinite; will-change:transform; }
+        @keyframes chainScroll { 0%{transform:translateY(-50%) translateX(0);} 100%{transform:translateY(-50%) translateX(-50%);} }
+
+        .chain-block { flex-shrink:0; width:165px; height:180px; background:linear-gradient(165deg,#111,#090909); border:1px solid rgba(247,147,26,0.07); border-radius:12px; padding:1rem; position:relative; overflow:hidden; display:flex; flex-direction:column; justify-content:space-between; transition:border-color .3s,box-shadow .3s; }
+        .chain-block:hover { border-color:rgba(247,147,26,0.25); box-shadow:0 0 40px rgba(247,147,26,0.06); }
+        .chain-block::before { content:''; position:absolute; top:0; left:10%; width:80%; height:2px; background:linear-gradient(90deg,transparent,var(--gold),transparent); opacity:.2; box-shadow:0 0 8px rgba(247,147,26,0.25); }
+        .chain-block::after { content:''; position:absolute; top:-15px; left:50%; transform:translateX(-50%); width:60%; height:30px; background:radial-gradient(ellipse,rgba(247,147,26,0.04),transparent); filter:blur(8px); pointer-events:none; }
+        .block-height { font-family:'Playfair Display',serif; font-size:1.15rem; font-weight:700; background:linear-gradient(135deg,var(--gold-lt),var(--gold)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+        .block-hash { font-family:monospace; font-size:0.56rem; color:var(--t3); letter-spacing:0.03em; word-break:break-all; line-height:1.4; margin-top:0.2rem; opacity:.7; }
+        .block-meta { display:flex; justify-content:space-between; align-items:flex-end; }
+        .block-txns { font-size:0.66rem; color:var(--t2); }
+        .block-txns span { color:var(--gold); font-weight:600; }
+        .block-time { font-size:0.56rem; color:var(--t3); text-align:right; }
+        .block-size { font-size:0.54rem; color:var(--t3); margin-top:0.1rem; }
+        .block-status { position:absolute; top:8px; right:8px; display:flex; align-items:center; gap:0.25rem; font-size:0.48rem; text-transform:uppercase; letter-spacing:0.06em; font-weight:600; color:#4ade80; }
+        .block-status .sdot { width:4px; height:4px; background:#4ade80; border-radius:50%; box-shadow:0 0 5px rgba(74,222,128,0.5); animation:mBlink 1s ease-in-out infinite; }
+        .chain-block.entrance { animation:blockIn .7s cubic-bezier(.16,1,.3,1) both; }
+        @keyframes blockIn { 0%{opacity:0;transform:scale(.8);box-shadow:0 0 60px rgba(247,147,26,0.25);} 100%{opacity:1;transform:scale(1);box-shadow:none;} }
+        .block-flash { position:absolute; inset:0; background:radial-gradient(ellipse,rgba(247,147,26,0.1),transparent 60%); border-radius:12px; pointer-events:none; opacity:0; }
+        .chain-block.entrance .block-flash { animation:bFlash 1.2s ease-out; }
+        @keyframes bFlash { 0%{opacity:1;} 100%{opacity:0;} }
+        .chain-link { flex-shrink:0; width:36px; height:4px; display:flex; align-items:center; }
+        .chain-link-line { width:100%; height:2px; position:relative; background:linear-gradient(90deg,rgba(247,147,26,0.08),rgba(247,147,26,0.3),rgba(247,147,26,0.08)); border-radius:1px; box-shadow:0 0 4px rgba(247,147,26,0.08); }
+        .chain-link-line::after { content:''; position:absolute; top:-2px; left:0; width:8px; height:6px; background:radial-gradient(ellipse,var(--gold),transparent); border-radius:50%; filter:blur(1px); animation:lkP 2s ease-in-out infinite; animation-delay:var(--d,0s); }
+        @keyframes lkP { 0%{left:-8px;opacity:0;} 15%{opacity:1;} 85%{opacity:1;} 100%{left:calc(100% + 8px);opacity:0;} }
+        .chain-loading { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); display:flex; flex-direction:column; align-items:center; gap:1rem; z-index:3; }
+        .chain-spinner { width:28px; height:28px; border:2px solid rgba(247,147,26,0.1); border-top-color:var(--gold); border-radius:50%; animation:spin .8s linear infinite; }
+        @keyframes spin { to{transform:rotate(360deg);} }
+        .chain-loading-text { font-size:.78rem; color:var(--t3); }
+        .chain-note { font-size:.72rem; color:var(--t3); text-align:center; margin-top:1rem; }
+        .chain-note a { color:var(--gold); text-decoration:none; }
+        @media(max-width:700px) { .mining-now { grid-template-columns:1fr; } .mining-icon { display:none; } }
+
+        /* ════ Specs ════ */
+        #specs { background: var(--bg2); overflow: hidden; }
+        .specs-glow {
+            position: absolute; top: 50%; left: -80px; width: 400px; height: 400px;
+            background: radial-gradient(circle, rgba(212,121,14,0.04), transparent 60%);
+            filter: blur(50px); pointer-events: none;
+        }
+        .specs-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; }
+        .spec-group { margin-bottom: 2rem; }
+        .spec-group h3 { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--gold); margin-bottom: 1rem; font-weight: 600; }
+        .spec-item {
+            display: flex; justify-content: space-between; padding: 0.75rem 0;
+            border-bottom: 1px solid rgba(255,255,255,0.04); transition: all 0.3s;
+        }
+        .spec-item:hover { border-bottom-color: rgba(247,147,26,0.2); padding-left: 0.75rem; background: rgba(247,147,26,0.01); }
+        .spec-item-label { font-size: 0.9rem; color: var(--t2); }
+        .spec-item-value { font-size: 0.9rem; font-weight: 500; }
+
+        /* ════ Download CTA ════ */
+        #download { text-align: center; padding: 8rem 2rem; overflow: hidden; }
+        .download-glow {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+            width: 900px; height: 450px;
+            background: radial-gradient(ellipse, rgba(247,147,26,0.07) 0%, rgba(247,147,26,0.02) 40%, transparent 65%);
+            filter: blur(60px); pointer-events: none;
+            animation: ctaBreath 6s ease-in-out infinite;
+        }
+        @keyframes ctaBreath { 0%,100% { transform: translate(-50%,-50%) scale(1); opacity: 1; } 50% { transform: translate(-50%,-50%) scale(1.15); opacity: 0.6; } }
+
+        /* Concentric rings animation */
+        .cta-rings {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+            width: 500px; height: 500px; pointer-events: none;
+        }
+        .cta-ring {
+            position: absolute; inset: 0; border: 1px solid rgba(247,147,26,0.04);
+            border-radius: 50%; animation: ringExpand 6s ease-out infinite;
+        }
+        .cta-ring:nth-child(2) { animation-delay: 2s; }
+        .cta-ring:nth-child(3) { animation-delay: 4s; }
+        @keyframes ringExpand { 0% { transform: scale(0.5); opacity: 0.6; } 100% { transform: scale(1.8); opacity: 0; } }
+
+        .download-inner { max-width: 640px; margin: 0 auto; position: relative; z-index: 1; }
+        #download .section-label { justify-content: center; }
+        #download .section-title { text-align: center; }
+        #download .section-desc { text-align: center; margin: 0 auto 2.5rem; }
+        .download-buttons { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; margin-bottom: 2rem; }
+        .download-note { font-size: 0.8rem; color: var(--t3); }
+        .download-note a { color: var(--gold); text-decoration: none; transition: all 0.3s; }
+        .download-note a:hover { text-decoration: underline; text-shadow: 0 0 10px rgba(247,147,26,0.3); }
+
+        /* ════ Community ════ */
+        #community { background: var(--bg2); }
+        .community-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 1.5rem; }
+
+        .community-card {
+            background: rgba(14,14,14,0.4); border: 1px solid var(--border);
+            border-radius: 16px; padding: 2rem; text-align: center;
+            text-decoration: none; color: var(--t1);
+            transition: all 0.4s cubic-bezier(0.16,1,0.3,1);
+            position: relative; overflow: hidden; backdrop-filter: blur(10px);
+        }
+        .community-card::before {
+            content: ''; position: absolute; bottom: -1px; left: -1px; right: -1px;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--gold), transparent);
+            opacity: 0; transition: opacity 0.4s;
+        }
+        .community-card::after {
+            content: ''; position: absolute; inset: 0;
+            background: radial-gradient(circle at center bottom, rgba(247,147,26,0.04), transparent 60%);
+            opacity: 0; transition: opacity 0.4s;
+        }
+        .community-card:hover { border-color: rgba(247,147,26,0.2); transform: translateY(-6px); box-shadow: 0 28px 64px rgba(0,0,0,0.4), 0 0 60px rgba(247,147,26,0.04); }
+        .community-card:hover::before, .community-card:hover::after { opacity: 1; }
+
+        .community-icon {
+            width: 56px; height: 56px; margin: 0 auto 1rem;
+            background: rgba(247,147,26,0.05); border: 1px solid rgba(247,147,26,0.08);
+            border-radius: 16px; display: flex; align-items: center; justify-content: center;
+            color: var(--gold); transition: all 0.4s;
+        }
+        .community-card:hover .community-icon { box-shadow: 0 0 28px rgba(247,147,26,0.2); border-color: rgba(247,147,26,0.3); }
+        .community-card h3 { font-size: 1.1rem; margin-bottom: 0.5rem; font-weight: 600; }
+        .community-card p { font-size: 0.85rem; color: var(--t2); }
+
+        /* ════ Exchanges ════ */
+        #exchanges { padding: 4rem 2rem; }
+        .exchange-btn-group { display: flex; gap: 1.5rem; justify-content: center; flex-wrap: wrap; }
+        .exchange-btn-group .btn-secondary { font-size: 1rem; padding: 1rem 2.5rem; }
+
+        /* ════ Footer ════ */
+        footer { border-top: 1px solid var(--border); padding: 3rem 2rem; position: relative; }
+        footer::before { content: ''; position: absolute; top: -1px; left: 0; width: 100%; height: 1px; background: linear-gradient(90deg, transparent, rgba(247,147,26,0.12), transparent); }
+        .footer-inner { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.5rem; }
+        .footer-left { display: flex; align-items: center; gap: 0.75rem; }
+        .footer-left img { width: 28px; height: 28px; border-radius: 6px; }
+        .footer-left span { font-family: 'Playfair Display', serif; font-size: 1rem; font-weight: 600; }
+        .footer-links { display: flex; gap: 2rem; list-style: none; }
+        .footer-links a { text-decoration: none; color: var(--t3); font-size: 0.85rem; transition: all 0.3s; }
+        .footer-links a:hover { color: var(--gold); text-shadow: 0 0 10px rgba(247,147,26,0.2); }
+        .footer-copy { width: 100%; text-align: center; font-size: 0.8rem; color: var(--t3); margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border); }
+        .footer-copy a { color: var(--gold); text-decoration: none; }
+
+        /* ════ Responsive ════ */
+        @media (max-width: 900px) {
+            .hero-inner { grid-template-columns: 1fr; text-align: center; }
+            .hero-content { max-width: 100%; }
+            .hero-desc { max-width: 100%; }
+            .hero-actions { justify-content: center; }
+            .hero-visual { display: none; }
+            .origin-grid { grid-template-columns: 1fr; gap: 2rem; }
+            .features-grid, .community-grid { grid-template-columns: 1fr; }
+            .specs-layout { grid-template-columns: 1fr; }
+            .nav-links { display: none; }
+            .nav-links.active { display: flex; flex-direction: column; position: fixed; inset: 0; background: rgba(5,5,5,0.97); backdrop-filter: blur(24px); justify-content: center; align-items: center; gap: 2rem; z-index: 999; }
+            .nav-links.active a { font-size: 1.25rem; }
+            .nav-links.active a::after { display: none; }
+            .mobile-toggle { display: block; z-index: 1001; }
+        }
+        @media (max-width: 600px) {
+            section { padding: 4rem 1.25rem; }
+            .hero { padding: 6rem 1.25rem 4rem; }
+            .hero h1 { font-size: 2.2rem; }
+            .download-buttons { flex-direction: column; align-items: center; }
+            .footer-inner { flex-direction: column; text-align: center; }
+            .footer-links { flex-wrap: wrap; justify-content: center; }
+            .exchange-btn-group { flex-direction: column; align-items: center; }
+        }
+
+        /* ════ Reveal animation ════ */
+        .reveal { opacity: 0; transform: translateY(30px); transition: opacity 0.8s cubic-bezier(0.16,1,0.3,1), transform 0.8s cubic-bezier(0.16,1,0.3,1); }
+        .reveal.visible { opacity: 1; transform: translateY(0); }
+        .stagger .reveal:nth-child(1) { transition-delay: 0s; }
+        .stagger .reveal:nth-child(2) { transition-delay: 0.1s; }
+        .stagger .reveal:nth-child(3) { transition-delay: 0.2s; }
+        .stagger .reveal:nth-child(4) { transition-delay: 0.3s; }
+        .stagger .reveal:nth-child(5) { transition-delay: 0.4s; }
+        .stagger .reveal:nth-child(6) { transition-delay: 0.5s; }
+
+        /* ════ Cursor glow ════ */
+        .cursor-glow {
+            position: fixed; width: 400px; height: 400px; border-radius: 50%;
+            background: radial-gradient(circle, rgba(247,147,26,0.045), transparent 65%);
+            pointer-events: none; z-index: 0; transform: translate(-50%,-50%);
+            filter: blur(25px); transition: opacity 0.3s;
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-mesh"></div>
+    <div class="cursor-glow" id="cursorGlow"></div>
+
+    <nav id="navbar">
+        <div class="nav-inner">
+            <a href="#" class="nav-logo">
+                <img src="data:image/png;base64,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" alt="BC2 Logo" width="36" height="36">
+                <span>GenesisWallet</span>
+            </a>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="#about">About</a></li>
+                <li><a href="#features">Features</a></li>
+                <li><a href="#blockchain">Blocks</a></li>
+                <li><a href="#specs">Specs</a></li>
+                <li><a href="#community">Community</a></li>
+                <li><a href="https://github.com/GenesisWalletOrg/GenesisWallet" class="btn-nav">GitHub</a></li>
+            </ul>
+            <button class="mobile-toggle" id="mobileToggle" aria-label="Menu">&#9776;</button>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div class="aurora aurora-1"></div>
+        <div class="aurora aurora-2"></div>
+        <div class="aurora aurora-3"></div>
+        <div class="aurora aurora-4"></div>
+        <div class="hero-grid"></div>
+        <div class="scan-beam"></div>
+        <div class="light-rays"></div>
+        <div class="particles" id="particles"></div>
+        <div class="hero-inner">
+            <div class="hero-content">
+                <div class="hero-badge"><span class="dot"></span>Open Source &middot; Community Fork</div>
+                <h1>The Wallet for<br><span class="gold">BitcoinII</span></h1>
+                <p class="hero-desc">GenesisWallet is an open-source community fork of BlueWallet, reforged for the BC2 network. Self-custody, private, and built on Satoshi's original code.</p>
+                <div class="hero-actions">
+                    <a href="https://github.com/GenesisWalletOrg/GenesisWallet/releases" class="btn btn-primary">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        Download
+                    </a>
+                    <a href="https://github.com/GenesisWalletOrg/GenesisWallet" class="btn btn-secondary">
+                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                        View Source
+                    </a>
+                </div>
+            </div>
+            <div class="hero-visual">
+                <div class="orbit orbit-1"><div class="orbit-dot orbit-dot-1"></div></div>
+                <div class="orbit orbit-2"><div class="orbit-dot orbit-dot-2"></div><div class="orbit-dot orbit-dot-4"></div></div>
+                <div class="orbit orbit-3"><div class="orbit-dot orbit-dot-3"></div></div>
+                <div class="phone-mockup">
+                    <div class="phone-screen">
+                        <div class="phone-notch"></div>
+                        <div class="phone-status"><span>9:41</span><span>&#9679;&#9679;&#9679;</span></div>
+                        <div class="wallet-ui">
+                            <div class="wallet-greeting">Welcome back</div>
+                            <div class="wallet-label">GenesisWallet</div>
+                            <div class="wallet-card">
+                                <div class="wallet-card-label">Total Balance</div>
+                                <div class="wallet-card-balance">12.4831 BC2</div>
+                                <div class="wallet-card-sub">HD SegWit &middot; bc2q...x7f4</div>
+                            </div>
+                            <div class="wallet-txn"><div class="wallet-txn-left"><div class="wallet-txn-icon txn-in">&#8593;</div><div><div class="wallet-txn-name">Received</div><div class="wallet-txn-date">Feb 9, 2026</div></div></div><div class="wallet-txn-amount txn-positive">+2.500</div></div>
+                            <div class="wallet-txn"><div class="wallet-txn-left"><div class="wallet-txn-icon txn-out">&#8595;</div><div><div class="wallet-txn-name">Sent</div><div class="wallet-txn-date">Feb 7, 2026</div></div></div><div class="wallet-txn-amount txn-negative">-0.150</div></div>
+                            <div class="wallet-txn"><div class="wallet-txn-left"><div class="wallet-txn-icon txn-in">&#8593;</div><div><div class="wallet-txn-name">Mining Payout</div><div class="wallet-txn-date">Feb 5, 2026</div></div></div><div class="wallet-txn-amount txn-positive">+1.200</div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="glow-div"></div>
+
+    <section id="about">
+        <div class="about-glow"></div>
+        <div class="section-inner">
+            <div class="origin-grid">
+                <div class="origin-text reveal">
+                    <div class="section-label">Origin Story</div>
+                    <h2 class="section-title">Born from BlueWallet.<br>Forked for BC2.</h2>
+                    <p>GenesisWallet is a community-driven open-source fork of <strong>BlueWallet</strong>, one of the most trusted Bitcoin wallets in the world. We preserved everything that makes BlueWallet excellent &mdash; its security model, its clean architecture, its commitment to self-custody &mdash; and adapted it for the BC2 network.</p>
+                    <p><strong>BC2 (BitcoinII)</strong> is Bitcoin's conservative sister chain, preserving Satoshi's original proof-of-work code with a fresh genesis block. GenesisWallet gives the BC2 community a native, mobile-first wallet built specifically for this chain.</p>
+                    <p>Every element &mdash; from the gold-amber color palette to the network parameters &mdash; has been carefully adapted. This is not an official wallet &mdash; it's a community project, built by the people who use it.</p>
+                </div>
+                <div class="origin-visual stagger">
+                    <div class="origin-card reveal">
+                        <div class="origin-card-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+                        <h4>Self-Custody First</h4>
+                        <p>Your keys, your coins. GenesisWallet never has access to your private keys or seed phrase. Full sovereignty by default.</p>
+                    </div>
+                    <div class="origin-card reveal">
+                        <div class="origin-card-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></div>
+                        <h4>Fully Open Source</h4>
+                        <p>Every line of code is public and auditable on GitHub. A community fork you can trust, review, and contribute to.</p>
+                    </div>
+                    <div class="origin-card reveal">
+                        <div class="origin-card-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div>
+                        <h4>BC2 Native</h4>
+                        <p>Purpose-configured for the BitcoinII network &mdash; correct chain parameters, Electrum server integration, and BC2 address formats.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="glow-div"></div>
+
+    <section id="features">
+        <div class="features-glow"></div>
+        <div class="section-inner">
+            <div class="section-label reveal">Features</div>
+            <h2 class="section-title reveal">Everything you need.<br>Nothing you don't.</h2>
+            <p class="section-desc reveal">Inheriting BlueWallet's battle-tested feature set, adapted and focused for BC2.</p>
+            <div class="features-grid stagger">
+                <div class="feature-card reveal"><div class="feature-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div><h3>HD Wallet Support</h3><p>Hierarchical Deterministic wallets with BIP39/BIP44/BIP84 support. Generate unlimited addresses from a single seed.</p></div>
+                <div class="feature-card reveal"><div class="feature-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></div><h3>SegWit Native</h3><p>Full SegWit (Bech32) support for lower transaction fees and faster confirmations on the BC2 network.</p></div>
+                <div class="feature-card reveal"><div class="feature-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div><h3>QR Transactions</h3><p>Send and receive BC2 with QR codes. Set custom amounts, add labels, and share payment requests instantly.</p></div>
+                <div class="feature-card reveal"><div class="feature-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><h3>Multi-Wallet</h3><p>Manage multiple wallets in a single app. Separate personal, mining, and merchant funds with ease.</p></div>
+                <div class="feature-card reveal"><div class="feature-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg></div><h3>Electrum Server</h3><p>Connects to BC2 Electrum servers for lightweight, fast synchronization without running a full node.</p></div>
+                <div class="feature-card reveal"><div class="feature-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div><h3>Watch-Only Mode</h3><p>Import xpub keys to monitor wallets without exposing private keys. Perfect for cold storage oversight.</p></div>
+            </div>
+        </div>
+    </section>
+
+    <div class="glow-div"></div>
+
+    <!-- BC2 Blockchain Explorer -->
+    <section id="blockchain">
+        <div class="blockchain-glow"></div>
+        <div class="section-inner">
+            <div class="chain-header reveal">
+                <div>
+                    <div class="section-label"><span class="chain-badge"><span class="chain-badge-dot"></span>BC2 Blockchain</span></div>
+                    <h2 class="section-title">Last 100 Blocks</h2>
+                    <p class="section-desc" style="margin-bottom:0;">Recent confirmed blocks from the BC2 network, powered by <a href="https://bc2.live" target="_blank" style="color:var(--gold);text-decoration:none;">BC2.Live</a>.</p>
+                </div>
+                <div class="chain-cta">
+                    <a href="https://bc2.live" target="_blank" rel="noopener">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                        BC2.Live
+                    </a>
+                    <a href="https://bc2explorer.com" target="_blank" rel="noopener">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                        BC2Explorer
+                    </a>
+                </div>
+            </div>
+
+            <div class="mining-now reveal" id="miningNow">
+                <div class="mining-icon"><span class="pickaxe">&#9935;</span></div>
+                <div class="mining-details">
+                    <div class="mining-title"><span class="blink"></span> Next Block &mdash; Currently Being Mined</div>
+                    <div class="mining-stat"><div class="mining-stat-value gv" id="mnTxCount">&mdash;</div><div class="mining-stat-label">Pending Transactions</div></div>
+                    <div class="mining-stat"><div class="mining-stat-value" id="mnSize">&mdash;</div><div class="mining-stat-label">Mempool Size</div></div>
+                    <div class="mining-stat"><div class="mining-stat-value" id="mnFee">&mdash;</div><div class="mining-stat-label">Low Fee (sat/vB)</div></div>
+                    <div class="mining-stat"><div class="mining-stat-value" id="mnMedFee">&mdash;</div><div class="mining-stat-label">Med Fee (sat/vB)</div></div>
+                    <div class="mining-stat"><div class="mining-stat-value gv" id="mnHeight">&mdash;</div><div class="mining-stat-label">Next Height</div></div>
+                    <div class="mining-stat"><div class="mining-stat-value" id="mnLastTime">&mdash;</div><div class="mining-stat-label">Last Block</div></div>
+                </div>
+            </div>
+
+            <div class="chain-viewport reveal" id="chainViewport">
+                <div class="chain-scanlines"></div>
+                <div class="chain-mask left"></div>
+                <div class="chain-mask right"></div>
+                <div class="chain-loading" id="chainLoading">
+                    <div class="chain-spinner"></div>
+                    <div class="chain-loading-text">Fetching blocks from BC2.Live&hellip;</div>
+                </div>
+                <div class="chain-track" id="chainTrack" style="opacity:0;"></div>
+            </div>
+
+            <div class="chain-note reveal" id="chainNote">Showing the last <strong id="blockCountLabel">100</strong> confirmed blocks &mdash; explore all blocks at <a href="https://bc2.live" target="_blank">BC2.Live</a> or <a href="https://bc2explorer.com" target="_blank">BC2Explorer</a></div>
+        </div>
+    </section>
+
+    <div class="glow-div"></div>
+
+    <section id="specs">
+        <div class="specs-glow"></div>
+        <div class="section-inner">
+            <div class="section-label reveal">Technical Details</div>
+            <h2 class="section-title reveal">Under the Hood</h2>
+            <p class="section-desc reveal">Built on proven technology. Every parameter tuned for the BC2 network.</p>
+            <div class="specs-layout reveal">
+                <div>
+                    <div class="spec-group"><h3>Wallet Architecture</h3>
+                        <div class="spec-item"><span class="spec-item-label">Framework</span><span class="spec-item-value">React Native</span></div>
+                        <div class="spec-item"><span class="spec-item-label">Base Fork</span><span class="spec-item-value">BlueWallet (MIT)</span></div>
+                        <div class="spec-item"><span class="spec-item-label">License</span><span class="spec-item-value">MIT Open Source</span></div>
+                    </div>
+                    <div class="spec-group"><h3>Supported Formats</h3>
+                        <div class="spec-item"><span class="spec-item-label">HD Wallets</span><span class="spec-item-value">BIP39 / BIP44 / BIP84</span></div>
+                        <div class="spec-item"><span class="spec-item-label">Address Types</span><span class="spec-item-value">Legacy, SegWit, Native SegWit</span></div>
+                        <div class="spec-item"><span class="spec-item-label">Multisig</span><span class="spec-item-value">Supported</span></div>
+                    </div>
+                </div>
+                <div>
+                    <div class="spec-group"><h3>BC2 Network</h3>
+                        <div class="spec-item"><span class="spec-item-label">Algorithm</span><span class="spec-item-value">SHA-256</span></div>
+                        <div class="spec-item"><span class="spec-item-label">Consensus</span><span class="spec-item-value">Proof of Work</span></div>
+                        <div class="spec-item"><span class="spec-item-label">Compatibility</span><span class="spec-item-value">Bitcoin Core Compatible</span></div>
+                        <div class="spec-item"><span class="spec-item-label">Backend</span><span class="spec-item-value">Electrum Server (SPV)</span></div>
+                    </div>
+                    <div class="spec-group"><h3>Chain Economics</h3>
+                        <div class="spec-item"><span class="spec-item-label">Max Supply</span><span class="spec-item-value">21,000,000 BC2</span></div>
+                        <div class="spec-item"><span class="spec-item-label">Block Reward</span><span class="spec-item-value">50 BC2 (pre-halving)</span></div>
+                        <div class="spec-item"><span class="spec-item-label">Block Time</span><span class="spec-item-value">~10 minutes</span></div>
+                        <div class="spec-item"><span class="spec-item-label">Halving Interval</span><span class="spec-item-value">210,000 blocks</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="glow-div"></div>
+
+    <section id="download">
+        <div class="download-glow"></div>
+        <div class="cta-rings"><div class="cta-ring"></div><div class="cta-ring"></div><div class="cta-ring"></div></div>
+        <div class="download-inner">
+            <div class="section-label reveal">Get Started</div>
+            <h2 class="section-title reveal">Download <span style="background:linear-gradient(135deg,var(--gold-lt),var(--gold),var(--gold-sec));background-size:300% 300%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:goldFlow 5s ease-in-out infinite;filter:drop-shadow(0 0 20px rgba(247,147,26,0.15));">GenesisWallet</span></h2>
+            <p class="section-desc reveal">Available now on Android. Grab the latest release from GitHub or build from source.</p>
+            <div class="download-buttons reveal">
+                <a href="https://github.com/GenesisWalletOrg/GenesisWallet/releases" class="btn btn-primary">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    Download APK
+                </a>
+                <a href="https://github.com/GenesisWalletOrg/GenesisWallet" class="btn btn-secondary">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                    Build from Source
+                </a>
+            </div>
+            <p class="download-note reveal">iOS coming soon &middot; Requires Android 8.0+ &middot; <a href="https://github.com/GenesisWalletOrg/GenesisWallet">View on GitHub</a></p>
+        </div>
+    </section>
+
+    <div class="glow-div"></div>
+
+    <section id="community">
+        <div class="section-inner">
+            <div style="text-align:center;margin-bottom:3rem;">
+                <div class="section-label reveal" style="justify-content:center;">Community</div>
+                <h2 class="section-title reveal">Join the Movement</h2>
+                <p class="section-desc reveal" style="margin:0 auto;">GenesisWallet is built by the BC2 community, for the BC2 community.</p>
+            </div>
+            <div class="community-grid stagger">
+                <a href="https://discord.com/invite/zUSkQHNVyG" target="_blank" rel="noopener" class="community-card reveal">
+                    <div class="community-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg></div>
+                    <h3>Discord</h3><p>Chat with developers and the BC2 community</p>
+                </a>
+                <a href="https://www.reddit.com/r/BitcoinII/" target="_blank" rel="noopener" class="community-card reveal">
+                    <div class="community-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0zm5.01 4.744c.688 0 1.25.561 1.25 1.249a1.25 1.25 0 0 1-2.498.056l-2.597-.547-.8 3.747c1.824.07 3.48.632 4.674 1.488.308-.309.73-.491 1.207-.491.968 0 1.754.786 1.754 1.754 0 .716-.435 1.333-1.01 1.614a3.111 3.111 0 0 1 .042.52c0 2.694-3.13 4.87-7.004 4.87-3.874 0-7.004-2.176-7.004-4.87 0-.183.015-.366.043-.534A1.748 1.748 0 0 1 4.028 12c0-.968.786-1.754 1.754-1.754.463 0 .898.196 1.207.49 1.207-.883 2.878-1.43 4.744-1.487l.885-4.182a.342.342 0 0 1 .14-.197.35.35 0 0 1 .238-.042l2.906.617a1.214 1.214 0 0 1 1.108-.701zM9.25 12C8.561 12 8 12.562 8 13.25c0 .687.561 1.248 1.25 1.248.687 0 1.248-.561 1.248-1.249 0-.688-.561-1.249-1.249-1.249zm5.5 0c-.687 0-1.248.561-1.248 1.25 0 .687.561 1.248 1.249 1.248.688 0 1.249-.561 1.249-1.249 0-.687-.562-1.249-1.25-1.249zm-5.466 3.99a.327.327 0 0 0-.231.094.33.33 0 0 0 0 .463c.842.842 2.484.913 2.961.913.477 0 2.105-.056 2.961-.913a.361.361 0 0 0 .029-.463.33.33 0 0 0-.464 0c-.547.533-1.684.73-2.512.73-.828 0-1.979-.196-2.512-.73a.326.326 0 0 0-.232-.095z"/></svg></div>
+                    <h3>Reddit</h3><p>r/BitcoinII &mdash; news, discussion, updates</p>
+                </a>
+                <a href="https://github.com/GenesisWalletOrg" target="_blank" rel="noopener" class="community-card reveal">
+                    <div class="community-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg></div>
+                    <h3>GitHub</h3><p>Contribute, report issues, and build together</p>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <div class="glow-div"></div>
+
+    <section id="exchanges">
+        <div class="section-inner" style="text-align:center;">
+            <div class="section-label reveal" style="justify-content:center;">Trade BC2</div>
+            <h2 class="section-title reveal" style="margin-bottom:2.5rem;">Available on Exchanges</h2>
+            <div class="exchange-btn-group reveal">
+                <a href="https://nonkyc.io/market/BC2_USDT" target="_blank" rel="noopener" class="btn btn-secondary">NonKYC</a>
+                <a href="https://www.coinex.com/en/exchange/BC2-USDT" target="_blank" rel="noopener" class="btn btn-secondary">CoinEx</a>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="footer-inner">
+            <div class="footer-left">
+                <img src="data:image/png;base64,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" alt="BC2 Logo" width="28" height="28">
+                <span>GenesisWallet</span>
+            </div>
+            <ul class="footer-links">
+                <li><a href="https://github.com/GenesisWalletOrg/GenesisWallet">GitHub</a></li>
+                <li><a href="https://discord.com/invite/zUSkQHNVyG">Discord</a></li>
+                <li><a href="https://www.reddit.com/r/BitcoinII/">Reddit</a></li>
+                <li><a href="https://genesiswallet.org">GenesisWallet.org</a></li>
+            </ul>
+            <div class="footer-copy">&copy; 2025 GenesisWallet &middot; MIT License &middot; Community fork of <a href="https://bluewallet.io" target="_blank" rel="noopener">BlueWallet</a></div>
+        </div>
+    </footer>
+
+    <script>
+        // Nav scroll
+        const nav = document.getElementById('navbar');
+        window.addEventListener('scroll', () => nav.classList.toggle('scrolled', window.scrollY > 40));
+
+        // Mobile menu
+        const toggle = document.getElementById('mobileToggle');
+        const navLinks = document.getElementById('navLinks');
+        toggle.addEventListener('click', () => {
+            navLinks.classList.toggle('active');
+            toggle.textContent = navLinks.classList.contains('active') ? '\u2715' : '\u2630';
+        });
+        navLinks.querySelectorAll('a').forEach(a => a.addEventListener('click', () => { navLinks.classList.remove('active'); toggle.textContent = '\u2630'; }));
+
+        // Scroll reveal
+        const obs = new IntersectionObserver(entries => {
+            entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+        }, { threshold: 0.08, rootMargin: '0px 0px -30px 0px' });
+        document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+
+        // Cursor glow
+        const glow = document.getElementById('cursorGlow');
+        if (window.matchMedia('(pointer:fine)').matches) {
+            let mx = 0, my = 0, gx = 0, gy = 0;
+            document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
+            (function anim() { gx += (mx - gx) * 0.06; gy += (my - gy) * 0.06; glow.style.left = gx + 'px'; glow.style.top = gy + 'px'; requestAnimationFrame(anim); })();
+        } else glow.style.display = 'none';
+
+        // Enhanced particles - gold and white, with drift
+        const pc = document.getElementById('particles');
+        function spawn() {
+            const p = document.createElement('div');
+            const isGold = Math.random() > 0.3;
+            p.className = 'particle ' + (isGold ? 'particle-gold' : 'particle-white');
+            p.style.left = Math.random() * 100 + '%';
+            p.style.animationDuration = (Math.random() * 10 + 8) + 's';
+            p.style.animationDelay = (Math.random() * 5) + 's';
+            const sz = isGold ? (Math.random() * 3 + 1) : (Math.random() * 1.5 + 0.5);
+            p.style.width = sz + 'px'; p.style.height = sz + 'px';
+            p.style.setProperty('--drift', (Math.random() * 60 - 30) + 'px');
+            pc.appendChild(p);
+            setTimeout(() => p.remove(), 18000);
+        }
+        setInterval(spawn, 600);
+        for (let i = 0; i < 15; i++) setTimeout(spawn, i * 200);
+
+        // ════ BC2 BLOCKCHAIN FEED ════
+        // Tries multiple BC2 Mempool instances, then falls back to simulated
+        var HOSTS = ['https://bc2.live', 'https://bitcoinii.space'];
+        var activeHost = null;
+        var chainTrack = document.getElementById('chainTrack');
+        var chainLoading = document.getElementById('chainLoading');
+        var allBlocks = [];
+        var wsRef = null;
+
+        // ── Helpers ──
+        function fmtH(h) { return h ? h.substring(0, 10) + '\u2026' + h.substring(58) : ''; }
+        function fmtT(ts) {
+            var d = Math.floor(Date.now() / 1000) - ts;
+            if (d < 0) return 'Just now';
+            if (d < 60) return d + 's ago';
+            if (d < 3600) return Math.floor(d / 60) + 'm ago';
+            if (d < 86400) return Math.floor(d / 3600) + 'h ago';
+            return Math.floor(d / 86400) + 'd ago';
+        }
+        function fmtS(b) {
+            if (b >= 1048576) return (b / 1048576).toFixed(2) + ' MB';
+            if (b >= 1024) return (b / 1024).toFixed(1) + ' KB';
+            return b + ' B';
+        }
+
+        // ── DOM builders ──
+        function mkBlock(b, latest) {
+            var el = document.createElement('div');
+            el.className = 'chain-block';
+            el.innerHTML =
+                '<div><div class="block-height">#' + b.height.toLocaleString() + '</div>' +
+                '<div class="block-hash">' + fmtH(b.id) + '</div></div>' +
+                '<div><div class="block-meta"><div>' +
+                '<div class="block-txns"><span>' + b.tx_count + '</span> txns</div>' +
+                '<div class="block-size">' + fmtS(b.size) + '</div></div>' +
+                '<div class="block-time">' + fmtT(b.timestamp) + '</div>' +
+                '</div></div><div class="block-flash"></div>' +
+                (latest ? '<div class="block-status"><span class="sdot"></span>Latest</div>' : '');
+            return el;
+        }
+        function mkLink(d) {
+            var l = document.createElement('div');
+            l.className = 'chain-link';
+            l.innerHTML = '<div class="chain-link-line" style="--d:' + d.toFixed(1) + 's"></div>';
+            return l;
+        }
+
+        function renderBlocks(blocks) {
+            chainTrack.innerHTML = '';
+            for (var r = 0; r < 2; r++) {
+                for (var i = 0; i < blocks.length; i++) {
+                    chainTrack.appendChild(mkBlock(blocks[i], i === 0 && r === 0));
+                    if (!(r === 1 && i === blocks.length - 1)) {
+                        chainTrack.appendChild(mkLink((i * 0.25 + r * blocks.length * 0.25) % 2.5));
+                    }
+                }
+            }
+            // Slower scroll — ~3s per block
+            chainTrack.style.animationDuration = Math.max(120, blocks.length * 3) + 's';
+            chainLoading.style.display = 'none';
+            chainTrack.style.opacity = '1';
+            chainTrack.style.transition = 'opacity .6s ease';
+        }
+
+        // ── Mining stats updater ──
+        function setMining(data) {
+            var el;
+            if (data.txCount != null) { el = document.getElementById('mnTxCount'); if (el) el.textContent = Number(data.txCount).toLocaleString(); }
+            if (data.size != null) { el = document.getElementById('mnSize'); if (el) el.textContent = fmtS(data.size); }
+            if (data.lowFee != null) { el = document.getElementById('mnFee'); if (el) el.textContent = data.lowFee; }
+            if (data.medFee != null) { el = document.getElementById('mnMedFee'); if (el) el.textContent = data.medFee; }
+            if (data.nextHeight != null) { el = document.getElementById('mnHeight'); if (el) el.textContent = '#' + Number(data.nextHeight).toLocaleString(); }
+            if (data.lastBlockTime != null) { el = document.getElementById('mnLastTime'); if (el) el.textContent = fmtT(data.lastBlockTime); }
+        }
+
+        function updateFromBlocks() {
+            if (!allBlocks.length) return;
+            setMining({ nextHeight: allBlocks[0].height + 1, lastBlockTime: allBlocks[0].timestamp });
+        }
+
+        // ── REST fetcher with host discovery ──
+        async function apiFetch(path) {
+            // If we already found a working host, try it first
+            var order = activeHost ? [activeHost].concat(HOSTS.filter(function(h){return h !== activeHost;})) : HOSTS;
+            for (var i = 0; i < order.length; i++) {
+                var urls = [order[i] + '/api' + path, order[i] + '/api/v1' + path];
+                for (var j = 0; j < urls.length; j++) {
+                    try {
+                        var r = await fetch(urls[j]);
+                        if (r.ok) {
+                            activeHost = order[i];
+                            return await r.json();
+                        }
+                    } catch (e) { /* next */ }
+                }
+            }
+            return null;
+        }
+
+        async function fetchBlocksREST() {
+            try {
+                var blocks = await apiFetch('/blocks');
+                if (!blocks || !blocks.length) return false;
+                allBlocks = blocks.slice();
+
+                // Paginate for ~100
+                var attempts = 0;
+                while (allBlocks.length < 100 && attempts < 8) {
+                    var lastH = allBlocks[allBlocks.length - 1].height;
+                    var more = await apiFetch('/blocks/' + (lastH - 1));
+                    if (!more || !more.length) break;
+                    var seen = {};
+                    allBlocks.forEach(function(b) { seen[b.height] = true; });
+                    var fresh = more.filter(function(b) { return !seen[b.height]; });
+                    if (!fresh.length) break;
+                    allBlocks = allBlocks.concat(fresh);
+                    attempts++;
+                }
+
+                allBlocks.sort(function(a, b) { return b.height - a.height; });
+                var ct = document.getElementById('blockCountLabel');
+                if (ct) ct.textContent = allBlocks.length;
+                renderBlocks(allBlocks);
+                return true;
+            } catch (e) {
+                console.warn('[BC2] block fetch failed:', e);
+                return false;
+            }
+        }
+
+        async function fetchStatsREST() {
+            var mp = await apiFetch('/mempool');
+            if (mp) setMining({ txCount: mp.count || mp.size, size: mp.vsize || mp.bytes || mp.usage });
+
+            var fees = await apiFetch('/v1/fees/recommended');
+            if (!fees) fees = await apiFetch('/fees/recommended');
+            if (fees) setMining({ lowFee: fees.minimumFee || fees.economyFee || fees.hourFee, medFee: fees.halfHourFee || fees.fastestFee });
+
+            // Also try mempool-blocks for richer projected data
+            var mpBlocks = await apiFetch('/v1/fees/mempool-blocks');
+            if (mpBlocks && mpBlocks.length) {
+                var next = mpBlocks[0];
+                setMining({ txCount: next.nTx || mp && mp.count, size: next.blockVSize ? Math.round(next.blockVSize) : undefined });
+            }
+        }
+
+        // ── WebSocket for live updates ──
+        function connectWS() {
+            if (!activeHost) return;
+            var wsUrl = activeHost.replace('https://', 'wss://') + '/api/v1/ws';
+            try {
+                var ws = new WebSocket(wsUrl);
+                var timeout = setTimeout(function() { ws.close(); }, 8000);
+
+                ws.onopen = function() {
+                    clearTimeout(timeout);
+                    wsRef = ws;
+                    console.log('[BC2] WS connected to', activeHost);
+                    ws.send(JSON.stringify({ action: 'init' }));
+                    ws.send(JSON.stringify({ action: 'want', data: ['blocks', 'mempool-blocks', 'stats'] }));
+                };
+
+                ws.onmessage = function(evt) {
+                    try {
+                        var msg = JSON.parse(evt.data);
+                        if (msg.block) {
+                            allBlocks.unshift(msg.block);
+                            if (allBlocks.length > 120) allBlocks = allBlocks.slice(0, 100);
+                            var ct = document.getElementById('blockCountLabel');
+                            if (ct) ct.textContent = allBlocks.length;
+                            renderBlocks(allBlocks);
+                            updateFromBlocks();
+                        }
+                        if (msg.mempoolInfo) setMining({ txCount: msg.mempoolInfo.size || msg.mempoolInfo.count, size: msg.mempoolInfo.bytes || msg.mempoolInfo.vsize || msg.mempoolInfo.usage });
+                        if (msg.fees) setMining({ lowFee: msg.fees.minimumFee || msg.fees.economyFee, medFee: msg.fees.halfHourFee || msg.fees.fastestFee });
+                    } catch (e) { /* parse error */ }
+                };
+
+                ws.onclose = function() { wsRef = null; setTimeout(connectWS, 20000); };
+                ws.onerror = function() { clearTimeout(timeout); };
+            } catch (e) { console.warn('[BC2] WS error:', e); }
+        }
+
+        // ── Simulated fallback ──
+        function genFallback() {
+            var base = 52790;
+            var now = Math.floor(Date.now() / 1000);
+            var hex = '0123456789abcdef';
+            var fb = [];
+            for (var i = 0; i < 100; i++) {
+                var h = '0000';
+                for (var j = 0; j < 60; j++) h += hex[Math.floor(Math.random() * 16)];
+                fb.push({ height: base - i, id: h, tx_count: Math.floor(Math.random() * 200) + 3, size: Math.floor(Math.random() * 900000) + 50000, timestamp: now - i * 600 - Math.floor(Math.random() * 300) });
+            }
+            return fb;
+        }
+
+        // ── Boot ──
+        (async function() {
+            var ok = await fetchBlocksREST();
+            if (ok) {
+                updateFromBlocks();
+                await fetchStatsREST();
+                connectWS();
+            } else {
+                // All REST failed, use simulated
+                allBlocks = genFallback();
+                renderBlocks(allBlocks);
+                updateFromBlocks();
+                setMining({ txCount: 42, size: 215040, lowFee: 1, medFee: 2 });
+                var note = document.getElementById('chainNote');
+                if (note) note.innerHTML = 'Showing simulated blocks \u2014 <a href="https://bc2.live" target="_blank">view the real chain at BC2.Live</a>';
+            }
+            // Periodic REST refresh
+            setInterval(async function() { var r = await fetchBlocksREST(); if (r) { updateFromBlocks(); fetchStatsREST(); } }, 60000);
+            setInterval(fetchStatsREST, 25000);
+            // Refresh relative times every 2 min
+            setInterval(function() { if (allBlocks.length) renderBlocks(allBlocks); }, 120000);
+        })();
+
+        // Parallax on scroll for aurora blobs
+        let ticking = false;
+        window.addEventListener('scroll', () => {
+            if (!ticking) {
+                requestAnimationFrame(() => {
+                    const s = window.scrollY;
+                    document.querySelectorAll('.aurora').forEach((a, i) => {
+                        const speed = [0.03, -0.02, 0.015, -0.025][i] || 0.01;
+                        a.style.transform = `translateY(${s * speed}px)`;
+                    });
+                    ticking = false;
+                });
+                ticking = true;
+            }
+        });
+    </script>
+</body>
+</html>
