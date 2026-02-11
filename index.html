@@ -524,7 +524,8 @@
         .mining-title .blink { display: inline-block; width: 6px; height: 6px; background: #4ade80; border-radius: 50%; box-shadow: 0 0 6px rgba(74,222,128,0.6); animation: mBlink 1s ease-in-out infinite; }
         @keyframes mBlink { 0%,100%{opacity:1;} 50%{opacity:.2;} }
 
-        .chain-viewport { position: relative; width: 100%; height: 250px; overflow: hidden; border-radius: 16px; background: rgba(8,8,8,0.7); border: 1px solid rgba(255,255,255,0.04); margin-top: 1.5rem; }
+        .chain-viewport { position: relative; width: 100%; height: 250px; overflow: hidden; border-radius: 16px; background: rgba(8,8,8,0.7); border: 1px solid rgba(255,255,255,0.04); margin-top: 1.5rem; cursor: grab; user-select: none; -webkit-user-select: none; }
+        .chain-viewport.dragging { cursor: grabbing; }
         .chain-viewport::before { content:''; position:absolute; bottom:0; left:50%; transform:translateX(-50%); width:60%; height:100px; background:radial-gradient(ellipse,rgba(247,147,26,0.04),transparent 70%); pointer-events:none; filter:blur(20px); z-index:1; }
         .chain-scanlines { position:absolute; top:0; left:0; width:100%; height:100%; background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,0.02) 3px,rgba(0,0,0,0.02) 4px); pointer-events:none; z-index:5; }
         .chain-mask { position:absolute; top:0; height:100%; width:120px; z-index:4; pointer-events:none; }
@@ -533,8 +534,12 @@
         .chain-track { position:absolute; top:50%; left:0; transform:translateY(-50%); display:flex; align-items:center; animation:chainScroll 300s linear infinite; will-change:transform; }
         @keyframes chainScroll { 0%{transform:translateY(-50%) translateX(0);} 100%{transform:translateY(-50%) translateX(-50%);} }
 
-        .chain-block { flex-shrink:0; width:165px; height:180px; background:linear-gradient(165deg,#111,#090909); border:1px solid rgba(247,147,26,0.07); border-radius:12px; padding:1rem; position:relative; overflow:hidden; display:flex; flex-direction:column; justify-content:space-between; transition:border-color .3s,box-shadow .3s; }
+        .chain-block { flex-shrink:0; width:165px; height:180px; background:linear-gradient(165deg,#111,#090909); border:1px solid rgba(247,147,26,0.07); border-radius:12px; padding:1rem; position:relative; overflow:hidden; display:flex; flex-direction:column; justify-content:space-between; transition:border-color .3s,box-shadow .3s; cursor:pointer; }
         .chain-block:hover { border-color:rgba(247,147,26,0.25); box-shadow:0 0 40px rgba(247,147,26,0.06); }
+        .chain-block:active { transform:scale(0.97); }
+        .chain-track.paused { animation-play-state:paused !important; }
+        .chain-block .block-view-hint { position:absolute; bottom:8px; right:10px; font-size:0.48rem; color:var(--gold); opacity:0; transition:opacity .3s; text-transform:uppercase; letter-spacing:0.06em; }
+        .chain-block:hover .block-view-hint { opacity:0.7; }
         .chain-block::before { content:''; position:absolute; top:0; left:10%; width:80%; height:2px; background:linear-gradient(90deg,transparent,var(--gold),transparent); opacity:.2; box-shadow:0 0 8px rgba(247,147,26,0.25); }
         .chain-block::after { content:''; position:absolute; top:-15px; left:50%; transform:translateX(-50%); width:60%; height:30px; background:radial-gradient(ellipse,rgba(247,147,26,0.04),transparent); filter:blur(8px); pointer-events:none; }
         .block-height { font-family:'Playfair Display',serif; font-size:1.15rem; font-weight:700; background:linear-gradient(135deg,var(--gold-lt),var(--gold)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
@@ -949,6 +954,18 @@
                 </a>
             </div>
             <p class="download-note reveal">iOS coming soon &middot; Requires Android 8.0+ &middot; <a href="https://github.com/GenesisWalletOrg/GenesisWallet">View on GitHub</a></p>
+            <div class="download-verify reveal" style="margin-top:2rem;padding:1.2rem 1.5rem;border-radius:12px;background:rgba(247,147,26,0.03);border:1px solid rgba(247,147,26,0.08);text-align:left;max-width:540px;margin-left:auto;margin-right:auto;">
+                <div style="font-size:0.7rem;color:var(--gold);text-transform:uppercase;letter-spacing:0.1em;font-weight:600;margin-bottom:0.6rem;display:flex;align-items:center;gap:0.4rem;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                    Verify Your Download
+                </div>
+                <div style="font-size:0.65rem;color:var(--t3);margin-bottom:0.5rem;">SHA-256 &mdash; <code style="color:var(--t2);">GenesisWalletUnsignedBeta.apk</code></div>
+                <div style="font-family:monospace;font-size:0.62rem;color:var(--t2);word-break:break-all;line-height:1.6;padding:0.6rem 0.8rem;background:rgba(0,0,0,0.3);border-radius:8px;border:1px solid rgba(255,255,255,0.04);cursor:pointer;position:relative;" onclick="navigator.clipboard.writeText('5698284f6068593734b1b46b97cdb5dfc1006a54147f4d98e280d7207dce9e2e');this.querySelector('.copy-toast').style.opacity=1;setTimeout(()=>this.querySelector('.copy-toast').style.opacity=0,1500);">
+                    5698284f6068593734b1b46b97cdb5dfc1006a54147f4d98e280d7207dce9e2e
+                    <span class="copy-toast" style="position:absolute;top:-28px;right:8px;font-size:0.6rem;color:var(--gold);background:rgba(10,10,10,0.9);padding:0.25rem 0.6rem;border-radius:6px;border:1px solid rgba(247,147,26,0.15);opacity:0;transition:opacity .3s;pointer-events:none;font-family:sans-serif;">Copied!</span>
+                </div>
+                <div style="font-size:0.58rem;color:var(--t3);margin-top:0.5rem;">Click hash to copy &middot; Verify with <code style="color:var(--t2);">sha256sum</code> on Linux/Mac or <code style="color:var(--t2);">Get-FileHash</code> on Windows</div>
+            </div>
         </div>
     </section>
 
@@ -1003,7 +1020,12 @@
                 <li><a href="https://www.reddit.com/r/BitcoinII/">Reddit</a></li>
                 <li><a href="https://genesiswallet.org">GenesisWallet.org</a></li>
             </ul>
-            <div class="footer-copy">&copy; 2025 GenesisWallet &middot; MIT License &middot; Community fork of <a href="https://bluewallet.io" target="_blank" rel="noopener">BlueWallet</a></div>
+            <div class="footer-copy">
+                &copy; 2025&ndash;2026 GenesisWallet Contributors &middot; Licensed under the <a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener">MIT License</a><br>
+                GenesisWallet is a community fork of <a href="https://bluewallet.io" target="_blank" rel="noopener">BlueWallet</a> &mdash; &copy; BlueWallet developers. Used under the MIT License.<br>
+                Bitcoin is an open protocol. BC2 (BitcoinII) is an independent blockchain network. Not affiliated with Bitcoin Core or BlueWallet.<br>
+                <span style="font-size:0.7rem;opacity:0.5;">This software is provided &ldquo;as is&rdquo;, without warranty of any kind. Use at your own risk.</span>
+            </div>
         </div>
     </footer>
 
@@ -1082,6 +1104,8 @@
         function mkBlock(b, latest) {
             var el = document.createElement('div');
             el.className = 'chain-block';
+            el.setAttribute('data-hash', b.id || '');
+            el.setAttribute('data-height', b.height || '');
             el.innerHTML =
                 '<div><div class="block-height">#' + b.height.toLocaleString() + '</div>' +
                 '<div class="block-hash">' + fmtH(b.id) + '</div></div>' +
@@ -1090,6 +1114,7 @@
                 '<div class="block-size">' + fmtS(b.size) + '</div></div>' +
                 '<div class="block-time">' + fmtT(b.timestamp) + '</div>' +
                 '</div></div><div class="block-flash"></div>' +
+                '<div class="block-view-hint">View block &rarr;</div>' +
                 (latest ? '<div class="block-status"><span class="sdot"></span>Latest</div>' : '');
             return el;
         }
@@ -1116,6 +1141,186 @@
             chainTrack.style.opacity = '1';
             chainTrack.style.transition = 'opacity .6s ease';
         }
+
+        // ── Drag-to-scroll + click-to-view blocks ──
+        var viewport = document.getElementById('chainViewport');
+        var track = document.getElementById('chainTrack');
+        var explorerBase = 'https://bc2.live/block/';
+        var isDragging = false;
+        var dragStartX = 0;
+        var trackOffset = 0;       // current manual offset in px
+        var animWasPaused = false;
+        var dragMoved = false;      // distinguish click from drag
+        var resumeTimer = null;
+        var trackWidth = 0;         // half the track (one full set of blocks)
+
+        function getComputedOffset() {
+            // Get the current animated translateX so we can freeze position
+            var style = window.getComputedStyle(track);
+            var matrix = style.transform || style.webkitTransform;
+            if (matrix && matrix !== 'none') {
+                var vals = matrix.match(/matrix.*\((.+)\)/);
+                if (vals) {
+                    var parts = vals[1].split(',');
+                    return parseFloat(parts[4]) || 0;
+                }
+            }
+            return 0;
+        }
+
+        function pauseTrack() {
+            // Freeze the track at its current visual position
+            var currentX = getComputedOffset();
+            track.style.animation = 'none';
+            track.style.transform = 'translateY(-50%) translateX(' + currentX + 'px)';
+            trackOffset = currentX;
+        }
+
+        function resumeTrack() {
+            // Calculate how far through the scroll cycle we are and resume
+            trackWidth = track.scrollWidth / 2;
+            if (trackWidth <= 0) return;
+
+            // Normalize offset to be within [-trackWidth, 0]
+            var normalizedX = trackOffset % trackWidth;
+            if (normalizedX > 0) normalizedX -= trackWidth;
+
+            // Figure out remaining duration proportionally
+            var totalDur = Math.max(120, allBlocks.length * 3);
+            var progress = Math.abs(normalizedX) / trackWidth;
+            var remainDur = totalDur * (1 - progress);
+            if (remainDur < 5) remainDur = totalDur;
+
+            // Re-enable animation from current position
+            track.style.animation = 'none';
+            track.offsetHeight; // force reflow
+            track.style.transform = '';
+            track.style.animation = 'chainScroll ' + totalDur + 's linear infinite';
+            track.style.animationDelay = '-' + (progress * totalDur).toFixed(2) + 's';
+        }
+
+        function clampOffset() {
+            trackWidth = track.scrollWidth / 2;
+            if (trackWidth > 0) {
+                // Wrap around so it never scrolls past the duplicate set
+                trackOffset = trackOffset % trackWidth;
+                if (trackOffset > 0) trackOffset -= trackWidth;
+            }
+        }
+
+        // Mouse events
+        viewport.addEventListener('mousedown', function(e) {
+            if (e.target.closest('.chain-loading')) return;
+            isDragging = true;
+            dragMoved = false;
+            dragStartX = e.clientX;
+            viewport.classList.add('dragging');
+
+            // Freeze at current position
+            pauseTrack();
+
+            if (resumeTimer) { clearTimeout(resumeTimer); resumeTimer = null; }
+            e.preventDefault();
+        });
+
+        document.addEventListener('mousemove', function(e) {
+            if (!isDragging) return;
+            var dx = e.clientX - dragStartX;
+            if (Math.abs(dx) > 3) dragMoved = true;
+            var newX = trackOffset + dx;
+            track.style.transform = 'translateY(-50%) translateX(' + newX + 'px)';
+        });
+
+        document.addEventListener('mouseup', function(e) {
+            if (!isDragging) return;
+            isDragging = false;
+            viewport.classList.remove('dragging');
+
+            var dx = e.clientX - dragStartX;
+            trackOffset += dx;
+            clampOffset();
+            track.style.transform = 'translateY(-50%) translateX(' + trackOffset + 'px)';
+
+            // If it was just a click (not a drag), handle block click
+            if (!dragMoved) {
+                var block = e.target.closest('.chain-block');
+                if (block) {
+                    var hash = block.getAttribute('data-hash');
+                    block.style.borderColor = 'rgba(247,147,26,0.5)';
+                    block.style.boxShadow = '0 0 50px rgba(247,147,26,0.15)';
+                    setTimeout(function() {
+                        if (hash && hash.length > 10) {
+                            window.open(explorerBase + hash, '_blank');
+                        }
+                        block.style.borderColor = '';
+                        block.style.boxShadow = '';
+                    }, 300);
+                }
+            }
+
+            // Resume auto-scroll after 4 seconds of no interaction
+            resumeTimer = setTimeout(function() {
+                resumeTrack();
+                resumeTimer = null;
+            }, 4000);
+        });
+
+        // Touch events for mobile
+        var touchStartX = 0;
+        var touchMoved = false;
+
+        viewport.addEventListener('touchstart', function(e) {
+            if (e.target.closest('.chain-loading')) return;
+            isDragging = true;
+            touchMoved = false;
+            touchStartX = e.touches[0].clientX;
+            dragStartX = touchStartX;
+            viewport.classList.add('dragging');
+            pauseTrack();
+            if (resumeTimer) { clearTimeout(resumeTimer); resumeTimer = null; }
+        }, { passive: true });
+
+        viewport.addEventListener('touchmove', function(e) {
+            if (!isDragging) return;
+            var dx = e.touches[0].clientX - dragStartX;
+            if (Math.abs(dx) > 3) touchMoved = true;
+            track.style.transform = 'translateY(-50%) translateX(' + (trackOffset + dx) + 'px)';
+        }, { passive: true });
+
+        viewport.addEventListener('touchend', function(e) {
+            if (!isDragging) return;
+            isDragging = false;
+            viewport.classList.remove('dragging');
+
+            var touch = e.changedTouches[0];
+            var dx = touch.clientX - dragStartX;
+            trackOffset += dx;
+            clampOffset();
+            track.style.transform = 'translateY(-50%) translateX(' + trackOffset + 'px)';
+
+            if (!touchMoved) {
+                var block = touch.target.closest ? touch.target.closest('.chain-block') : null;
+                if (block) {
+                    var hash = block.getAttribute('data-hash');
+                    if (hash && hash.length > 10) {
+                        window.open(explorerBase + hash, '_blank');
+                    }
+                }
+            }
+
+            resumeTimer = setTimeout(function() {
+                resumeTrack();
+                resumeTimer = null;
+            }, 4000);
+        });
+
+        // Pause on hover (no drag), resume on leave
+        viewport.addEventListener('mouseenter', function() {
+            if (!isDragging && !resumeTimer) pauseTrack();
+        });
+        viewport.addEventListener('mouseleave', function() {
+            if (!isDragging && !resumeTimer) resumeTrack();
+        });
 
         // ── Mining stats updater ──
         function setMining(data) {
