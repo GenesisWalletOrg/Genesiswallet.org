@@ -2634,7 +2634,7 @@
             var ctx = canvas.getContext('2d');
             var W, H, dpr;
             var particles = [];
-            var maxParticles = 60;
+            var maxParticles = 20;
             var animId = null;
             var visible = false;
             var blockFlash = 0; // countdown for block-mined effect
@@ -2771,7 +2771,7 @@
                 }
 
                 // Respawn dead particles gradually after block collapse
-                if (respawnQueue > 0 && blockFlash < 10) {
+                if (respawnQueue > 0 && blockFlash < 10 && !blockJustMined) {
                     var spawnsPerFrame = 2;
                     for (var j = 0; j < particles.length && spawnsPerFrame > 0; j++) {
                         if (!particles[j].alive) {
@@ -2790,7 +2790,7 @@
                 }
 
                 // Fade in new particles
-                for (var k = 0; k < particles.length; k++) {
+                if (!blockJustMined) for (var k = 0; k < particles.length; k++) {
                     if (particles[k].alive && particles[k].age < 30 && !particles[k].collapsing) {
                         particles[k].alpha = Math.min(particles[k].alpha + 0.015, 0.3 + Math.random() * 0.3);
                     }
@@ -2800,12 +2800,11 @@
                 var aliveCount = 0;
                 for (var m = 0; m < particles.length; m++) if (particles[m].alive) aliveCount++;
                 if (countEl) {
-                    if (blockJustMined && blockFlash > 0) {
+                    if (blockJustMined) {
                         countEl.textContent = '0 unconfirmed';
                     } else {
                         countEl.textContent = realTxCount + ' unconfirmed';
                     }
-                    if (blockJustMined && blockFlash <= 0) blockJustMined = false;
                 }
             }
 
@@ -2823,8 +2822,12 @@
             window._mempoolHeatmap = {
                 setTxCount: function(n) {
                     realTxCount = n;
+                    if (blockJustMined && blockFlash <= 0) {
+                        // Collapse is done, new mempool data arrived — resume
+                        blockJustMined = false;
+                    }
                     if (!blockJustMined) {
-                        maxParticles = Math.max(15, Math.min(80, Math.round(n / 2)));
+                        maxParticles = Math.max(1, Math.min(80, Math.round(n / 2)));
                         // Adjust particle array
                         while (particles.length < maxParticles) particles.push(spawnParticle());
                         while (particles.length > maxParticles) particles.pop();
