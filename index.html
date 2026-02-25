@@ -645,7 +645,7 @@
         #mempoolCanvas { width: 100%; height: 140px; display: block; }
         .mempool-heatmap-legend { display: flex; gap: 1rem; justify-content: center; padding: 0 1rem 0.6rem; }
         .mhl-item { font-family: 'SF Mono','Fira Code',monospace; font-size: 0.5rem; color: var(--t3); display: flex; align-items: center; gap: 0.3rem; text-transform: uppercase; letter-spacing: 0.06em; }
-        .mhl-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
+        .mhl-dot { width: 6px; height: 6px; border-radius: 0; display: inline-block; }
 
         .chain-viewport { position: relative; width: 100%; height: 280px; overflow: hidden; border-radius: 16px; background: rgba(8,8,8,0.7); border: 1px solid rgba(255,255,255,0.04); margin-top: 1.5rem; cursor: grab; user-select: none; -webkit-user-select: none; touch-action: pan-y; }
         .chain-viewport.dragging { cursor: grabbing; }
@@ -1231,9 +1231,9 @@
                 </div>
                 <canvas id="mempoolCanvas"></canvas>
                 <div class="mempool-heatmap-legend">
-                    <span class="mhl-item"><span class="mhl-dot" style="background:#6366f1;"></span>Low fee</span>
-                    <span class="mhl-item"><span class="mhl-dot" style="background:#f59e0b;"></span>Med fee</span>
-                    <span class="mhl-item"><span class="mhl-dot" style="background:#ef4444;"></span>High fee</span>
+                    <span class="mhl-item"><span class="mhl-dot" style="background:#F7931A;"></span>1 sat/vB</span>
+                    <span class="mhl-item"><span class="mhl-dot" style="background:#F97316;"></span>5 sat/vB</span>
+                    <span class="mhl-item"><span class="mhl-dot" style="background:#DC2626;"></span>20+ sat/vB</span>
                 </div>
             </div>
 
