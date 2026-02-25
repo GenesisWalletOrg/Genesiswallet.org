@@ -12,7 +12,7 @@
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=DM+Serif+Display&display=swap" rel="stylesheet">
     <style>
         *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -84,9 +84,11 @@
         }
         .nav-inner { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; }
         .nav-logo { display: flex; align-items: center; gap: 0.75rem; text-decoration: none; color: var(--t1); }
-        .nav-logo img { width: 36px; height: 36px; border-radius: 8px; filter: drop-shadow(0 0 10px rgba(247,147,26,0.35)); transition: filter 0.3s; }
+        .nav-logo img { width: 36px; height: 36px; border-radius: 0; filter: drop-shadow(0 0 10px rgba(247,147,26,0.35)); transition: filter 0.3s; }
         .nav-logo:hover img { filter: drop-shadow(0 0 20px rgba(247,147,26,0.6)); }
-        .nav-logo span { font-family: 'Playfair Display', serif; font-size: 1.25rem; font-weight: 600; }
+        .nav-logo span { font-size: 1.25rem; font-weight: 600; }
+        .nav-logo .brand-genesis { font-family: 'DM Serif Display', serif; }
+        .nav-logo .brand-wallet { font-family: 'DM Sans', sans-serif; font-size: 0.7rem; font-weight: 500; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gold); margin-left: 0.15rem; vertical-align: 0.05em; }
         .nav-links { display: flex; align-items: center; gap: 2rem; list-style: none; }
         .nav-links a { text-decoration: none; color: var(--t2); font-size: 0.9rem; transition: all 0.3s; position: relative; }
         .nav-links a:not(.btn-nav)::after { content: ''; position: absolute; bottom: -4px; left: 0; width: 0; height: 1px; background: var(--gold); box-shadow: 0 0 8px rgba(247,147,26,0.5); transition: width 0.3s; }
@@ -154,16 +156,6 @@
         }
         @keyframes gridPulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
 
-        /* Scanning light beam */
-        .scan-beam {
-            position: absolute; top: 0; left: -300px;
-            width: 300px; height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(247,147,26,0.015), rgba(255,179,71,0.04), rgba(247,147,26,0.015), transparent);
-            transform: skewX(-12deg);
-            animation: scanBeam 10s ease-in-out infinite;
-            pointer-events: none;
-        }
-        @keyframes scanBeam { 0%,100% { left: -300px; opacity: 1; } 50% { left: calc(100% + 300px); opacity: 0.6; } }
 
         /* Vertical light rays */
         .light-rays {
@@ -171,25 +163,25 @@
             width: 100%; height: 600px; pointer-events: none;
             background:
                 conic-gradient(from 180deg at 50% 0%, transparent 40%, rgba(247,147,26,0.02) 45%, transparent 50%, transparent 90%, rgba(255,179,71,0.015) 95%, transparent 100%);
-            animation: raysRotate 30s linear infinite;
+            animation: raysSway 20s ease-in-out infinite;
             opacity: 0.7;
         }
-        @keyframes raysRotate { from { transform: translateX(-50%) rotate(0deg); } to { transform: translateX(-50%) rotate(360deg); } }
+        @keyframes raysSway { 0%,100% { transform: translateX(-50%) rotate(-8deg); } 50% { transform: translateX(-50%) rotate(8deg); } }
 
         /* Particles */
         .particles { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
         .particle {
-            position: absolute; border-radius: 50%; opacity: 0;
-            animation: particleRise linear infinite;
+            position: absolute; border-radius: 0; opacity: 0;
+            animation: particleRise linear 1 forwards;
         }
-        .particle-gold { background: var(--gold); box-shadow: 0 0 6px rgba(247,147,26,0.6); }
-        .particle-white { background: rgba(255,255,255,0.8); box-shadow: 0 0 4px rgba(255,255,255,0.4); }
+        .particle-gold { background: var(--gold); box-shadow: 0 0 8px rgba(247,147,26,0.7), 0 0 2px rgba(247,147,26,0.9); }
+        .particle-white { background: rgba(255,255,255,0.85); box-shadow: 0 0 6px rgba(255,255,255,0.5), 0 0 2px rgba(255,255,255,0.8); }
         @keyframes particleRise {
-            0% { opacity: 0; transform: translateY(100vh) translateX(0) scale(0); }
-            10% { opacity: 0.7; }
-            50% { transform: translateY(50vh) translateX(var(--drift)) scale(1); }
-            90% { opacity: 0.7; }
-            100% { opacity: 0; transform: translateY(-10vh) translateX(calc(var(--drift) * -1)) scale(0.5); }
+            0% { opacity: 0; transform: translateY(100vh) translateX(0) scale(0) rotate(0deg); }
+            5% { opacity: 0.7; transform: translateY(95vh) translateX(0) scale(0.8) rotate(18deg); }
+            50% { opacity: 0.7; transform: translateY(50vh) translateX(var(--drift)) scale(1) rotate(180deg); }
+            95% { opacity: 0.7; transform: translateY(-90vh) translateX(calc(var(--drift) * -1)) scale(0.8) rotate(342deg); }
+            100% { opacity: 0.7; transform: translateY(-110vh) translateX(calc(var(--drift) * -1)) scale(0.7) rotate(360deg); }
         }
 
         .hero-inner { max-width: 1200px; margin: 0 auto; width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center; position: relative; z-index: 1; }
@@ -219,8 +211,8 @@
         @keyframes dotPulse { 0%,100% { box-shadow: 0 0 10px rgba(247,147,26,0.7), 0 0 20px rgba(247,147,26,0.3); } 50% { box-shadow: 0 0 4px rgba(247,147,26,0.3), 0 0 8px rgba(247,147,26,0.1); } }
 
         .hero h1 {
-            font-family: 'Playfair Display', serif; font-size: clamp(2.8rem,5vw,4.2rem);
-            font-weight: 700; line-height: 1.1; letter-spacing: -0.02em;
+            font-family: 'DM Sans', sans-serif; font-size: clamp(2.8rem,5vw,4.2rem);
+            font-weight: 700; line-height: 1.1; letter-spacing: -0.03em;
             margin-bottom: 1.5rem; animation: fadeInUp 0.8s ease 0.1s both;
         }
         .hero h1 .gold {
@@ -283,14 +275,14 @@
 
         .phone-mockup {
             width: 280px; height: 560px;
-            background: linear-gradient(160deg, #1A1A1A, #0D0D0D);
-            border-radius: 36px; border: 2px solid #2A2A2A; padding: 12px;
+            background: linear-gradient(160deg, #1A1A2A, #0D0D17);
+            border-radius: 36px; border: 2px solid #1e2235; padding: 12px;
             position: relative;
             box-shadow:
                 0 50px 100px rgba(0,0,0,0.6),
-                0 0 0 1px rgba(255,255,255,0.05),
-                inset 0 1px 0 rgba(255,255,255,0.05),
-                0 0 150px rgba(247,147,26,0.08),
+                0 0 0 1px rgba(100,160,255,0.05),
+                inset 0 1px 0 rgba(100,160,255,0.05),
+                0 0 150px rgba(60,130,246,0.06),
                 0 0 60px rgba(247,147,26,0.04);
             transform: perspective(1000px) rotateY(-5deg) rotateX(3deg) translateY(100px);
             opacity: 0;
@@ -302,8 +294,8 @@
             100% { opacity: 1; transform: perspective(1000px) rotateY(-5deg) rotateX(3deg) translateY(0); }
         }
         @keyframes phoneFloat {
-            0%,100% { transform: perspective(1000px) rotateY(-5deg) rotateX(3deg) translateY(0); box-shadow: 0 50px 100px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.05), inset 0 1px 0 rgba(255,255,255,0.05), 0 0 150px rgba(247,147,26,0.08), 0 0 60px rgba(247,147,26,0.04); }
-            50% { transform: perspective(1000px) rotateY(-5deg) rotateX(3deg) translateY(-14px); box-shadow: 0 70px 120px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05), inset 0 1px 0 rgba(255,255,255,0.05), 0 0 200px rgba(247,147,26,0.1), 0 0 80px rgba(247,147,26,0.06); }
+            0%,100% { transform: perspective(1000px) rotateY(-5deg) rotateX(3deg) translateY(0); box-shadow: 0 50px 100px rgba(0,0,0,0.6), 0 0 0 1px rgba(100,160,255,0.05), inset 0 1px 0 rgba(100,160,255,0.05), 0 0 150px rgba(60,130,246,0.06), 0 0 60px rgba(247,147,26,0.04); }
+            50% { transform: perspective(1000px) rotateY(-5deg) rotateX(3deg) translateY(-14px); box-shadow: 0 70px 120px rgba(0,0,0,0.5), 0 0 0 1px rgba(100,160,255,0.05), inset 0 1px 0 rgba(100,160,255,0.05), 0 0 200px rgba(60,130,246,0.08), 0 0 80px rgba(247,147,26,0.06); }
         }
 
         /* Phone reflection */
@@ -314,46 +306,49 @@
             pointer-events: none;
         }
 
-        .phone-screen { width: 100%; height: 100%; background: linear-gradient(180deg, #0F0F0F, #1A1408); border-radius: 24px; overflow: hidden; position: relative; }
+        .phone-screen { width: 100%; height: 100%; background: #1a1008; border-radius: 24px; overflow: hidden; position: relative; display: flex; flex-direction: column; }
         .phone-notch { width: 120px; height: 28px; background: #000; border-radius: 0 0 16px 16px; margin: 0 auto; position: relative; z-index: 2; }
-        .phone-status { display: flex; justify-content: space-between; padding: 0.5rem 1.25rem 0; font-size: 0.65rem; color: var(--t3); }
-        .wallet-ui { padding: 1.5rem 1rem; }
-        .wallet-greeting { font-size: 0.7rem; color: var(--t3); margin-bottom: 0.25rem; }
-        .wallet-label { font-family: 'Playfair Display', serif; font-size: 1rem; color: var(--t1); margin-bottom: 1.5rem; }
+        .phone-status { display: flex; justify-content: space-between; padding: 0.5rem 1.25rem 0; font-size: 0.65rem; color: rgba(255,255,255,0.5); }
+        .wallet-ui { padding: 0.8rem 0.85rem 0; flex: 1; display: flex; flex-direction: column; }
+        .wallet-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.6rem; }
+        .wallet-header-title { font-size: 1.2rem; font-weight: 700; color: #fff; }
+        .wallet-header-add { width: 24px; height: 24px; border-radius: 50%; background: rgba(90,130,240,0.2); border: 1.5px solid rgba(90,130,240,0.5); display: flex; align-items: center; justify-content: center; font-size: 0.8rem; color: #5a82f0; font-weight: 400; }
 
         .wallet-card {
-            background: linear-gradient(135deg, var(--gold), var(--gold-sec));
-            border-radius: 16px; padding: 1.25rem; margin-bottom: 1rem; position: relative; overflow: hidden;
+            background: linear-gradient(145deg, #f0b840, #d4922a, #c88020);
+            border-radius: 12px; padding: 0.75rem 0.8rem 0.65rem; margin-bottom: 0.45rem; position: relative; overflow: hidden;
+            min-height: 95px; display: flex; flex-direction: column; justify-content: space-between;
         }
         .wallet-card::before {
-            content: ''; position: absolute; top: -60%; right: -40%;
-            width: 180px; height: 180px; background: rgba(255,255,255,0.12);
-            border-radius: 50%; animation: cardOrb 8s linear infinite;
+            content: ''; position: absolute; top: -50%; right: -30%;
+            width: 140px; height: 140px; background: rgba(255,255,255,0.08);
+            border-radius: 50%; animation: cardOrb 10s linear infinite;
         }
         .wallet-card::after {
             content: ''; position: absolute; top: 0; left: -100%;
             width: 200%; height: 100%;
-            background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.06) 25%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.06) 75%, transparent 100%);
-            animation: cardSweep 5s ease-in-out infinite;
+            background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 75%, transparent 100%);
+            animation: cardSweep 6s ease-in-out infinite;
         }
-        @keyframes cardOrb { from { transform: rotate(0deg) translateX(30px); } to { transform: rotate(360deg) translateX(30px); } }
+        @keyframes cardOrb { from { transform: rotate(0deg) translateX(25px); } to { transform: rotate(360deg) translateX(25px); } }
         @keyframes cardSweep { 0%,100% { transform: translateX(-50%); } 50% { transform: translateX(0%); } }
 
-        .wallet-card-label { font-size: 0.65rem; color: rgba(0,0,0,0.5); text-transform: uppercase; letter-spacing: 0.1em; font-weight: 600; position: relative; z-index: 1; }
-        .wallet-card-balance { font-size: 1.6rem; font-weight: 700; color: var(--bg); margin: 0.25rem 0; position: relative; z-index: 1; }
-        .wallet-card-sub { font-size: 0.7rem; color: rgba(0,0,0,0.4); position: relative; z-index: 1; }
-        .wallet-card-logo { position: absolute; bottom: 10px; right: 12px; width: 32px; height: 32px; border-radius: 50%; z-index: 2; opacity: 0.85; filter: drop-shadow(0 2px 6px rgba(0,0,0,0.3)); }
+        .wallet-card-name { font-size: 0.7rem; font-weight: 600; color: rgba(255,255,255,0.8); position: relative; z-index: 1; margin-bottom: 0.2rem; }
+        .wallet-card-balance { font-size: 1.3rem; font-weight: 800; color: #fff; position: relative; z-index: 1; text-shadow: 0 1px 3px rgba(0,0,0,0.15); }
+        .wallet-card-balance .card-unit { font-size: 0.7rem; font-weight: 700; color: rgba(255,255,255,0.75); margin-left: 0.2em; }
+        .wallet-card-bottom { display: flex; align-items: flex-end; justify-content: space-between; margin-top: 0.35rem; position: relative; z-index: 1; }
+        .wallet-card-meta {}
+        .wallet-card-txlabel { font-size: 0.5rem; font-weight: 700; color: rgba(255,255,255,0.55); }
+        .wallet-card-txval { font-size: 0.55rem; font-weight: 600; color: rgba(255,255,255,0.7); }
+        .wallet-card-logo { width: 38px; height: 38px; border-radius: 50%; z-index: 2; opacity: 0.7; filter: drop-shadow(0 2px 6px rgba(0,0,0,0.3)); }
 
-        .wallet-txn { display: flex; align-items: center; justify-content: space-between; padding: 0.7rem 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
-        .wallet-txn-left { display: flex; align-items: center; gap: 0.6rem; }
-        .wallet-txn-icon { width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; }
-        .txn-in { background: rgba(247,147,26,0.1); color: var(--gold); }
-        .txn-out { background: rgba(255,255,255,0.05); color: var(--t3); }
-        .wallet-txn-name { font-size: 0.75rem; color: var(--t1); font-weight: 500; }
-        .wallet-txn-date { font-size: 0.6rem; color: var(--t3); }
-        .wallet-txn-amount { font-size: 0.75rem; font-weight: 600; }
-        .txn-positive { color: var(--gold); }
-        .txn-negative { color: var(--t2); }
+        .wallet-add-card {
+            background: linear-gradient(145deg, #c88020, #a06818);
+            border-radius: 12px; padding: 0.65rem 0.8rem; position: relative; overflow: hidden;
+        }
+        .wallet-add-title { font-size: 0.75rem; font-weight: 700; color: #fff; margin-bottom: 0.15rem; position: relative; z-index: 1; }
+        .wallet-add-desc { font-size: 0.5rem; color: rgba(255,255,255,0.6); margin-bottom: 0.35rem; position: relative; z-index: 1; line-height: 1.3; }
+        .wallet-add-btn { display: inline-block; background: #f0c030; color: #6b4400; font-size: 0.55rem; font-weight: 700; padding: 0.25rem 0.65rem; border-radius: 6px; position: relative; z-index: 1; }
 
         /* Orbits */
         .orbit { position: absolute; border-radius: 50%; top: 50%; left: 50%; transform: translate(-50%,-50%); }
@@ -362,7 +357,7 @@
         .orbit-3 { width: 640px; height: 640px; border: 1px solid rgba(247,147,26,0.025); animation: orbitSpin 70s linear infinite; }
 
         .orbit-dot {
-            position: absolute; border-radius: 50%; background: var(--gold);
+            position: absolute; border-radius: 0; background: var(--gold);
         }
         .orbit-dot-1 { width: 6px; height: 6px; top: 0; left: 50%; transform: translateX(-50%); box-shadow: 0 0 14px rgba(247,147,26,0.6), 0 0 30px rgba(247,147,26,0.2); }
         .orbit-dot-2 { width: 4px; height: 4px; bottom: 10%; right: 5%; box-shadow: 0 0 10px rgba(247,147,26,0.5); opacity: 0.8; }
@@ -406,8 +401,8 @@
             box-shadow: 0 0 10px rgba(247,147,26,0.4);
         }
         .section-title {
-            font-family: 'Playfair Display', serif; font-size: clamp(2rem,3.5vw,2.8rem);
-            font-weight: 600; line-height: 1.2; margin-bottom: 1rem;
+            font-family: 'DM Sans', sans-serif; font-size: clamp(2rem,3.5vw,2.8rem);
+            font-weight: 700; line-height: 1.2; margin-bottom: 1rem; letter-spacing: -0.03em;
         }
         .section-desc { font-size: 1.05rem; color: var(--t2); max-width: 540px; line-height: 1.7; margin-bottom: 3rem; }
 
@@ -510,6 +505,117 @@
         .chain-header { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem; }
         .chain-badge { display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; color: var(--gold); text-transform: uppercase; letter-spacing: 0.1em; font-weight: 600; }
         .chain-badge-dot { width: 8px; height: 8px; background: var(--gold); border-radius: 50%; box-shadow: 0 0 8px rgba(247,147,26,0.6), 0 0 20px rgba(247,147,26,0.3); animation: cbPulse 2s ease-in-out infinite; }
+
+        /* Heartbeat audio toggle */
+        .heartbeat-toggle { display: inline-flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 0.35rem 0.5rem; margin-left: 0.75rem; cursor: pointer; color: var(--t3); transition: all 0.3s; vertical-align: middle; position: relative; }
+        .heartbeat-toggle:hover { border-color: rgba(247,147,26,0.25); color: var(--gold); background: rgba(247,147,26,0.06); }
+        .heartbeat-toggle.active { border-color: rgba(74,222,128,0.3); color: #4ade80; background: rgba(74,222,128,0.06); box-shadow: 0 0 16px rgba(74,222,128,0.08); }
+        .heartbeat-toggle.active .hb-icon-off { display: none; }
+        .heartbeat-toggle.active .hb-icon-on { display: inline !important; }
+        .heartbeat-toggle .hb-pulse-ring { position: absolute; inset: -4px; border-radius: 12px; border: 1px solid rgba(74,222,128,0.3); opacity: 0; }
+        .heartbeat-toggle.active .hb-pulse-ring { animation: hbRing 1.5s ease-out infinite; }
+        @keyframes hbRing { 0% { transform: scale(1); opacity: 0.6; } 100% { transform: scale(1.4); opacity: 0; } }
+
+        /* ── Genesis Block Monument ── */
+        .genesis-monument { text-align: center; position: relative; }
+        .genesis-tablets { display: flex; gap: 2.5rem; justify-content: center; align-items: stretch; margin-top: 2.5rem; perspective: 1200px; }
+        .genesis-tablet {
+            flex: 1; max-width: 480px; position: relative;
+            background: linear-gradient(170deg, #1a1814 0%, #0f0e0b 40%, #141210 100%);
+            border: 1px solid rgba(247,147,26,0.08);
+            border-radius: 4px; padding: 2.5rem 2rem 2rem;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.03), inset 0 0 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        /* Stone texture overlay */
+        .genesis-tablet::before {
+            content: ''; position: absolute; inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+            opacity: 0.5; pointer-events: none; border-radius: 4px;
+        }
+        /* Chisel glow top edge */
+        .genesis-tablet::after {
+            content: ''; position: absolute; top: 0; left: 15%; width: 70%; height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(247,147,26,0.4), transparent);
+            box-shadow: 0 0 15px rgba(247,147,26,0.15);
+        }
+        .tablet-era { font-family: 'SF Mono','Fira Code',monospace; font-size: 0.6rem; color: var(--gold); text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 0.5rem; opacity: 0.7; position: relative; z-index: 1; }
+        .tablet-date { font-family: 'DM Serif Display',serif; font-size: 1.6rem; font-weight: 700; color: var(--t1); margin-bottom: 0.25rem; position: relative; z-index: 1; }
+        .tablet-source { font-family: 'SF Mono','Fira Code',monospace; font-size: 0.58rem; color: var(--t3); margin-bottom: 1.5rem; position: relative; z-index: 1; }
+
+        /* The chiseled message */
+        .tablet-message {
+            font-family: 'DM Serif Display',serif; font-size: 1.15rem; font-weight: 400;
+            line-height: 1.7; color: var(--t1); position: relative; z-index: 1;
+            padding: 1.25rem; border-radius: 4px;
+            background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.03);
+        }
+        .tablet-message em { color: var(--gold); font-style: normal; font-weight: 600; }
+
+        /* Chisel reveal animation */
+        .chisel-char {
+            display: inline-block; opacity: 0; transform: translateY(4px);
+            transition: opacity 0.25s ease, transform 0.25s ease;
+        }
+        .chisel-char.revealed { opacity: 1; transform: translateY(0); }
+        .chisel-char.space { width: 0.3em; }
+        .chisel-word { display: inline-block; white-space: nowrap; }
+        .genesis-tablet.chisel-complete {
+            animation: tabletAura 4s cubic-bezier(0.22,0.61,0.36,1) forwards;
+        }
+        @keyframes tabletAura {
+            0% { box-shadow: 0 0 0 0 rgba(220,38,38,0), 0 0 0 0 rgba(220,38,38,0); }
+            25% { box-shadow: 0 0 12px 2px rgba(220,38,38,0.08), 0 0 30px 6px rgba(220,38,38,0.03); }
+            60% { box-shadow: 0 0 30px 4px rgba(220,38,38,0.18), 0 0 80px 15px rgba(220,38,38,0.07); }
+            100% { box-shadow: 0 0 20px 2px rgba(220,38,38,0.12), 0 0 60px 10px rgba(220,38,38,0.05); }
+        }
+        .genesis-tablet.chisel-complete-btc {
+            animation: tabletAuraBtc 4s cubic-bezier(0.22,0.61,0.36,1) forwards;
+        }
+        @keyframes tabletAuraBtc {
+            0% { box-shadow: 0 0 0 0 rgba(247,147,26,0), 0 0 0 0 rgba(247,147,26,0); }
+            25% { box-shadow: 0 0 12px 2px rgba(247,147,26,0.08), 0 0 30px 6px rgba(247,147,26,0.03); }
+            60% { box-shadow: 0 0 30px 4px rgba(247,147,26,0.18), 0 0 80px 15px rgba(247,147,26,0.07); }
+            100% { box-shadow: 0 0 20px 2px rgba(247,147,26,0.12), 0 0 60px 10px rgba(247,147,26,0.05); }
+        }
+
+        .tablet-hash { font-family: 'SF Mono','Fira Code',monospace; font-size: 0.42rem; color: var(--t3); word-break: break-all; line-height: 1.5; margin-top: 1.25rem; opacity: 0.5; position: relative; z-index: 1; }
+        .tablet-hash span { color: var(--gold); font-weight: 600; }
+
+        .tablet-btc { border-color: rgba(247,147,26,0.12); }
+        .tablet-btc::after { background: linear-gradient(90deg, transparent, rgba(247,147,26,0.35), transparent); }
+        .tablet-btc .tablet-era { color: #f7931a; }
+        .tablet-btc .tablet-message em { color: #f7931a; }
+        .tablet-btc .tablet-hash span { color: #f7931a; }
+        .tablet-bc2 { border-color: rgba(220,38,38,0.12); }
+        .tablet-bc2::after { background: linear-gradient(90deg, transparent, rgba(220,38,38,0.4), transparent); }
+        .tablet-bc2 .tablet-era { color: #ef4444; }
+        .tablet-bc2 .tablet-message em { color: #ef4444; }
+        .tablet-bc2 .tablet-hash span { color: #ef4444; }
+
+        /* Context footer */
+        .genesis-context {
+            margin-top: 2rem; font-family: 'SF Mono','Fira Code',monospace;
+            font-size: 0.65rem; color: var(--t3); line-height: 1.8;
+        }
+        .genesis-context strong { color: var(--t1); font-weight: 600; }
+        .genesis-divider {
+            display: flex; align-items: center; justify-content: center; gap: 1rem;
+            margin: 2rem 0; font-family: 'SF Mono','Fira Code',monospace; font-size: 0.6rem;
+            color: var(--t3); text-transform: uppercase; letter-spacing: 0.15em;
+        }
+        .genesis-divider::before, .genesis-divider::after {
+            content: ''; flex: 1; max-width: 120px; height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(247,147,26,0.2), transparent);
+        }
+
+        /* Genesis tablets auto-reveal on scroll */
+
+        @media (max-width: 900px) {
+            .genesis-tablets { flex-direction: column; align-items: center; }
+            .genesis-tablet { max-width: 100%; }
+            .video-grid { grid-template-columns: 1fr 1fr; }
+        }
         @keyframes cbPulse { 0%,100%{opacity:1;transform:scale(1);} 50%{opacity:.3;transform:scale(.7);} }
         .chain-cta { display: flex; gap: 0.75rem; flex-wrap: wrap; }
         .chain-cta a { font-size: 0.85rem; color: var(--gold); text-decoration: none; display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.45rem 1.1rem; border: 1px solid rgba(247,147,26,0.15); border-radius: 8px; background: rgba(247,147,26,0.04); transition: all .3s; }
@@ -531,6 +637,16 @@
         .mining-title .blink { display: inline-block; width: 6px; height: 6px; background: #4ade80; border-radius: 50%; box-shadow: 0 0 6px rgba(74,222,128,0.6); animation: mBlink 1s ease-in-out infinite; }
         @keyframes mBlink { 0%,100%{opacity:1;} 50%{opacity:.2;} }
 
+        /* Mempool Heatmap */
+        .mempool-heatmap { margin-top: 1.5rem; border-radius: 14px; background: rgba(8,8,8,0.7); border: 1px solid rgba(255,255,255,0.04); overflow: hidden; position: relative; }
+        .mempool-heatmap-header { display: flex; justify-content: space-between; align-items: center; padding: 0.7rem 1rem 0; }
+        .mempool-heatmap-title { font-family: 'SF Mono','Fira Code',monospace; font-size: 0.6rem; color: var(--gold); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; }
+        .mempool-heatmap-count { font-family: 'SF Mono','Fira Code',monospace; font-size: 0.55rem; color: var(--t3); }
+        #mempoolCanvas { width: 100%; height: 140px; display: block; }
+        .mempool-heatmap-legend { display: flex; gap: 1rem; justify-content: center; padding: 0 1rem 0.6rem; }
+        .mhl-item { font-family: 'SF Mono','Fira Code',monospace; font-size: 0.5rem; color: var(--t3); display: flex; align-items: center; gap: 0.3rem; text-transform: uppercase; letter-spacing: 0.06em; }
+        .mhl-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
+
         .chain-viewport { position: relative; width: 100%; height: 280px; overflow: hidden; border-radius: 16px; background: rgba(8,8,8,0.7); border: 1px solid rgba(255,255,255,0.04); margin-top: 1.5rem; cursor: grab; user-select: none; -webkit-user-select: none; touch-action: pan-y; }
         .chain-viewport.dragging { cursor: grabbing; }
         .chain-viewport::before { content:''; position:absolute; bottom:0; left:50%; transform:translateX(-50%); width:60%; height:100px; background:radial-gradient(ellipse,rgba(247,147,26,0.04),transparent 70%); pointer-events:none; filter:blur(20px); z-index:1; }
@@ -538,10 +654,13 @@
         .chain-mask { position:absolute; top:0; height:100%; width:120px; z-index:4; pointer-events:none; }
         .chain-mask.left { left:0; background:linear-gradient(90deg,var(--bg2),transparent); width:40px; }
         .chain-mask.right { right:0; background:linear-gradient(-90deg,var(--bg2),transparent); }
-        .chain-track { position:absolute; top:50%; left:0; transform:translateY(-50%); display:flex; align-items:center; will-change:transform; padding-left:20px; }
+        .chain-track { position:absolute; top:50%; left:0; transform:translateY(-50%); display:flex; align-items:center; will-change:transform,opacity; padding-left:20px; }
 
         .chain-block { flex-shrink:0; width:165px; height:215px; background:linear-gradient(165deg,#111,#090909); border:1px solid rgba(247,147,26,0.07); border-radius:12px; padding:0.75rem 0.85rem; position:relative; overflow:hidden; display:flex; flex-direction:column; justify-content:space-between; transition:border-color .3s,box-shadow .3s; cursor:pointer; }
         .chain-block:hover { border-color:rgba(247,147,26,0.25); box-shadow:0 0 40px rgba(247,147,26,0.06); }
+        .chain-track.hb-active .chain-block { box-shadow: 0 0 16px 3px rgba(247,147,26,0.14); transition: box-shadow 0.12s ease-out; }
+        .chain-track:not(.hb-active) .chain-block { transition: box-shadow 0.5s ease-out; }
+        .chain-track.hb-active .chain-block.latest-block { box-shadow: 0 0 20px 4px rgba(74,222,128,0.18); }
         .chain-block:active { transform:scale(0.97); }
 
         /* Transaction visualization grid */
@@ -556,10 +675,47 @@
 
         /* External link warning modal */
         .ext-modal-overlay { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); z-index:9999; display:none; align-items:center; justify-content:center; opacity:0; transition:opacity .25s; }
+
+        /* ═══ Block Anatomy Modal ═══ */
+        .anatomy-overlay { position:fixed; inset:0; background:rgba(3,3,3,0.92); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); z-index:10000; display:none; opacity:0; transition:opacity .3s; overflow-y:auto; }
+        .anatomy-overlay.active { display:flex; opacity:1; }
+        .anatomy-inner { max-width:620px; width:94%; margin:3rem auto; padding:0 0 3rem; }
+        .anatomy-close { position:fixed; top:1.2rem; right:1.5rem; width:40px; height:40px; border-radius:50%; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); color:var(--t2); font-size:1.2rem; cursor:pointer; display:flex; align-items:center; justify-content:center; z-index:10001; transition:all .2s; }
+        .anatomy-close:hover { background:rgba(247,147,26,0.1); border-color:rgba(247,147,26,0.3); color:var(--gold); }
+        .anatomy-block-hero { text-align:center; padding:2.5rem 0 1.5rem; }
+        .anatomy-block-hero .abh-height { font-family:'DM Sans',sans-serif; font-size:2.2rem; font-weight:700; letter-spacing:-0.03em; background:linear-gradient(135deg,var(--gold-lt),var(--gold)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+        .anatomy-block-hero .abh-time { font-family:'SF Mono','Fira Code',monospace; font-size:0.7rem; color:var(--t3); margin-top:0.3rem; }
+        .anatomy-block-hero .abh-hash { font-family:'SF Mono','Fira Code',monospace; font-size:0.52rem; color:var(--t3); word-break:break-all; margin-top:0.75rem; line-height:1.6; padding:0.6rem 1rem; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.04); border-radius:8px; cursor:pointer; position:relative; }
+        .anatomy-block-hero .abh-hash:hover { border-color:rgba(247,147,26,0.15); }
+        .anatomy-block-hero .abh-hash .leading-zeros { color:var(--gold); font-weight:600; }
+        .anatomy-section { margin-top:1.5rem; }
+        .anatomy-section-title { font-family:'SF Mono','Fira Code',monospace; font-size:0.6rem; color:var(--gold); text-transform:uppercase; letter-spacing:0.12em; font-weight:600; margin-bottom:0.75rem; display:flex; align-items:center; gap:0.5rem; }
+        .anatomy-section-title::after { content:''; flex:1; height:1px; background:linear-gradient(90deg,rgba(247,147,26,0.15),transparent); }
+        .anatomy-fields { display:grid; grid-template-columns:1fr 1fr; gap:0.5rem; }
+        .anatomy-field { padding:0.65rem 0.8rem; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.04); border-radius:8px; transition:border-color .2s; }
+        .anatomy-field:hover { border-color:rgba(247,147,26,0.12); }
+        .anatomy-field-label { font-family:'SF Mono','Fira Code',monospace; font-size:0.48rem; color:var(--t3); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:0.2rem; }
+        .anatomy-field-value { font-family:'SF Mono','Fira Code',monospace; font-size:0.72rem; color:var(--t1); font-weight:600; word-break:break-all; }
+        .anatomy-field.full { grid-column:1/-1; }
+        .anatomy-merkle { margin-top:1.5rem; text-align:center; }
+        .anatomy-merkle canvas { width:100%; max-width:560px; border-radius:12px; border:1px solid rgba(255,255,255,0.04); background:rgba(0,0,0,0.3); }
+        .anatomy-tx-mosaic { display:grid; grid-template-columns:repeat(auto-fill,minmax(8px,1fr)); gap:2px; padding:0.75rem; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.04); border-radius:10px; margin-top:0.5rem; }
+        .anatomy-tx-cell { aspect-ratio:1; border-radius:2px; }
+        .anatomy-explorer-link { display:inline-flex; align-items:center; gap:0.4rem; margin-top:1.5rem; padding:0.6rem 1.2rem; background:rgba(247,147,26,0.06); border:1px solid rgba(247,147,26,0.15); border-radius:8px; color:var(--gold); font-size:0.75rem; font-weight:500; text-decoration:none; transition:all .2s; }
+        .anatomy-explorer-link:hover { background:rgba(247,147,26,0.12); border-color:rgba(247,147,26,0.3); }
+        @media(max-width:600px) {
+            .anatomy-fields { grid-template-columns:1fr; }
+            .anatomy-block-hero .abh-height { font-size:1.6rem; }
+            .anatomy-inner { margin:1rem auto; }
+        }
+
+        /* ═══ Genesis DNA Helix ═══ */
+        .genesis-dna-wrap { position:relative; width:100%; max-width:580px; margin:0 auto; height:220px; }
+        .genesis-dna-canvas { width:100%; height:100%; display:block; }
         .ext-modal-overlay.active { display:flex; opacity:1; }
         .ext-modal { background:linear-gradient(165deg,#161616,#0c0c0c); border:1px solid rgba(247,147,26,0.15); border-radius:16px; padding:2rem; max-width:420px; width:90%; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,0.5), 0 0 40px rgba(247,147,26,0.05); }
         .ext-modal-icon { font-size:2rem; margin-bottom:0.75rem; }
-        .ext-modal h3 { font-family:'Playfair Display',serif; font-size:1.15rem; color:var(--t1); margin-bottom:0.5rem; }
+        .ext-modal h3 { font-family:'DM Sans',sans-serif; font-size:1.15rem; font-weight:700; color:var(--t1); margin-bottom:0.5rem; }
         .ext-modal p { font-size:0.82rem; color:var(--t2); line-height:1.6; margin-bottom:0.5rem; }
         .ext-modal .ext-url { font-family:monospace; font-size:0.75rem; color:var(--gold); background:rgba(247,147,26,0.06); border:1px solid rgba(247,147,26,0.1); border-radius:8px; padding:0.5rem 0.75rem; margin:0.75rem 0; word-break:break-all; display:block; }
         .ext-modal .ext-warn { font-size:0.7rem; color:var(--t3); margin-bottom:1.25rem; }
@@ -708,13 +864,70 @@
         .exchange-btn-group { display: flex; gap: 1.5rem; justify-content: center; flex-wrap: wrap; }
         .exchange-btn-group .btn-secondary { font-size: 1rem; padding: 1rem 2.5rem; }
 
+        /* Video section */
+        .video-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-top: 2.5rem; }
+        .video-card {
+            border-radius: 14px; overflow: hidden; background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(247,147,26,0.08); transition: all 0.4s;
+        }
+        .video-card:hover { border-color: rgba(247,147,26,0.25); box-shadow: 0 8px 40px rgba(247,147,26,0.08); transform: translateY(-4px); }
+        .video-embed {
+            position: relative; width: 100%; padding-bottom: 56.25%; background: #0a0a0a;
+        }
+        .video-embed iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; }
+        .video-placeholder {
+            position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            background: linear-gradient(135deg, rgba(247,147,26,0.06), rgba(247,147,26,0.02));
+            cursor: pointer; transition: background 0.3s;
+        }
+        .video-placeholder:hover { background: linear-gradient(135deg, rgba(247,147,26,0.1), rgba(247,147,26,0.04)); }
+        .video-play-btn {
+            width: 56px; height: 56px; border-radius: 50%;
+            background: linear-gradient(135deg, var(--gold), #d4790e);
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 4px 20px rgba(247,147,26,0.35);
+            margin-bottom: 0.75rem; transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .video-placeholder:hover .video-play-btn { transform: scale(1.1); box-shadow: 0 6px 30px rgba(247,147,26,0.5); }
+        .video-play-btn svg { width: 22px; height: 22px; fill: #fff; margin-left: 2px; }
+        .video-slot-label { font-size: 0.8rem; color: rgba(255,255,255,0.4); font-weight: 500; }
+        .video-title { padding: 0.85rem 1rem; font-size: 0.85rem; color: var(--t2); font-weight: 500; line-height: 1.4; }
+
+        /* FAQ Accordion */
+        .faq-list { max-width: 780px; margin: 2.5rem auto 0; }
+        .faq-item {
+            border: 1px solid rgba(247,147,26,0.08); border-radius: 12px;
+            margin-bottom: 0.75rem; overflow: hidden; background: rgba(255,255,255,0.015);
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        .faq-item:hover { border-color: rgba(247,147,26,0.18); }
+        .faq-item.open { border-color: rgba(247,147,26,0.2); box-shadow: 0 4px 24px rgba(247,147,26,0.06); }
+        .faq-question {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 1.1rem 1.25rem; cursor: pointer; user-select: none;
+            font-size: 0.95rem; font-weight: 600; color: var(--t1); transition: color 0.3s;
+        }
+        .faq-question:hover { color: var(--gold); }
+        .faq-chevron {
+            width: 20px; height: 20px; flex-shrink: 0; transition: transform 0.35s;
+            stroke: var(--gold); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+        }
+        .faq-item.open .faq-chevron { transform: rotate(180deg); }
+        .faq-answer {
+            max-height: 0; overflow: hidden; transition: max-height 0.4s ease, padding 0.3s;
+            padding: 0 1.25rem; color: var(--t2); font-size: 0.9rem; line-height: 1.7;
+        }
+        .faq-item.open .faq-answer { max-height: 400px; padding: 0 1.25rem 1.15rem; }
+
         /* ════ Footer ════ */
         footer { border-top: 1px solid var(--border); padding: 3rem 2rem; position: relative; }
         footer::before { content: ''; position: absolute; top: -1px; left: 0; width: 100%; height: 1px; background: linear-gradient(90deg, transparent, rgba(247,147,26,0.12), transparent); }
         .footer-inner { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.5rem; }
         .footer-left { display: flex; align-items: center; gap: 0.75rem; }
-        .footer-left img { width: 28px; height: 28px; border-radius: 6px; }
-        .footer-left span { font-family: 'Playfair Display', serif; font-size: 1rem; font-weight: 600; }
+        .footer-left img { width: 28px; height: 28px; border-radius: 0; }
+        .footer-left span { font-size: 1rem; font-weight: 600; }
+        .footer-left .brand-genesis { font-family: 'DM Serif Display', serif; }
+        .footer-left .brand-wallet { font-family: 'DM Sans', sans-serif; font-size: 0.55rem; font-weight: 500; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gold); margin-left: 0.1rem; vertical-align: 0.05em; }
         .footer-links { display: flex; gap: 2rem; list-style: none; }
         .footer-links a { text-decoration: none; color: var(--t3); font-size: 0.85rem; transition: all 0.3s; }
         .footer-links a:hover { color: var(--gold); text-shadow: 0 0 10px rgba(247,147,26,0.2); }
@@ -746,9 +959,13 @@
             .hero h1 { font-size: 2.2rem; }
             .download-buttons { flex-direction: column; align-items: center; }
             .community-grid { grid-template-columns: 1fr; }
+            .tablet-message { font-size: 0.95rem; padding: 1rem; }
+            .tablet-date { font-size: 1.3rem; }
+            .genesis-tablet { padding: 1.75rem 1.25rem 1.5rem; }
             .footer-inner { flex-direction: column; text-align: center; }
             .footer-links { flex-wrap: wrap; justify-content: center; }
             .exchange-btn-group { flex-direction: column; align-items: center; }
+            .video-grid { grid-template-columns: 1fr; gap: 1rem; }
         }
 
         /* ════ Reveal animation ════ */
@@ -772,13 +989,19 @@
 </head>
 <body>
     <div class="bg-mesh"></div>
+    <!-- Block Anatomy Overlay -->
+    <div class="anatomy-overlay" id="anatomyOverlay">
+        <button class="anatomy-close" id="anatomyClose">&times;</button>
+        <div class="anatomy-inner" id="anatomyContent"></div>
+    </div>
+
     <div class="cursor-glow" id="cursorGlow"></div>
 
     <nav id="navbar">
         <div class="nav-inner">
             <a href="#" class="nav-logo">
-                <img src="data:image/png;base64,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" alt="BC2 Logo" width="36" height="36">
-                <span>GenesisWallet</span>
+                <img src="data:image/png;base64,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" alt="GenesisWallet" width="36" height="36">
+                <span><span class="brand-genesis">Genesis</span><span class="brand-wallet">Wallet</span></span>
             </a>
             <ul class="nav-links" id="navLinks">
                 <li><a href="#about">About</a></li>
@@ -786,7 +1009,9 @@
                 <li><a href="#blockchain">Blocks</a></li>
                 <li><a href="#specs">Specs</a></li>
                 <li><a href="#community">Community</a></li>
-                <li><a href="https://github.com/GenesisWalletOrg/GenesisWallet" class="btn-nav">GitHub</a></li>
+                <li><a href="#videos">Videos</a></li>
+                <li><a href="#faq">FAQ</a></li>
+                <li><a href="https://github.com/GenesisWalletOrg" class="btn-nav">GitHub</a></li>
             </ul>
             <button class="mobile-toggle" id="mobileToggle" aria-label="Menu">&#9776;</button>
         </div>
@@ -798,7 +1023,6 @@
         <div class="aurora aurora-3"></div>
         <div class="aurora aurora-4"></div>
         <div class="hero-grid"></div>
-        <div class="scan-beam"></div>
         <div class="light-rays"></div>
         <div class="particles" id="particles"></div>
         <div class="hero-inner">
@@ -807,11 +1031,11 @@
                 <h1>The Wallet for<br><span class="gold">BitcoinII</span></h1>
                 <p class="hero-desc">GenesisWallet is an open-source community fork of BlueWallet, reforged for the BC2 network. Self-custody, private, and built on Satoshi's original code.</p>
                 <div class="hero-actions">
-                    <a href="https://github.com/GenesisWalletOrg/GenesisWallet/releases" class="btn btn-primary">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                        Download
-                    </a>
-                    <a href="https://github.com/GenesisWalletOrg/GenesisWallet" class="btn btn-secondary">
+                    <span class="btn btn-primary" style="cursor:default;opacity:0.7;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        Coming Soon
+                    </span>
+                    <a href="https://github.com/GenesisWalletOrg" class="btn btn-secondary">
                         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
                         View Source
                     </a>
@@ -824,22 +1048,87 @@
                 <div class="phone-mockup">
                     <div class="phone-screen">
                         <div class="phone-notch"></div>
-                        <div class="phone-status"><span>9:41</span><span>&#9679;&#9679;&#9679;</span></div>
+                        <div class="phone-status"><span>3:15 PM</span><span>&#9679;&#9679;&#9679;</span></div>
                         <div class="wallet-ui">
-                            <div class="wallet-greeting">Welcome back</div>
-                            <div class="wallet-label">GenesisWallet</div>
-                            <div class="wallet-card">
-                                <div class="wallet-card-label">Total Balance</div>
-                                <div class="wallet-card-balance">12.4831 BC2</div>
-                                <div class="wallet-card-sub">HD SegWit &middot; bc2q...x7f4</div>
-                                <img class="wallet-card-logo" src="data:image/png;base64,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" alt="BC2">
+                            <div class="wallet-header">
+                                <div class="wallet-header-title">wallets</div>
                             </div>
-                            <div class="wallet-txn"><div class="wallet-txn-left"><div class="wallet-txn-icon txn-in">&#8593;</div><div><div class="wallet-txn-name">Received</div><div class="wallet-txn-date">Feb 9, 2026</div></div></div><div class="wallet-txn-amount txn-positive">+2.500</div></div>
-                            <div class="wallet-txn"><div class="wallet-txn-left"><div class="wallet-txn-icon txn-out">&#8595;</div><div><div class="wallet-txn-name">Sent</div><div class="wallet-txn-date">Feb 7, 2026</div></div></div><div class="wallet-txn-amount txn-negative">-0.150</div></div>
-                            <div class="wallet-txn"><div class="wallet-txn-left"><div class="wallet-txn-icon txn-in">&#8593;</div><div><div class="wallet-txn-name">Mining Payout</div><div class="wallet-txn-date">Feb 5, 2026</div></div></div><div class="wallet-txn-amount txn-positive">+1.200</div></div>
+                            <div class="wallet-card">
+                                <div>
+                                    <div class="wallet-card-name">BC2 Wallet</div>
+                                    <div class="wallet-card-balance">0.4217<span class="card-unit">BC2</span></div>
+                                </div>
+                                <div class="wallet-card-bottom">
+                                    <div class="wallet-card-meta">
+                                        <div class="wallet-card-txlabel">Latest Transaction</div>
+                                        <div class="wallet-card-txval">Feb 24, 2026</div>
+                                    </div>
+                                    <img class="wallet-card-logo" src="data:image/png;base64,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" alt="BC2">
+                                </div>
+                            </div>
+                            <div style="margin-top:0.3rem;">
+                                <div style="font-size:0.5rem;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.25rem;font-weight:600;">Transactions</div>
+                                <div class="wallet-txn" style="display:flex;align-items:center;justify-content:space-between;padding:0.35rem 0;border-bottom:1px solid rgba(255,255,255,0.04);"><div style="display:flex;align-items:center;gap:0.4rem;"><div style="width:22px;height:22px;border-radius:50%;background:rgba(247,147,26,0.12);color:#F7931A;display:flex;align-items:center;justify-content:center;font-size:0.55rem;">&#8593;</div><div><div style="font-size:0.6rem;color:rgba(255,255,255,0.85);font-weight:500;">Received</div><div style="font-size:0.45rem;color:rgba(255,255,255,0.3);">Feb 24, 2026</div></div></div><div style="font-size:0.6rem;font-weight:600;color:#F7931A;">+0.0850</div></div>
+                                <div class="wallet-txn" style="display:flex;align-items:center;justify-content:space-between;padding:0.35rem 0;border-bottom:1px solid rgba(255,255,255,0.04);"><div style="display:flex;align-items:center;gap:0.4rem;"><div style="width:22px;height:22px;border-radius:50%;background:rgba(255,59,48,0.1);color:#ff3b30;display:flex;align-items:center;justify-content:center;font-size:0.55rem;">&#8595;</div><div><div style="font-size:0.6rem;color:rgba(255,255,255,0.85);font-weight:500;">Sent</div><div style="font-size:0.45rem;color:rgba(255,255,255,0.3);">Feb 22, 2026</div></div></div><div style="font-size:0.6rem;font-weight:600;color:rgba(255,255,255,0.45);">-0.0200</div></div>
+                                <div class="wallet-txn" style="display:flex;align-items:center;justify-content:space-between;padding:0.35rem 0;border-bottom:1px solid rgba(255,255,255,0.04);"><div style="display:flex;align-items:center;gap:0.4rem;"><div style="width:22px;height:22px;border-radius:50%;background:rgba(247,147,26,0.12);color:#F7931A;display:flex;align-items:center;justify-content:center;font-size:0.55rem;">&#8593;</div><div><div style="font-size:0.6rem;color:rgba(255,255,255,0.85);font-weight:500;">Mining Payout</div><div style="font-size:0.45rem;color:rgba(255,255,255,0.3);">Feb 20, 2026</div></div></div><div style="font-size:0.6rem;font-weight:600;color:#F7931A;">+0.0125</div></div>
+                                <div class="wallet-txn" style="display:flex;align-items:center;justify-content:space-between;padding:0.35rem 0;"><div style="display:flex;align-items:center;gap:0.4rem;"><div style="width:22px;height:22px;border-radius:50%;background:rgba(255,59,48,0.1);color:#ff3b30;display:flex;align-items:center;justify-content:center;font-size:0.55rem;">&#8595;</div><div><div style="font-size:0.6rem;color:rgba(255,255,255,0.85);font-weight:500;">Sent</div><div style="font-size:0.45rem;color:rgba(255,255,255,0.3);">Feb 18, 2026</div></div></div><div style="font-size:0.6rem;font-weight:600;color:rgba(255,255,255,0.45);">-0.0050</div></div>
+                            </div>
+                            <div style="display:flex;align-items:center;justify-content:center;gap:2rem;padding:0.5rem 0 0.6rem;margin-top:auto;">
+                                <div style="display:flex;flex-direction:column;align-items:center;gap:0.2rem;">
+                                    <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#e8a830,#d4922a);display:flex;align-items:center;justify-content:center;box-shadow:0 2px 10px rgba(247,147,26,0.3);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 11 12 6 7 11"/><line x1="12" y1="6" x2="12" y2="18"/></svg></div>
+                                    <div style="font-size:0.45rem;color:rgba(255,255,255,0.5);font-weight:500;">Send</div>
+                                </div>
+                                <div style="display:flex;flex-direction:column;align-items:center;gap:0.2rem;">
+                                    <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#e8a830,#d4922a);display:flex;align-items:center;justify-content:center;box-shadow:0 2px 10px rgba(247,147,26,0.3);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="7 13 12 18 17 13"/><line x1="12" y1="18" x2="12" y2="6"/></svg></div>
+                                    <div style="font-size:0.45rem;color:rgba(255,255,255,0.5);font-weight:500;">Receive</div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="glow-div"></div>
+
+    <section id="genesis">
+        <div class="section-inner genesis-monument">
+            <div class="section-label reveal" style="justify-content:center;"><span class="chain-badge"><span class="chain-badge-dot"></span>Genesis</span></div>
+            <h2 class="section-title reveal">The Genesis Block</h2>
+            <p class="section-desc reveal" style="margin:0 auto;">Every chain begins with a message. A timestamp etched into the first block, forever immutable &mdash; a record of the world that made this chain necessary.</p>
+
+            <!-- Primary: BC2 genesis with chisel animation -->
+            <div class="genesis-tablet tablet-bc2 reveal" id="genesisTablet" style="max-width:580px;margin:3rem auto 0;">
+                <div class="tablet-era">BC2 &middot; Block #0 &middot; Genesis</div>
+                <div class="tablet-date">December 12, 2024</div>
+                <div class="tablet-source">Coinbase &middot; Satooshi Nakamoto</div>
+                <div class="tablet-message" id="chiselTarget">
+                    <span class="chisel-text" data-text="&ldquo;BBC News 12/04/2024 French government collapses in no-confidence vote&rdquo;"></span>
+                </div>
+                <div class="tablet-hash">Block Hash: <span>00000000</span>28f062b221c1a8a5cf0244b1627315f7aa5b775b931cfec46dc17ceb</div>
+            </div>
+
+            <!-- DNA Helix connecting the two genesis blocks -->
+            <div class="genesis-dna-wrap reveal" id="genesisDnaWrap">
+                <canvas class="genesis-dna-canvas" id="genesisDnaCanvas"></canvas>
+            </div>
+
+            <!-- BTC genesis with chisel animation -->
+            <div class="genesis-tablet tablet-btc reveal" id="btcGenesisTablet" style="max-width:580px;margin:-0.25rem auto 0;">
+                <div class="tablet-era">Bitcoin &middot; Block #0 &middot; Genesis</div>
+                <div class="tablet-date">January 3, 2009</div>
+                <div class="tablet-source">Coinbase &middot; Satoshi Nakamoto</div>
+                <div class="tablet-message" id="btcChiselTarget">
+                    <span class="chisel-text" data-text="&ldquo;The Times 03/Jan/2009 Chancellor on brink of second bailout for banks&rdquo;"></span>
+                </div>
+                <div class="tablet-hash">Block Hash: <span>00000000</span>0019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f</div>
+            </div>
+
+            <div class="genesis-context reveal">
+                <strong>2009:</strong> Banks collapsed under toxic debt. Governments printed bailouts.<br>
+                <strong>2024:</strong> Governments collapsed under sovereign debt. The printing never stopped.<br>
+                <em style="color:var(--gold);font-style:normal;">Same crisis. Same code. Different decade.</em>
             </div>
         </div>
     </section>
@@ -906,7 +1195,7 @@
             <div class="chain-header reveal">
                 <div>
                     <div class="section-label"><span class="chain-badge"><span class="chain-badge-dot"></span>BC2 Blockchain</span></div>
-                    <h2 class="section-title">Live Block Explorer</h2>
+                    <h2 class="section-title">Live Block Explorer <button class="heartbeat-toggle" id="heartbeatToggle" title="Toggle network pulse"><span class="hb-pulse-ring"></span><svg class="hb-icon-off" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg><svg class="hb-icon-on" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></button></h2>
                     <p class="section-desc" style="margin-bottom:0;">Recent confirmed blocks from the BC2 network, powered by <a href="https://bc2.live" target="_blank" style="color:var(--gold);text-decoration:none;">BC2.Live</a>.</p>
                 </div>
                 <div class="chain-cta">
@@ -931,6 +1220,20 @@
                     <div class="mining-stat"><div class="mining-stat-value" id="mnMedFee">&mdash;</div><div class="mining-stat-label">Med Fee (sat/vB)</div></div>
                     <div class="mining-stat"><div class="mining-stat-value gv" id="mnHeight">&mdash;</div><div class="mining-stat-label">Next Height</div></div>
                     <div class="mining-stat"><div class="mining-stat-value" id="mnLastTime">&mdash;</div><div class="mining-stat-label">Last Block</div></div>
+                </div>
+            </div>
+
+            <!-- Mempool Heatmap -->
+            <div class="mempool-heatmap reveal" id="mempoolHeatmap">
+                <div class="mempool-heatmap-header">
+                    <span class="mempool-heatmap-title"><span class="blink"></span> Live Mempool</span>
+                    <span class="mempool-heatmap-count" id="mempoolOrbCount"></span>
+                </div>
+                <canvas id="mempoolCanvas"></canvas>
+                <div class="mempool-heatmap-legend">
+                    <span class="mhl-item"><span class="mhl-dot" style="background:#6366f1;"></span>Low fee</span>
+                    <span class="mhl-item"><span class="mhl-dot" style="background:#f59e0b;"></span>Med fee</span>
+                    <span class="mhl-item"><span class="mhl-dot" style="background:#ef4444;"></span>High fee</span>
                 </div>
             </div>
 
@@ -996,34 +1299,25 @@
         <div class="download-inner">
             <div class="section-label reveal">Get Started</div>
             <h2 class="section-title reveal">Download <span style="background:linear-gradient(135deg,var(--gold-lt),var(--gold),var(--gold-sec));background-size:300% 300%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:goldFlow 5s ease-in-out infinite;filter:drop-shadow(0 0 20px rgba(247,147,26,0.15));">GenesisWallet</span></h2>
-            <p class="section-desc reveal">Available now on Android. Grab the latest release from GitHub or build from source.</p>
+            <p class="section-desc reveal">Coming soon to Android and iOS. Follow us on GitHub for updates.</p>
             <div class="download-buttons reveal">
-                <a href="https://github.com/GenesisWalletOrg/GenesisWallet/releases" class="btn btn-primary">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                    Download APK
-                </a>
-                <a href="https://github.com/GenesisWalletOrg/GenesisWallet" class="btn btn-secondary">
+                <span class="btn btn-primary" style="cursor:default;opacity:0.7;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    Coming Soon
+                </span>
+                <a href="https://github.com/GenesisWalletOrg" class="btn btn-secondary">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
                     Build from Source
                 </a>
             </div>
-            <p class="download-note reveal">iOS coming soon &middot; Requires Android 8.0+ &middot; <a href="https://github.com/GenesisWalletOrg/GenesisWallet">View on GitHub</a></p>
-            <div class="download-verify reveal" style="margin-top:2rem;padding:1.2rem 1.5rem;border-radius:12px;background:rgba(247,147,26,0.03);border:1px solid rgba(247,147,26,0.08);text-align:left;max-width:540px;margin-left:auto;margin-right:auto;">
-                <div style="font-size:0.7rem;color:var(--gold);text-transform:uppercase;letter-spacing:0.1em;font-weight:600;margin-bottom:0.6rem;display:flex;align-items:center;gap:0.4rem;">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                    Verify Your Download
-                </div>
-                <div style="font-size:0.65rem;color:var(--t3);margin-bottom:0.5rem;">SHA-256 &mdash; <code style="color:var(--t2);">GenesisWalletUnsignedBeta.apk</code></div>
-                <div style="font-family:monospace;font-size:0.62rem;color:var(--t2);word-break:break-all;line-height:1.6;padding:0.6rem 0.8rem;background:rgba(0,0,0,0.3);border-radius:8px;border:1px solid rgba(255,255,255,0.04);cursor:pointer;position:relative;" onclick="navigator.clipboard.writeText('5698284f6068593734b1b46b97cdb5dfc1006a54147f4d98e280d7207dce9e2e');this.querySelector('.copy-toast').style.opacity=1;setTimeout(()=>this.querySelector('.copy-toast').style.opacity=0,1500);">
-                    5698284f6068593734b1b46b97cdb5dfc1006a54147f4d98e280d7207dce9e2e
-                    <span class="copy-toast" style="position:absolute;top:-28px;right:8px;font-size:0.6rem;color:var(--gold);background:rgba(10,10,10,0.9);padding:0.25rem 0.6rem;border-radius:6px;border:1px solid rgba(247,147,26,0.15);opacity:0;transition:opacity .3s;pointer-events:none;font-family:sans-serif;">Copied!</span>
-                </div>
-                <div style="font-size:0.58rem;color:var(--t3);margin-top:0.5rem;">Click hash to copy &middot; Verify with <code style="color:var(--t2);">sha256sum</code> on Linux/Mac or <code style="color:var(--t2);">Get-FileHash</code> on Windows</div>
+            <p class="download-note reveal">Android &amp; iOS &middot; <a href="https://github.com/GenesisWalletOrg">View on GitHub</a></p>
+            <div class="download-verify reveal" style="margin-top:2rem;padding:1.5rem 2rem;border-radius:12px;background:rgba(247,147,26,0.03);border:1px solid rgba(247,147,26,0.08);text-align:center;max-width:540px;margin-left:auto;margin-right:auto;">
+                <div style="font-size:1.1rem;color:var(--gold);font-weight:700;margin-bottom:0.4rem;">Available Soon</div>
+                <div style="font-size:0.75rem;color:var(--t3);line-height:1.6;">GenesisWallet is currently in development. Star the <a href="https://github.com/GenesisWalletOrg" style="color:var(--gold);text-decoration:none;">GitHub repo</a> to be notified when the first release is ready.</div>
             </div>
         </div>
     </section>
 
-    <div class="glow-div"></div>
 
     <section id="community">
         <div class="section-inner">
@@ -1080,14 +1374,88 @@
         </div>
     </section>
 
+    <div class="glow-div"></div>
+
+    <section id="videos" style="padding:5rem 2rem;">
+        <div class="section-inner" style="text-align:center;">
+            <div class="section-label reveal" style="justify-content:center;"><span class="chain-badge"><span class="chain-badge-dot"></span>Watch</span></div>
+            <h2 class="section-title reveal">Videos &amp; Tutorials</h2>
+            <p class="section-desc reveal" style="margin:0 auto;">Guides, demos, and community content for the BC2 ecosystem.</p>
+            <div class="video-grid reveal">
+                <!-- VIDEO SLOT 1 — Replace YOUTUBE_VIDEO_ID_1 with a real YouTube video ID -->
+                <div class="video-card">
+                    <div class="video-embed">
+                        <iframe src="https://www.youtube.com/embed/iZkUrQLCbo4?start=0" title="Getting Started with GenesisWallet" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                    </div>
+                    <div class="video-title">Getting Started with GenesisWallet</div>
+                </div>
+                <!-- VIDEO SLOT 2 — Replace YOUTUBE_VIDEO_ID_2 with a real YouTube video ID -->
+                <div class="video-card">
+                    <div class="video-embed">
+                        <iframe src="https://www.youtube.com/embed/MVLj-NXH_dY?start=0" title="How to Mine BC2" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                    </div>
+                    <div class="video-title">How to Mine BC2</div>
+                </div>
+                <!-- VIDEO SLOT 3 — Replace YOUTUBE_VIDEO_ID_3 with a real YouTube video ID -->
+                <div class="video-card">
+                    <div class="video-embed">
+                        <iframe src="https://www.youtube.com/embed/PcNX8oJJROA?start=0" title="BC2: Satoshi's Original Vision" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                    </div>
+                    <div class="video-title">BC2: Satoshi's Original Vision</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="glow-div"></div>
+
+    <section id="faq" style="padding:5rem 2rem;">
+        <div class="section-inner" style="text-align:center;">
+            <div class="section-label reveal" style="justify-content:center;"><span class="chain-badge"><span class="chain-badge-dot"></span>FAQ</span></div>
+            <h2 class="section-title reveal">Frequently Asked Questions</h2>
+            <div class="faq-list reveal">
+                <div class="faq-item">
+                    <div class="faq-question">What is GenesisWallet?<svg class="faq-chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></div>
+                    <div class="faq-answer">GenesisWallet is an open-source, community-driven fork of BlueWallet &mdash; one of the most trusted Bitcoin wallets in the world. It has been adapted specifically for the BC2 (BitcoinII) network while preserving BlueWallet's security model, clean architecture, and commitment to self-custody.</div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question">What is BC2 (BitcoinII)?<svg class="faq-chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></div>
+                    <div class="faq-answer">BC2 is Bitcoin's conservative sister chain &mdash; a proof-of-work cryptocurrency built on Satoshi Nakamoto's original Bitcoin code. It preserves the foundational principles of Bitcoin while addressing modern challenges, maintaining SHA-256 mining compatibility and the original difficulty adjustment algorithm.</div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question">Is GenesisWallet safe to use?<svg class="faq-chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></div>
+                    <div class="faq-answer">GenesisWallet inherits BlueWallet's robust security architecture. Your private keys never leave your device, it supports HD wallets with BIP39/BIP44/BIP84, and the entire codebase is open source under the MIT License &mdash; meaning anyone can audit the code. As with any wallet, always back up your seed phrase and store it securely.</div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question">Where can I buy or trade BC2?<svg class="faq-chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></div>
+                    <div class="faq-answer">BC2 is currently available on NonKYC (BC2/BTC and BC2/USDT pairs) and CoinEx (BC2/USDT pair). You can also mine BC2 using any SHA-256 compatible ASIC miner by connecting to a BC2 mining pool.</div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question">Can I mine BC2?<svg class="faq-chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></div>
+                    <div class="faq-answer">Yes! BC2 uses the SHA-256 proof-of-work algorithm, the same as Bitcoin. Any SHA-256 ASIC miner (such as the Antminer S19 series) can mine BC2 by pointing it to a BC2 mining pool. Mining payouts are received directly in your GenesisWallet.</div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question">How do I get started?<svg class="faq-chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></div>
+                    <div class="faq-answer">Download GenesisWallet from the GitHub releases page, create a new wallet, securely back up your 24-word seed phrase, and you're ready to receive BC2. You can get your first BC2 by mining, trading on an exchange, or receiving from another user.</div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question">Is GenesisWallet affiliated with BlueWallet?<svg class="faq-chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></div>
+                    <div class="faq-answer">No. GenesisWallet is an independent, community-driven fork. It is not affiliated with, endorsed by, or supported by the BlueWallet team. The fork is made possible by BlueWallet's open-source MIT License, and all original BlueWallet attributions are preserved.</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="glow-div"></div>
+
     <footer>
         <div class="footer-inner">
             <div class="footer-left">
-                <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAABhGlDQ1BJQ0MgUHJvZmlsZQAAeJx9kb9Lw0AcxV/TFkUqDmYQcchQndpFRRxrFYpQIdQKrTqYXPoLmrQkKS6OgmvBwR+LVQcXZ10dXAVB8AeIf4A4KbpIid9LCi1iPDjuw7t7j7t3gNCqMt0KJQDdsM1MKinl8qtS3ysEhBBGDKLCrPqcLKfhO77uEeDrXZxn+Z/7cwxqBYsBAYk4weqmTbxBPLNp1znvE4usrGjE58Qxky5I/Mh11eM3ziWXBZ4pmtnMPLFILJV6WO1hVjZ14mniqKYblC/kPNY4b3HWqw3WuSd/YaRgrCxzneYYUljEEmRIUNFABVXYiNNqkGIhQ/tJH/+o65fJpZKrAkaOBdSgQ3H94H/wu1urODXpJUWSQPjFcT7Ggb5doN10nO9jx2mfAMFn4Mro+mstYPaT9GZXix4BQ9vAxXVXU/eAyx1g5KmumIorBWkKxSLwfkbflAeGb4GBNa+3zj5OH4AsdZW+AQ4OgYkSZa/7vLu/t7d/z3T6+wFd7HKe2OsHhgAAHENJREFUeNrtm8uvZFl21n977/OIExH3EfeVr8rKyqrKruput12m7LbbCAu3gBkMMMIgkEBiAhIjJP4AJMQIMWLADBASTwkhYGAajNsyGEx30e6u7nJXV1WXM7PydZ8RN57nnL3WYrBP3MzszsosWWJgTEg3M27EOefuvfZa3/rWt/Z2Zmb8IX55/pC/ss9ykZnxf9tR3MU/n/rtZ3wZ4HDus93nXhQCqor3fzAdxcxwzv3+DPDkzYvFgrt3bnN4+IjZdEbTtogo2l2z/sE5HHTvweFJS9Fdt447nz7z3uGcx3vIXCB4j3dcfOa6+7xzBO8uVtY50nXd3/Ldn8myQNmr6G/usLlziaKsXmiI7HmTr+uaX/8v/5nf+dY7nE/G1CJgYDhwHggJRpwRAnjvnzBE1g3OdwYyDId3ELzDYfiQJpYFT5HlFM4RgsO7kCblBe89OZ4QkoGcN7yDzIPHcDhcZwDnBO8i5jLKasil67d49Ys/R16Un2qEH/OA9YXjszP+2T/9J9y9/TG9Xg+fBcQc1q1qCAGHw7pnOveEASx0Awp47/DhsacE53HO0vc+eUMeAqXPyPDd54b3iguegMdD8oIQ8MHhUYJ70hscOMVUMVNA0RipmyXD0SV+7qt/lsHGFph1HvmCLBBj5N/8q3/O/U/uMBrtkOdFmqhfT7ZzZ+dxLg1azVB1OONiYMFDFozgwTtLK+YMHwwfuutI96gpGgCXJpAAyDBNoRYRVARtDTVHVLofJYogUYmiiBhtK7SiuFBx/OAev/W1f0tsW+xFIbAGvG+9801+74c/ZHt7hIqm1fYeURCSm+J9534Oh8ewzr09zifXDxfu312XbkvPcw5PCgHf4bX3juAyHNoZyuMvUD1LYWFp3ZwHM0VFUdMuNJPBTA01kNgSsh73b3/M97/zTX7i7a9gqrgnQP0pAzjnUFV+53feIa/KBHLB4XDgDAO8D48n4QPereO+M0AW0sCdw4fkIb4DxDTBx8bxLmEBZphzBCAg4NKwkpd4OvhbBy3OwDuP4YmmiCqoYhqTJ5piYkS19Hso+MF77/L5t75MCOHZHrCO/dPTE07PTimKAlNNERgCwYEL4AhpAsFfxLz3npA5fBYILoBPQBc6Pw/O4Z0nW1+Pw3uHmeLNcM6nEDPDkwOS8rnjKeBylgxh3qGWxozLMJcmKpo+V3HJWxVUDCPn+OiI0+ND9i9deQoQsyfQDzrwizGSFwWqihkdIocOvUOXpnxCbO/J8kDIs2SULiy883jnwUHhPeY8wRke1604BHN4SyHzmMKs33VD8o8XKN2aPFExnGoaY+fyah5VJUoK56iddwCL5ZKzs5NPN8D6jy+XCwwjZIHMsjRYUtx4AoS0smninizPCSEjeyLlrd2bLq/7Die8pcEEl8DOueQFzqX4VUse5syD+c5QKWOYJqMoCe2xBJWmydWlc3cxQ0gTjyqICOCIaiwXyxfzAFUhywJ5SF8FnwDOIKUwv179QF4W+CzgrPuuS3MhdK7eTR4HmfPEpqb0M6qyxPmKVjzmS1QU0UhYW0cyUDCnGC4ZwXdeYIniGpo8wjtMO2N0hjRSVjID1c5zFNqm+SxEyJGHnCwE1v6/BjrfoXsWAj7PyLrs4K3jAD7lA+/TPDyGktJfkWXE1YJrVwI7e9tMxzMOT3NUZww2e9R1QMQhYsQsTVY1hUsHlU/VI8mZUr71IcMbiKRJY4mrrDNHStGKqrzYAK4jHFnIEkh1K473nQEcIRSELBC6FSd07K6Lq0BacTUl944QwHlPrzBGu5fo9ftoPcFZoMrG3Lz5JtPzMYcPGmrXBzXE1m5ugKUJm8PsMR6kBBIwE7zziMs6YiY4l3VgGi5wRdVebADvHUXw5MF3+fax2ydDpPTmfeLofm0YB94s5XQfaNs5PT9HpMCoqKPRL4yqv4k0E5aLSOaN3f1N8nIT7BhnRpF5LAqqie+D6/DZLhincy45uj3Gb+jwxkLKIesQcoY6h/gLerW+4VM8AMhdMoJhic5duH92gfxrCupdeoiRKKo5xeHQdsytN0Y0YojC2XjCxrCPy0rq6YQ25mRZQ7Wxh2E0ixVZsY3iMHNgjuhdWjVbF02a8ME5HIo6AyLOOcQkBVymKKDmUPGISylVrZvPj1TJP+4BDry3rrDo0lmgCwFP5kmkxUFwhnm9AEGcw/lA0zRkOmWw9Srb1QCLysFVUAk0TY0rdtnYd8jxQ4reDk0zQ1qlyAKiBplD8ZiAc4oAkvhSAj9LRjK3TpeKaXcNXep0KXwMHl+/LlyesED2o5KDcw4fOt7lwXsluNAZRlJK86Gjq4kjQEeLOxTuVRV3PrjHv/7Gr3HzJ3+WL3/1T6EurSIY1XAPkYaDvATzmDm2Ll1HGs9qtsI3kgzeetooOBVQh+AASYZQjwZDSGKNdHCbbNJ2GW2NHYaaPOX6P84EL4ywXvVwgfzBO3yWVthC4u6eAC4xRQtdCWzdg0y59vk/xuLgNT784DvcePM+V195lbYWcHBy5yOG21tUO/spRzdQ9Q36jrzK4XgKqxYXwES7/C8ES7VI8gLFC6iCWkw8opusddeYCSaScEDarlL8FAO4J9744AjBP678gscHj13Un11h2DG99c3rNGWWcvTmtVu8trFFCIaooCjBK1//l/+YsDjn8vWXuPLFt7jx9h/FlSWmQjXICKHP+P4YESF0IOacI5VJycsERSSSgD0kLzEFFVQVLJnKdf977IJhPj8LXODA40ouFTc+kQ4S2tuaoxs47R7eZScMnDnickmmS7a29tGmIYSc1fSUV/7IL5GVu0zvvMd3v/6bfPe//Sa/9Ff/Oht7l9BWKHsV1eaMetGQuwJzCeAigtdIJnRsUDu9MqW60GGFV8VUUgLsYj+Ye2bt75+pP7q1hOU6Gtt5ghpelFRrKq4ryk00uZq0iLSIRZxTrFkxKJTcBbSucSKsTh/Ry4cMt/a49qVf5Kf+zN9k8/JP8s5/+Pd4Faxt0Lqhqgq8tbgmEtqWPApZbMmlxVvEqeBEIQoSa2KMSGxQaVCNmEonrylYi+oLQuAJMozvqrSUV5NFnZOnhVeThL6slZJ1Xd7xTuew1ZTRZkmRb+CjkIecfOnZH44SuzTBmhVfevuPc/7wfVi1lHkPDPJiwEa/pm4VyzMsMyj7tE3NyfQcMcWr4STi1IEYYhG1mAqkmOoBVUEkEtsmhcYTxdazeYCBQzFrEtJ2UpAj5fd1nAuKM3fBy82SSzoAjQienjZcuXyLfOzhzj20bRllG/i8xGqBsgSnyGzBTrGHfuNjoig+BHxVsVP0cOYQ0bSa/Qr2Dwj37rI6PqKxxG6cKs4ULyn+TYQoEY1JRYqqIB1iPj3/Z2QBM0wFk9jlzpSmnBNY1+3rcnUNfOoSZTVwluIPhSIYxWxFc/tj/PQeAcMP+ujmAK36xLMFTpWgDb5ZJXfPcrLtLcYffodlLOl//m3a6ZSAESYTytM+vX6Oi5JEGrXE8VUwFTRGVAWNLRoT+JoIsfv8hUTIVLFWIDPUKQ7FW0C9oU46bWbNSnwqT1GckgyG4szQVrGswWYzXH1GGBnH53OYTxgUO4Qy4nYC2rSYQrQSsgFaL3j03n/n4YMxGz/5J+HkGG9KKAoGErmsRvQ9RIVoqdyN0k16jUUKJpayhGq6pq0vDGD2vHLYhNi2xLxNqq0lxdWpR12KeKeOdSBAIiMuKRIIliqzVU1erbC2JdYt7som77/zLmefPGJzu8f+/g67N18hu3YDC1nysjynDZ5HbUH1xa/iyj5S13gC582MLATMK1YWqYSWSJQaEUGidOWyQ8U6QOw0AonENl5ggHseCJoIbTOjKALOK+qSUpdKS9chaZKefBcIhk/pqAMdBayeULlEm7NeRTw7ocqHvP4rf4FitaB9eI/ieEbua/KbN1CdYVHI+6+x/4vXWR7PwAf85euMx6dMHtxHqwptaqgKNDbEGGligxPr4l4xRxJHYouKpIUSxWKTUmc34ucKIjEuaWPRdXA6ZuhzTEO63VLcRbjIwSkxaMIOB7Y6x2Kf9viU7PA+zeCchWW4ImezGGHfeR99+ACbenQvkmdLXFvD8Yr4ze9SPDzEv/kG7itfIUqkrRti5rHZCu15mmZFboFSHa2kOE/CqCbSJelHzBBV5AkDfEoa7CQnU2KMxNgSLphf4tjmk+KKCs60k6A0dYHMIdIgUWlbYcNHMhV0PsVJ5Oz4mOXgBh+89y2WW7tcbpesTk8p33qLe9/7BpV7wODKJYZ+gBYZzaMj8i9+gQcfvMfhZMYKpamXWNnHD4YUj45ppMW6NCeqtJ0E1qqgMb2XblHXePBCHmCqaNsmFyIxQvOWGhZeUKcgEUfA1OM1cbS2jXg54aWrB0TJqGyA1A2IYE3D4XhOfbWHrGoW5QpX9WnNUZycUFctriqoVy2hlwyHCj42nK+WSCd5NyslmiHtBqvVgoV5ajOixg79FbHOC2IkiiSJ3AyTuJaRXkCEOgNI3YB3mPOYMywYeMEwnAoeQcwh2hKcp1ktqDhldryi7FUsW2HpU9GgzYp8/xLeGW29Qpuaxgf07BQnkcs3L3F+1rCcTYli+PMp7WJBcXJCUxwwmy9weaDViDMlTsaIRMx8atJqygQihpig0qLaZQYVENC2xjR+Og+4mL8IWrdoHvHeo06RAF4NH5JM7tQQpNPaBCUwOfmE1k2xVqh6Qi8LSPCoLomLht2rFc7XhK0ho80N7H99hJ/P8EVG1t+gvT2mUaGJRlG3xFVNs1hiTct8PqU/GKISkckENgcd04tEVdoonZcoag1ihkqDacTUkKhos7qoLJ/NA+zJEGiwtkFCuMiZloXEA+wJA5p1crUwqHZYTI3pgzPK7JTNXs7Gxib+yuu4I8/ywT2m5QiaFXuXb5CdTVg5kLbGyMjyDdrjOzS9JKVqrHFlQSuRVbMiKwqIQns2wTWXadqGVrvxdIgv1iCmqHjiuipUw8TQ1i6k9Rd6gMSUN4NoIsAu1fiatOnOgL4THLrc6nI2Nq8iegnTyPj8kKVOca/2ke1t2sUJ8/mSolkQT0+QtkZF8T4g56dAAY2ifk7UMpW5zmMqNBIZT8bsbWzjL+2hztG2DY21mDqImjzXEhkTS4zQNHEDldiFzGdggmDE2BBjiwW6/O87phfBXAIa1swvESM1pU1SDfic3BeUrsE+uUdshIezQDO+R77Zp20bzDnadoU2LdosiJMHbAz2WBydseWHiWusGiz2cFFRjdSrGdY6fL2icrBolaXGJKPpWgmVLkslUieiqETQJgHhCxsjIikEpEHUEbxiwaPqU6MB17XMBEgtr2SNZATTVKK6egJOCcMh7mhFKyXBB7LFjHwUieZpYqTVBs22OPr4mHbvJtubN/FHk4surtUr3HJO8IFAhWsa/GJB29RY0+BNETOw2MnkBtJ28rmCxq5Ykifi/Dl6gIog7QqJTartY01smuQV3e+qHcDEiLZtos5tQ9s2tLFluZzRLs+pVyvayRSmM/ohUjRLbnzubXZf/Rlyhe3hFjw4orf9CuXB5yhr4foX3oKyoJdlhPGEW9eu8+qVa+hqSVwtACXb2ECayEoiK2mJsQFJmyJirBEVxCKmbVckxUTQ5DM0RtSEpm0oYkNwoM4TfEHoZOXUtyPV3gAaujZU0vJFjbatyfKMM6Dxiqt6NJOHaL1ic/8lmrYkfu4W/sbLaNsw3NpiONolygn5+YR463Pkoz2Wx48YVRvsjHb54Pu/i+7uEK5eT7WFxuTagIh03eHHeR8zzNJeJlNFpX0s3T2bCttFFmjbhrapaVFCyJLWvpaULSTg8anqUo0XjU2N3e9mRN2kEYevhqwmMyazUyhzvvO1fwHldYpXforj+z+kl2e8/u43ufP+9zhbLPnBg7uUVZ/ty9egn/Po67/KQg3JPHE6hR3BpMavvc85YmyJpo83SFi3QWLdHHXr7tK6GHLPMoC7oMISU/1slnJtAjaH71pVZp7gs1Rrdz06VYgqmKTuUBAIrZHtXUGOT2gWGZZlHDthu7/D9N7vcTo5ZiMvaOcznINWGurYMJ9NOHvwCVduvo60QtssKVQIRY5ITTkcEJoG1TbJ4ipJpkuInLbUdPqAoWm3Gk/udbRnCSKPPUBUiJIekCpel/R7ACd4FxBSqUnXuk6u5zE1vEA0hTwnlAV95/nZL/4MvjXiyTEbb/wEq8MHtDFS5j22b7zO4Oyc17Jj/Ggb9akq9VnJm6+8RvPoQWrRiZDnPdgaobF5XI5LRKRTsnxqoUNiiGaWdD3TC03wuXqA4ZLluooKDHFpS4t121Fct9mp61R3BYmBC4klasoWs9WSs0f32Hv9Dfq9EjcZIwf7hJdeIjY10ii6bOn1h/j9y8jZNG2P2drBZx5pa/Irl3FbI3xTo01DsbfP5OQ+i3qJZKkBaiqdMt21xenK4I4DYA6J8fHMn8cD2miMZ5E2S9K3CwEvnp53iX7G7sHaXGgCrsww79Em4sQRum1T9wy+9tu/wcHlA2gjYdYwHGzT/OD7HH7yCZZl7I1GvPnxB7z/zm9xnkGsj9BHP8QWDdQ1W+8O2Nrd4+G9OwSfYxjj1ZzTQY/aOdqZEFMGRLLUNyBkWFGgAbRu8I1BNiDvDZ6DAZ1xFtG4P4fNyiUFplFEGjIfCQYhy/GbJc2yYXZ/TP/KFtVgiI1r/Cpl1XJvSK+XUzeRdx+cUk3usXV1h1Ht2daaZQV3d4f4xjAXuBUyjhr4ZLJAigzZKqHMaU8XZDLn1suXeXQw4vjuMe3pkrA5wIU+de4Iu1voqkEPp9jOJlmeEc/nqBNsGKgV6smK8cpozD0nDXaNDitydLNP0e9Tejg+POHh8Rk9F9gabbH9+X1iVdA+PKd6/QrhxojF0ZTJ4RG2qultDBlJxeWsz0avzwc/POZoseTK9WscNmdUl3Yos4K45cgtcHL7nKYRBgf7rO7eQReKFkoYbWCnSgyOh0fnDC/vcVg6/KMVywcTOJoRywwXPNnOkDCsmN8fI7MlWguNNvSLHSh6SC40maPu0qY9TxDB0p6cYb/H1a0BG8OSpszxtRK2BjRR2JisGL1xwLwIrE7mmBj90RZmyubONptFxeHRlHt1TbY35GDjAO33mF4fsHF9j/l7j1icnFCGAreMrM7nbFR9itf2qc8iOllh4yU6CiyOz5h8eMStYUlvf5t5mJEXOfXJnLwqsHGDTBtsWBAGBdK2WEw7w/QsUvYrhjs7vHZpm8s720+u9bMxYK2sTGbnVNZydX+XftXng8MzzDni+Yp8o+LG0nM8EU5jIHMVq01PuLrJ2f/+iPn5Et/L2aoGSM+zNRxwvljit3oQPMvSKIoeXh2trFhYw+7uHsW9Q9p+gc8cxStbNA/GFMs+rlexPJ2xpcp0scJvlJSFJ2xW9AYVUkeWZ+dkeMqDKqlBqlgjOEm7UoPnYjfa87fIdBshnMCDwxNcCAx2tsnynFqE3s4GD8YzvveffjttVguOYRbYv3GV4vJVip9/GT1dkGc5WV7SnwlBAqdnZ5SLjIU7Z6otOy/tcV4ahWwxjnOufv4WxSffZ+aALLCYLCEL9K6MUAQLOdVog4NlRiswYcX49n0mtx8xurwPZUa2u0E+KtBli7URzSBrjThbcLaqWa2eK4gk6/Tzirw2YqaY63Hn0Ywr4tgU42FUJPfYsESubnH4gzvIvGYzL9jI+4Svf0hWZbhLA8gz2uBoRjkiRpCCrbJPL+TE8yX9rGCzl9OLLfm8JTfPXlsw1QV5v6Q1R7OdEwWmH55SBWF8LBzPx1x+9RKH988pa0ecN9z++BOGByP2BhXFShgebLKYLolHC9pVw3S64Pbdu3w1fgZJrFcN+fa7H7G3P6LMA4enU75wbcSl3V2KvE9zZ4x4uDoc8saXv0QclMyXLe2kZmaKm87Z7AWkKih7Bbvjmp28oJopG+MZX3j5cxyIMF+s2A5bmC9446ff5tKtW7gYaf/df6SdCQtt6Y+2OPaCvTyiyAt2+hucjwsm2wW9YpcwaXhlf4gVGeodrRg6WeJLT7nTR1sliy39vW2a+ZzLe5f4URB4Yn9A+vDa9ZcpdgY03Y5u6wdORNnNcw52hpw1kWUUggpmnthE8tGA3kvbFCEQSk/bNPT7FaNpxM+n/I/bt6mCZ+AcvbzHyWxOLZFBdUgwWJln/+iID99/nzsPDmkw5lHIz6a8fuMKfn/ApWv79MSzf8lTP5xBhLZw6EJg1lKrYoMe2WhIrRnxcJEU7uCJdc3w5X0OXrp2sefhxw3gU51/45Wb/PwvfIX3vv1ttgdDdgcDfN5jEuH8eJyaDk2kdo5JSPt2q0axaUCrjGLUx3voA/lKOG0bPpyP2d0eMvQZ/U/ucmc5YdZEsiywmRcsZxP2PvyA754dc1J4lm3kdLUkHj5kMKrIPlrRziOlOXq7GfFwii1Tq0sNjiZTFssVOwe72PmSTx6eUPQKtjaGNHVDvVhw+fVXuPnaG5hZ1+/4UQM4h0gky3J++U//Cr/9a1/H18Jmr8fewU5SxduW6Dw66lPuDgn9HI+jOZ1jrRJzyKJRLFfoXDAX+Im3b/KVn7pJZoouWt60TX5vfMqj3QzXK7nSG/DW3nW8GjdP7vJgfM55obRVhh/krO7PsKNzwuKEcrRBmMyRRYMPjqxXYgPj8v6Qdt5gUakXNdILSAYxNzYOdpi+P+bLX/4qeZYTYyTLsmdjgPcBVeWX//xf5Df+56/zm7/2NWoHj85OKAvPrUs7nIUMu7xJsdUH75l/fIirDZ2t6G3uEu9NGBjMFwvismV3OOb2+BwNgWuhZLAx48NHh2wPXmJYlFRqLOcLmpMx2V7G5venFG3NuG7ov32D2M+RzSG9XoVrjFHtaRs4iXPEMmIGvTd2UzX5aEnuHa/evMSqESKeR6eHvP7ln+HP/ZW/hqr+2HZ5/7QBUo8vz3P+7t/5+3zpiz9NXMzJgJgV3K2NSd1A4XBloF0ssV5G2K1g1AMxFven3Ls/Y3keKSxQxZzL2YDt1jHwniILXL+6y1Y/p3RKHpT+5gYbUuJWkbuLMz56dARitO/cxz4aE7IcqhLfy8hOZ2yc1OyVA7av7+JCQCYrmmWNBKPycK1XMogt9z/8IZf61/jbf+vvUVX9Z54beuapMREhhMD0/Jx/9A//AV/7r7/KYTvBckex0aO3O4B5Q26B+v6ErJeRRWjvn4Mqlc/o557r+0Pe3NlmSzNqacmrklFZ4B3YwRA/b9jVnP3hPqvZkkfNhLvjMecB+hs9hoOSOG/RXsb8/in18Zzt6FlI5HtNg33pgDjMefS792nahjAok2qVZ+xeOuAXvvIn+Et/+W/Qr/oXc/pMx+bWByXX5wVPzk749gfv8v6dH3D66Aidr5BlC3UEVXqv7OLPG+LpHJ9nlDh6o4qq8lx1JWVWUB9NCM7T6zwtu7JNtmgYaka1sUUrDeeTCYtVjW4UsFXiq4L2bEEwx/jBKcdnCz63vcUC5YEaqxKyKwMm9yZIa5S9ku3dHW68/gZf+NJb7OzuvfDs43MPTq5b3v4ZlvuD8FLVx2caf78nR9eG0B9pLLqn9tY4nm4ZPT4L+6LDq44fK8ee/sKeGsjjqvWpI3D2lOLtSLvTX3Rq9DMb4P+fHv9/+PV/ABXDQUDLosBbAAAAAElFTkSuQmCC" alt="BC2 Logo" width="28" height="28">
-                <span>GenesisWallet</span>
+                <img src="data:image/png;base64,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" alt="GenesisWallet" width="28" height="28">
+                <span><span class="brand-genesis">Genesis</span><span class="brand-wallet">Wallet</span></span>
             </div>
             <ul class="footer-links">
-                <li><a href="https://github.com/GenesisWalletOrg/GenesisWallet">GitHub</a></li>
+                <li><a href="https://github.com/GenesisWalletOrg">GitHub</a></li>
                 <li><a href="https://discord.com/invite/zUSkQHNVyG">Discord</a></li>
                 <li><a href="https://www.reddit.com/r/BitcoinII/">Reddit</a></li>
                 <li><a href="https://genesiswallet.org">GenesisWallet.org</a></li>
@@ -1146,23 +1514,23 @@
             (function anim() { gx += (mx - gx) * 0.06; gy += (my - gy) * 0.06; glow.style.left = gx + 'px'; glow.style.top = gy + 'px'; requestAnimationFrame(anim); })();
         } else glow.style.display = 'none';
 
-        // Enhanced particles - gold and white, with drift
+        // Enhanced particles - gold and white cubes, with drift
         const pc = document.getElementById('particles');
         function spawn() {
             const p = document.createElement('div');
             const isGold = Math.random() > 0.3;
             p.className = 'particle ' + (isGold ? 'particle-gold' : 'particle-white');
             p.style.left = Math.random() * 100 + '%';
-            p.style.animationDuration = (Math.random() * 10 + 8) + 's';
-            p.style.animationDelay = (Math.random() * 5) + 's';
-            const sz = isGold ? (Math.random() * 3 + 1) : (Math.random() * 1.5 + 0.5);
+            p.style.animationDuration = (Math.random() * 18 + 20) + 's';
+            p.style.animationDelay = (Math.random() * 6) + 's';
+            const sz = isGold ? (Math.random() * 5 + 3) : (Math.random() * 3 + 2);
             p.style.width = sz + 'px'; p.style.height = sz + 'px';
             p.style.setProperty('--drift', (Math.random() * 60 - 30) + 'px');
             pc.appendChild(p);
-            setTimeout(() => p.remove(), 18000);
+            p.addEventListener('animationend', () => p.remove());
         }
-        setInterval(spawn, 600);
-        for (let i = 0; i < 15; i++) setTimeout(spawn, i * 200);
+        setInterval(spawn, 1200);
+        for (let i = 0; i < 8; i++) setTimeout(spawn, i * 400);
 
         // ════ BC2 BLOCKCHAIN FEED ════
         // Tries multiple BC2 Mempool instances, then falls back to simulated
@@ -1728,20 +2096,19 @@
             trackOffset = clampOffset(trackOffset + dx);
             applyTransform(trackOffset);
 
-            // Click (not drag) → open block
+            // Click (not drag) → show block anatomy
             if (!dragMoved) {
                 var block = e.target.closest('.chain-block');
                 if (block) {
                     var hash = block.getAttribute('data-hash');
+                    var height = block.getAttribute('data-height');
                     block.style.borderColor = 'rgba(247,147,26,0.5)';
                     block.style.boxShadow = '0 0 50px rgba(247,147,26,0.15)';
                     setTimeout(function() {
-                        if (hash && hash.length > 10) {
-                            window.open(explorerBase + hash, '_blank');
-                        }
                         block.style.borderColor = '';
                         block.style.boxShadow = '';
-                    }, 300);
+                    }, 400);
+                    if (hash && height) showBlockAnatomy(hash, parseInt(height));
                 }
                 resumeTimer = setTimeout(startAutoScroll, 5000);
                 return;
@@ -1814,7 +2181,8 @@
                 var block = e.changedTouches[0].target.closest ? e.changedTouches[0].target.closest('.chain-block') : null;
                 if (block) {
                     var hash = block.getAttribute('data-hash');
-                    if (hash && hash.length > 10) window.open(explorerBase + hash, '_blank');
+                    var height = block.getAttribute('data-height');
+                    if (hash && height) showBlockAnatomy(hash, parseInt(height));
                 }
                 resumeTimer = setTimeout(startAutoScroll, 5000);
                 return;
@@ -1844,7 +2212,10 @@
         // ── Mining stats updater ──
         function setMining(data) {
             var el;
-            if (data.txCount != null) { el = document.getElementById('mnTxCount'); if (el) el.textContent = Number(data.txCount).toLocaleString(); }
+            if (data.txCount != null) {
+                el = document.getElementById('mnTxCount'); if (el) el.textContent = Number(data.txCount).toLocaleString();
+                if (window._mempoolHeatmap) window._mempoolHeatmap.setTxCount(data.txCount);
+            }
             if (data.size != null) { el = document.getElementById('mnSize'); if (el) el.textContent = fmtS(data.size); }
             if (data.lowFee != null) { el = document.getElementById('mnFee'); if (el) el.textContent = data.lowFee; }
             if (data.medFee != null) { el = document.getElementById('mnMedFee'); if (el) el.textContent = data.medFee; }
@@ -2029,6 +2400,8 @@
                             if (ct) ct.textContent = allBlocks.length;
                             renderBlocks(allBlocks);
                             updateFromBlocks();
+                            // Mining heartbeat: visual pulse on new block
+                            if (window._mempoolHeatmap) window._mempoolHeatmap.blockMined();
                         }
                         if (msg.mempoolInfo) setMining({ txCount: msg.mempoolInfo.size || msg.mempoolInfo.count, size: msg.mempoolInfo.bytes || msg.mempoolInfo.vsize || msg.mempoolInfo.usage });
                         if (msg.fees) setMining({ lowFee: msg.fees.minimumFee || msg.fees.economyFee, medFee: msg.fees.halfHourFee || msg.fees.fastestFee });
@@ -2143,6 +2516,16 @@
             setInterval(function() { if (allBlocks.length) renderBlocks(allBlocks); }, 120000);
         })();
 
+        // FAQ Accordion
+        document.querySelectorAll('.faq-question').forEach(q => {
+            q.addEventListener('click', () => {
+                const item = q.parentElement;
+                const wasOpen = item.classList.contains('open');
+                document.querySelectorAll('.faq-item.open').forEach(i => i.classList.remove('open'));
+                if (!wasOpen) item.classList.add('open');
+            });
+        });
+
         // Parallax on scroll for aurora blobs
         let ticking = false;
         window.addEventListener('scroll', () => {
@@ -2158,6 +2541,837 @@
                 ticking = true;
             }
         });
+
+        // ═══════════════════════════════════════════════
+        // ═══════════════════════════════════════════════
+        // Genesis Block Monument
+        // ═══════════════════════════════════════════════
+        (function() {
+            var chiselTarget = document.getElementById('chiselTarget');
+            var chiselSpan = chiselTarget ? chiselTarget.querySelector('.chisel-text') : null;
+            var chiselReady = false;
+            var chiselDone = false;
+
+            // Build individual character spans
+            function prepareChisel() {
+                if (!chiselSpan || chiselReady) return;
+                var text = chiselSpan.getAttribute('data-text');
+                // Decode HTML entities
+                var tmp = document.createElement('span');
+                tmp.innerHTML = text;
+                var decoded = tmp.textContent || tmp.innerText;
+                chiselSpan.innerHTML = '';
+                // Group characters into words so browser breaks at word boundaries
+                var words = decoded.split(' ');
+                for (var w = 0; w < words.length; w++) {
+                    var wordWrap = document.createElement('span');
+                    wordWrap.className = 'chisel-word';
+                    for (var c = 0; c < words[w].length; c++) {
+                        var span = document.createElement('span');
+                        span.className = 'chisel-char';
+                        span.textContent = words[w][c];
+                        wordWrap.appendChild(span);
+                    }
+                    chiselSpan.appendChild(wordWrap);
+                    // Add space between words (not after last)
+                    if (w < words.length - 1) {
+                        var sp = document.createElement('span');
+                        sp.className = 'chisel-char space';
+                        sp.textContent = ' ';
+                        chiselSpan.appendChild(sp);
+                    }
+                }
+                chiselReady = true;
+            }
+
+            // Reveal characters one by one
+            function runChisel() {
+                if (chiselDone || !chiselReady) return;
+                chiselDone = true;
+                var chars = chiselSpan.querySelectorAll('.chisel-char');
+                var baseDelay = 45; // ms between chars
+                var lastDelay = 0;
+                for (var i = 0; i < chars.length; i++) {
+                    var d = i * baseDelay + Math.random() * 25;
+                    if (d > lastDelay) lastDelay = d;
+                    (function(el, delay) {
+                        setTimeout(function() {
+                            el.classList.add('revealed');
+                        }, delay);
+                    })(chars[i], d);
+                }
+                // Aura glow after chisel completes
+                setTimeout(function() {
+                    var t = document.getElementById('genesisTablet');
+                    if (t) t.classList.add('chisel-complete');
+                }, lastDelay + 600);
+            }
+
+            // Trigger when tablet scrolls into view
+            var tablet = document.getElementById('genesisTablet');
+            if (tablet) {
+                prepareChisel();
+                var chiselObs = new IntersectionObserver(function(entries) {
+                    entries.forEach(function(e) {
+                        if (e.isIntersecting && !chiselDone) {
+                            // Small delay after scroll-reveal fade-in
+                            setTimeout(runChisel, 600);
+                            chiselObs.unobserve(tablet);
+                        }
+                    });
+                }, { threshold: 0.4 });
+                chiselObs.observe(tablet);
+            }
+        })();
+
+        // Compare toggle
+        // Mempool Heatmap Canvas Animation
+        // ═══════════════════════════════════════════════
+        (function() {
+            var canvas = document.getElementById('mempoolCanvas');
+            var countEl = document.getElementById('mempoolOrbCount');
+            if (!canvas) return;
+            var ctx = canvas.getContext('2d');
+            var W, H, dpr;
+            var particles = [];
+            var maxParticles = 60;
+            var animId = null;
+            var visible = false;
+            var blockFlash = 0; // countdown for block-mined effect
+
+            var colors = [
+                'rgba(99,102,241,A)',   // indigo - low fee
+                'rgba(99,102,241,A)',
+                'rgba(139,92,246,A)',   // violet
+                'rgba(245,158,11,A)',   // amber - med fee
+                'rgba(249,115,22,A)',   // orange
+                'rgba(239,68,68,A)',    // red - high fee
+            ];
+
+            function resize() {
+                dpr = window.devicePixelRatio || 1;
+                var rect = canvas.parentElement.getBoundingClientRect();
+                W = rect.width;
+                H = 140;
+                canvas.width = W * dpr;
+                canvas.height = H * dpr;
+                canvas.style.width = W + 'px';
+                canvas.style.height = H + 'px';
+                ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            }
+
+            function spawnParticle(x, y) {
+                var tier = Math.random();
+                var ci = tier < 0.4 ? 0 : tier < 0.6 ? 1 : tier < 0.75 ? 2 : tier < 0.88 ? 3 : tier < 0.95 ? 4 : 5;
+                var r = 2 + tier * 6;
+                return {
+                    x: x != null ? x : Math.random() * W,
+                    y: y != null ? y : Math.random() * H,
+                    vx: (Math.random() - 0.5) * 0.3,
+                    vy: (Math.random() - 0.5) * 0.2,
+                    r: r,
+                    baseR: r,
+                    color: colors[ci],
+                    alpha: 0.3 + Math.random() * 0.4,
+                    phase: Math.random() * Math.PI * 2,
+                    speed: 0.3 + Math.random() * 0.7,
+                    alive: true,
+                    age: 0,
+                    spinDir: Math.random() > 0.5 ? 1 : -1,
+                    // For block-mined collapse
+                    collapsing: false,
+                };
+            }
+
+            function init() {
+                resize();
+                particles = [];
+                for (var i = 0; i < maxParticles; i++) {
+                    particles.push(spawnParticle());
+                }
+            }
+
+            function triggerBlockMined() {
+                blockFlash = 60; // frames
+                for (var i = 0; i < particles.length; i++) {
+                    particles[i].collapsing = true;
+                }
+            }
+
+            function draw(time) {
+                if (!visible) { animId = null; return; }
+                animId = requestAnimationFrame(draw);
+
+                ctx.clearRect(0, 0, W, H);
+
+                // Block flash overlay
+                if (blockFlash > 0) {
+                    var flashAlpha = Math.min(0.12, blockFlash / 60 * 0.12);
+                    ctx.fillStyle = 'rgba(247,147,26,' + flashAlpha.toFixed(3) + ')';
+                    ctx.fillRect(0, 0, W, H);
+                    blockFlash--;
+                }
+
+                var t = time * 0.001;
+                var cx = W / 2, cy = H / 2;
+                var respawnQueue = 0;
+
+                for (var i = 0; i < particles.length; i++) {
+                    var p = particles[i];
+                    if (!p.alive) { respawnQueue++; continue; }
+                    p.age++;
+
+                    if (p.collapsing) {
+                        // Rush toward center and shrink
+                        var dx = cx - p.x, dy = cy - p.y;
+                        var dist = Math.sqrt(dx * dx + dy * dy) || 1;
+                        p.x += dx / dist * 3;
+                        p.y += dy / dist * 3;
+                        p.r *= 0.96;
+                        p.alpha *= 0.97;
+                        if (p.r < 0.5 || p.alpha < 0.02) {
+                            p.alive = false;
+                            continue;
+                        }
+                    } else {
+                        // Gentle floating
+                        p.x += p.vx + Math.sin(t * p.speed + p.phase) * 0.15;
+                        p.y += p.vy + Math.cos(t * p.speed * 0.7 + p.phase) * 0.1;
+
+                        // Wrap edges
+                        if (p.x < -p.r) p.x = W + p.r;
+                        if (p.x > W + p.r) p.x = -p.r;
+                        if (p.y < -p.r) p.y = H + p.r;
+                        if (p.y > H + p.r) p.y = -p.r;
+
+                        // Gentle breathing
+                        p.r = p.baseR + Math.sin(t * 1.5 + p.phase) * 0.5;
+                    }
+
+                    // Draw glow
+                    var grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r * 2.5);
+                    var c = p.color.replace('A', (p.alpha * 0.6).toFixed(2));
+                    var c2 = p.color.replace('A', '0');
+                    grad.addColorStop(0, p.color.replace('A', p.alpha.toFixed(2)));
+                    grad.addColorStop(0.4, c);
+                    grad.addColorStop(1, c2);
+                    ctx.save();
+                    ctx.translate(p.x, p.y);
+                    ctx.rotate((p.phase || 0) + p.age * 0.02 * (p.spinDir || 1));
+                    ctx.fillStyle = grad;
+                    ctx.fillRect(-p.r * 2.5, -p.r * 2.5, p.r * 5, p.r * 5);
+
+                    // Draw core
+                    ctx.fillStyle = p.color.replace('A', p.alpha.toFixed(2));
+                    ctx.fillRect(-p.r, -p.r, p.r * 2, p.r * 2);
+                    ctx.restore();
+                }
+
+                // Respawn dead particles gradually after block collapse
+                if (respawnQueue > 0 && blockFlash < 30) {
+                    var spawnsPerFrame = 2;
+                    for (var j = 0; j < particles.length && spawnsPerFrame > 0; j++) {
+                        if (!particles[j].alive) {
+                            // Spawn from edges
+                            var edge = Math.random();
+                            var sx, sy;
+                            if (edge < 0.25) { sx = 0; sy = Math.random() * H; }
+                            else if (edge < 0.5) { sx = W; sy = Math.random() * H; }
+                            else if (edge < 0.75) { sx = Math.random() * W; sy = 0; }
+                            else { sx = Math.random() * W; sy = H; }
+                            particles[j] = spawnParticle(sx, sy);
+                            particles[j].alpha = 0.05; // fade in
+                            spawnsPerFrame--;
+                        }
+                    }
+                }
+
+                // Fade in new particles
+                for (var k = 0; k < particles.length; k++) {
+                    if (particles[k].alive && particles[k].age < 30 && !particles[k].collapsing) {
+                        particles[k].alpha = Math.min(particles[k].alpha + 0.015, 0.3 + Math.random() * 0.3);
+                    }
+                }
+
+                // Update count display
+                var aliveCount = 0;
+                for (var m = 0; m < particles.length; m++) if (particles[m].alive) aliveCount++;
+                if (countEl) countEl.textContent = aliveCount + ' unconfirmed';
+            }
+
+            // Visibility observer — only animate when on screen
+            if ('IntersectionObserver' in window) {
+                var heatmapEl = document.getElementById('mempoolHeatmap');
+                var obs = new IntersectionObserver(function(entries) {
+                    visible = entries[0].isIntersecting;
+                    if (visible && !animId) animId = requestAnimationFrame(draw);
+                }, { threshold: 0.1 });
+                if (heatmapEl) obs.observe(heatmapEl);
+            }
+
+            // Scale particle count based on actual mempool tx count
+            window._mempoolHeatmap = {
+                setTxCount: function(n) {
+                    maxParticles = Math.max(15, Math.min(80, Math.round(n / 2)));
+                    // Adjust particle array
+                    while (particles.length < maxParticles) particles.push(spawnParticle());
+                    while (particles.length > maxParticles) particles.pop();
+                },
+                blockMined: function() {
+                    triggerBlockMined();
+                }
+            };
+
+            window.addEventListener('resize', function() {
+                if (visible) resize();
+            });
+
+            init();
+        })();
+        (function() {
+            var btcTablet = document.getElementById('btcGenesisTablet');
+            var btcChiselTarget = document.getElementById('btcChiselTarget');
+            var btcChiselSpan = btcChiselTarget ? btcChiselTarget.querySelector('.chisel-text') : null;
+            var btcChiselReady = false, btcChiselDone = false;
+
+            function prepareBtcChisel() {
+                if (!btcChiselSpan || btcChiselReady) return;
+                var text = btcChiselSpan.getAttribute('data-text');
+                var tmp = document.createElement('span');
+                tmp.innerHTML = text;
+                var decoded = tmp.textContent || tmp.innerText;
+                btcChiselSpan.innerHTML = '';
+                var words = decoded.split(' ');
+                for (var w = 0; w < words.length; w++) {
+                    var wordWrap = document.createElement('span');
+                    wordWrap.className = 'chisel-word';
+                    for (var c = 0; c < words[w].length; c++) {
+                        var span = document.createElement('span');
+                        span.className = 'chisel-char';
+                        span.textContent = words[w][c];
+                        wordWrap.appendChild(span);
+                    }
+                    btcChiselSpan.appendChild(wordWrap);
+                    if (w < words.length - 1) {
+                        var sp = document.createElement('span');
+                        sp.className = 'chisel-char space';
+                        sp.textContent = ' ';
+                        btcChiselSpan.appendChild(sp);
+                    }
+                }
+                btcChiselReady = true;
+            }
+
+            function runBtcChisel() {
+                if (btcChiselDone || !btcChiselReady) return;
+                btcChiselDone = true;
+                var chars = btcChiselSpan.querySelectorAll('.chisel-char');
+                var baseDelay = 45;
+                var lastDelay = 0;
+                for (var i = 0; i < chars.length; i++) {
+                    var d = i * baseDelay + Math.random() * 25;
+                    if (d > lastDelay) lastDelay = d;
+                    (function(el, delay) {
+                        setTimeout(function() { el.classList.add('revealed'); }, delay);
+                    })(chars[i], d);
+                }
+                setTimeout(function() {
+                    if (btcTablet) btcTablet.classList.add('chisel-complete-btc');
+                }, lastDelay + 600);
+            }
+
+            if (btcTablet && 'IntersectionObserver' in window) {
+                prepareBtcChisel();
+                var obs = new IntersectionObserver(function(entries) {
+                    entries.forEach(function(e) {
+                        if (e.isIntersecting && !btcChiselDone) {
+                            setTimeout(runBtcChisel, 600);
+                            obs.unobserve(btcTablet);
+                        }
+                    });
+                }, { threshold: 0.4 });
+                obs.observe(btcTablet);
+            }
+        })();
+
+        // Network Pulse Animation (visual only)
+        // ═══════════════════════════════════════════════
+        (function() {
+            var hbTimer = null;
+            var hbActive = false;
+            var hbInterval = 2500;
+            var pulseTimeout = null;
+            var btn = document.getElementById('heartbeatToggle');
+            if (!btn) return;
+
+            var trackEl = document.getElementById('chainTrack');
+
+            function pulse() {
+                if (!hbActive) return;
+                if (trackEl) { trackEl.classList.add('hb-active'); }
+                if (pulseTimeout) clearTimeout(pulseTimeout);
+                pulseTimeout = setTimeout(function() {
+                    if (trackEl) trackEl.classList.remove('hb-active');
+                }, 200);
+            }
+
+            function updateRate() {
+                if (typeof allBlocks === 'undefined' || !allBlocks || allBlocks.length < 3) return;
+                var count = Math.min(5, allBlocks.length - 1);
+                var totalTime = 0;
+                for (var i = 0; i < count; i++) totalTime += allBlocks[i].timestamp - allBlocks[i + 1].timestamp;
+                var avg = totalTime / count;
+                var target = avg < 120 ? 1500 : avg < 300 ? 2000 : avg < 600 ? 2500 : avg < 900 ? 3000 : 3500;
+                hbInterval = hbInterval * 0.7 + target * 0.3;
+            }
+
+            function start() {
+                if (hbTimer) return;
+                hbActive = true;
+                updateRate();
+                function tick() {
+                    if (!hbActive) return;
+                    pulse();
+                    updateRate();
+                    hbTimer = setTimeout(tick, hbInterval);
+                }
+                hbTimer = setTimeout(tick, 500);
+            }
+
+            function stop() {
+                hbActive = false;
+                if (hbTimer) { clearTimeout(hbTimer); hbTimer = null; }
+                if (pulseTimeout) { clearTimeout(pulseTimeout); pulseTimeout = null; }
+                if (trackEl) trackEl.classList.remove('hb-active');
+            }
+
+            var enabled = false;
+
+            btn.addEventListener('click', function() {
+                enabled = !enabled;
+                if (enabled) {
+                    btn.classList.add('active');
+                    start();
+                } else {
+                    btn.classList.remove('active');
+                    stop();
+                }
+            });
+        })();
+        // ═══ Block Anatomy (click-to-explode) ═══
+        var anatomyOverlay = document.getElementById('anatomyOverlay');
+        var anatomyContent = document.getElementById('anatomyContent');
+        var anatomyClose = document.getElementById('anatomyClose');
+
+        function showBlockAnatomy(hash, height) {
+            // Find block in cache
+            var block = null;
+            for (var i = 0; i < allBlocks.length; i++) {
+                if (allBlocks[i].height === height) { block = allBlocks[i]; break; }
+            }
+            if (!block) return;
+
+            var pool = resolvePool(block);
+
+            // Format timestamp
+            var dt = new Date(block.timestamp * 1000);
+            var timeStr = dt.toLocaleString();
+
+            // Leading zeros highlight
+            var hashHtml = '';
+            var zeros = 0;
+            for (var c = 0; c < hash.length; c++) {
+                if (hash[c] === '0' && c === zeros) { zeros++; hashHtml += '<span class="leading-zeros">' + hash[c] + '</span>'; }
+                else hashHtml += hash[c];
+            }
+
+            // Merkle root (may not be in cached data)
+            var merkle = block.merkle_root || block.merkleroot || '';
+            var prevHash = block.previousblockhash || '';
+            var version = block.version || '';
+            var bits = block.bits || '';
+            var nonce = block.nonce || '';
+            var diff = block.difficulty || '';
+
+            // Build anatomy HTML
+            var html = '<div class="anatomy-block-hero">';
+            html += '<div class="abh-height">Block #' + height.toLocaleString() + '</div>';
+            html += '<div class="abh-time">' + timeStr + ' · ' + fmtT(block.timestamp) + '</div>';
+            html += '<div class="abh-hash" onclick="navigator.clipboard.writeText(\'' + hash + '\')" title="Click to copy">' + hashHtml + '</div>';
+            html += '</div>';
+
+            // Header fields
+            html += '<div class="anatomy-section"><div class="anatomy-section-title">Block Header</div>';
+            html += '<div class="anatomy-fields">';
+            if (version) html += '<div class="anatomy-field"><div class="anatomy-field-label">Version</div><div class="anatomy-field-value">0x' + (typeof version === 'number' ? version.toString(16).padStart(8,'0') : version) + '</div></div>';
+            html += '<div class="anatomy-field"><div class="anatomy-field-label">Timestamp</div><div class="anatomy-field-value">' + block.timestamp + '</div></div>';
+            if (bits) html += '<div class="anatomy-field"><div class="anatomy-field-label">Bits</div><div class="anatomy-field-value">' + (typeof bits === 'number' ? '0x' + bits.toString(16) : bits) + '</div></div>';
+            if (nonce) html += '<div class="anatomy-field"><div class="anatomy-field-label">Nonce</div><div class="anatomy-field-value">' + Number(nonce).toLocaleString() + '</div></div>';
+            if (diff) html += '<div class="anatomy-field full"><div class="anatomy-field-label">Difficulty</div><div class="anatomy-field-value">' + (typeof diff === 'number' ? diff.toLocaleString(undefined,{maximumFractionDigits:2}) : diff) + '</div></div>';
+            if (prevHash) html += '<div class="anatomy-field full"><div class="anatomy-field-label">Previous Block Hash</div><div class="anatomy-field-value" style="font-size:0.5rem;opacity:0.7;">' + prevHash + '</div></div>';
+            if (merkle) html += '<div class="anatomy-field full"><div class="anatomy-field-label">Merkle Root</div><div class="anatomy-field-value" style="font-size:0.5rem;opacity:0.7;">' + merkle + '</div></div>';
+            html += '</div></div>';
+
+            // Size & Weight
+            html += '<div class="anatomy-section"><div class="anatomy-section-title">Block Body</div>';
+            html += '<div class="anatomy-fields">';
+            html += '<div class="anatomy-field"><div class="anatomy-field-label">Transactions</div><div class="anatomy-field-value" style="color:var(--gold);font-size:1.1rem;">' + block.tx_count + '</div></div>';
+            html += '<div class="anatomy-field"><div class="anatomy-field-label">Size</div><div class="anatomy-field-value">' + fmtS(block.size || 0) + '</div></div>';
+            var weight = block.weight || 0;
+            html += '<div class="anatomy-field"><div class="anatomy-field-label">Weight</div><div class="anatomy-field-value">' + (weight > 0 ? (weight/1000).toFixed(1) + ' kWU' : '—') + '</div></div>';
+            var pct = weight > 0 ? Math.min(100, Math.round((weight / 4000000) * 100)) : 0;
+            html += '<div class="anatomy-field"><div class="anatomy-field-label">Fullness</div><div class="anatomy-field-value">' + pct + '%</div></div>';
+            if (pool.name !== 'Unknown') {
+                html += '<div class="anatomy-field full"><div class="anatomy-field-label">Mined by</div><div class="anatomy-field-value" style="color:var(--gold);">' + pool.name + '</div></div>';
+            }
+            html += '</div></div>';
+
+            // Merkle tree visualization canvas
+            html += '<div class="anatomy-section"><div class="anatomy-section-title">Merkle Tree</div>';
+            html += '<div class="anatomy-merkle"><canvas id="anatomyMerkleCanvas" width="560" height="180"></canvas></div>';
+            html += '</div>';
+
+            // Transaction mosaic
+            html += '<div class="anatomy-section"><div class="anatomy-section-title">Transaction Mosaic · ' + block.tx_count + ' txns</div>';
+            html += '<div class="anatomy-tx-mosaic" id="anatomyTxMosaic"></div>';
+            html += '</div>';
+
+            // Explorer link
+            html += '<div style="text-align:center;">';
+            html += '<a href="' + explorerBase + hash + '" target="_blank" class="anatomy-explorer-link">';
+            html += '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>';
+            html += 'View on BC2 Explorer</a></div>';
+
+            anatomyContent.innerHTML = html;
+            anatomyOverlay.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+            requestAnimationFrame(function() { anatomyOverlay.classList.add('active'); });
+
+            // Draw merkle tree
+            setTimeout(function() { drawMerkleTree(block); }, 100);
+
+            // Build transaction mosaic
+            var mosaic = document.getElementById('anatomyTxMosaic');
+            if (mosaic) {
+                var txCount = Math.min(block.tx_count || 0, 500);
+                var txColors = ['#1e1b4b','#312e81','#3730a3','#4338ca','#4f46e5','#6366f1','#818cf8','#a78bfa','#f59e0b','#f97316','#ef4444','#dc2626'];
+                var bHash = hash;
+                var cells = '';
+                for (var t = 0; t < txCount; t++) {
+                    var seed = hashSeed(bHash, t);
+                    var tier = Math.min(11, Math.floor(seed / 23));
+                    cells += '<div class="anatomy-tx-cell" style="background:' + txColors[tier] + ';opacity:' + (0.6 + (seed%40)/100).toFixed(2) + '"></div>';
+                }
+                mosaic.innerHTML = cells;
+            }
+
+            // If missing key fields, fetch from API
+            if (!merkle && activeHost) {
+                fetch(activeHost + '/api/block/' + hash)
+                    .then(function(r) { return r.json(); })
+                    .then(function(d) {
+                        // Update cached block
+                        if (d.merkle_root || d.merkleroot) block.merkle_root = d.merkle_root || d.merkleroot;
+                        if (d.previousblockhash) block.previousblockhash = d.previousblockhash;
+                        if (d.version) block.version = d.version;
+                        if (d.bits) block.bits = d.bits;
+                        if (d.nonce) block.nonce = d.nonce;
+                        if (d.difficulty) block.difficulty = d.difficulty;
+                        // Re-render with full data
+                        showBlockAnatomy(hash, height);
+                    }).catch(function() {});
+            }
+        }
+
+        function drawMerkleTree(block) {
+            var canvas = document.getElementById('anatomyMerkleCanvas');
+            if (!canvas) return;
+            var ctx = canvas.getContext('2d');
+            var dpr = window.devicePixelRatio || 1;
+            var W = 560, H = 180;
+            canvas.width = W * dpr; canvas.height = H * dpr;
+            canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+            // Simulate a merkle tree based on tx_count
+            var txCount = Math.min(block.tx_count || 4, 64);
+            var levels = Math.max(2, Math.ceil(Math.log2(txCount)) + 1);
+            var nodesByLevel = [];
+            for (var lv = 0; lv < levels; lv++) {
+                var count = Math.pow(2, lv);
+                if (lv === levels - 1) count = Math.min(count, txCount);
+                nodesByLevel.push(count);
+            }
+
+            var gold = '#F7931A';
+            var goldFade = 'rgba(247,147,26,0.15)';
+
+            // Draw from root down
+            var rootY = 24;
+            var leafY = H - 16;
+            var levelGap = (leafY - rootY) / (levels - 1);
+
+            // Animate nodes appearing
+            var allNodes = [];
+            for (var lv = 0; lv < levels; lv++) {
+                var count = nodesByLevel[lv];
+                var y = rootY + lv * levelGap;
+                var spacing = W / (count + 1);
+                for (var n = 0; n < count; n++) {
+                    var x = spacing * (n + 1);
+                    allNodes.push({ x:x, y:y, level:lv, index:n, count:count });
+                }
+            }
+
+            var drawn = 0;
+            var total = allNodes.length;
+
+            function drawFrame() {
+                ctx.clearRect(0, 0, W, H);
+
+                var toDraw = Math.min(total, drawn);
+
+                // Draw connecting lines first
+                for (var i = 0; i < toDraw; i++) {
+                    var node = allNodes[i];
+                    if (node.level > 0) {
+                        var parentCount = nodesByLevel[node.level - 1];
+                        var parentIndex = Math.floor(node.index / 2);
+                        if (parentIndex < parentCount) {
+                            var pSpacing = W / (parentCount + 1);
+                            var px = pSpacing * (parentIndex + 1);
+                            var py = rootY + (node.level - 1) * levelGap;
+                            ctx.beginPath();
+                            ctx.moveTo(px, py + 5);
+                            ctx.lineTo(node.x, node.y - 5);
+                            ctx.strokeStyle = goldFade;
+                            ctx.lineWidth = 1;
+                            ctx.stroke();
+                        }
+                    }
+                }
+
+                // Draw nodes
+                for (var i = 0; i < toDraw; i++) {
+                    var node = allNodes[i];
+                    var isRoot = node.level === 0;
+                    var isLeaf = node.level === levels - 1;
+                    var r = isRoot ? 6 : (isLeaf ? 3 : 4);
+                    var alpha = isRoot ? 1 : (0.3 + 0.7 * (1 - node.level / levels));
+
+                    // Glow
+                    if (isRoot) {
+                        ctx.beginPath();
+                        var grd = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, 20);
+                        grd.addColorStop(0, 'rgba(247,147,26,0.25)');
+                        grd.addColorStop(1, 'transparent');
+                        ctx.fillStyle = grd;
+                        ctx.arc(node.x, node.y, 20, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+
+                    ctx.beginPath();
+                    ctx.arc(node.x, node.y, r, 0, Math.PI * 2);
+                    ctx.fillStyle = isRoot ? gold : (isLeaf ? 'rgba(99,102,241,' + alpha + ')' : 'rgba(247,147,26,' + alpha + ')');
+                    ctx.fill();
+                }
+
+                // Root label
+                if (toDraw > 0) {
+                    ctx.font = '500 9px "SF Mono","Fira Code",monospace';
+                    ctx.fillStyle = gold;
+                    ctx.textAlign = 'center';
+                    ctx.fillText('MERKLE ROOT', allNodes[0].x, allNodes[0].y - 12);
+
+                    // Leaf label
+                    if (toDraw >= total) {
+                        ctx.fillStyle = 'rgba(99,102,241,0.6)';
+                        ctx.fillText(block.tx_count + ' TRANSACTIONS', W / 2, leafY + 14);
+                    }
+                }
+
+                drawn += 3;
+                if (drawn <= total + 3) requestAnimationFrame(drawFrame);
+            }
+            drawFrame();
+        }
+
+        if (anatomyClose) {
+            anatomyClose.addEventListener('click', function() {
+                anatomyOverlay.classList.remove('active');
+                setTimeout(function() {
+                    anatomyOverlay.style.display = 'none';
+                    document.body.style.overflow = '';
+                }, 300);
+            });
+        }
+        if (anatomyOverlay) {
+            anatomyOverlay.addEventListener('click', function(e) {
+                if (e.target === anatomyOverlay) anatomyClose.click();
+            });
+        }
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && anatomyOverlay && anatomyOverlay.classList.contains('active')) {
+                anatomyClose.click();
+            }
+        });
+
+        // ═══ Genesis DNA Helix Animation ═══
+        (function() {
+            var wrap = document.getElementById('genesisDnaWrap');
+            var canvas = document.getElementById('genesisDnaCanvas');
+            if (!canvas || !wrap) return;
+            var ctx = canvas.getContext('2d');
+            var dpr = window.devicePixelRatio || 1;
+            var W, H;
+            var animId = null;
+            var isVisible = false;
+            var t = 0;
+
+            var labels = ['SHA-256', '21M CAP', 'PROOF OF WORK', '10 MIN BLOCKS', '210K HALVING', 'UTXO MODEL', 'P2P NETWORK', 'OPEN SOURCE'];
+
+            function resize() {
+                var rect = wrap.getBoundingClientRect();
+                W = rect.width;
+                H = rect.height;
+                canvas.width = W * dpr;
+                canvas.height = H * dpr;
+                canvas.style.width = W + 'px';
+                canvas.style.height = H + 'px';
+                ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            }
+
+            function draw() {
+                if (!isVisible) return;
+                ctx.clearRect(0, 0, W, H);
+
+                var cx = W / 2;
+                var amplitude = Math.min(W * 0.28, 120);
+                var waveLen = H / 2.2;
+                var strandPoints1 = [];
+                var strandPoints2 = [];
+                var steps = 120;
+
+                // Calculate strand positions
+                for (var i = 0; i <= steps; i++) {
+                    var y = (i / steps) * H;
+                    var phase = (y / waveLen) * Math.PI * 2 + t;
+                    var x1 = cx + Math.sin(phase) * amplitude;
+                    var x2 = cx - Math.sin(phase) * amplitude;
+                    strandPoints1.push({ x: x1, y: y });
+                    strandPoints2.push({ x: x2, y: y });
+                }
+
+                // Draw connecting rungs (base pairs) with labels
+                var rungInterval = Math.floor(steps / labels.length);
+                for (var i = 0; i < labels.length; i++) {
+                    var idx = Math.floor(rungInterval * (i + 0.5));
+                    if (idx >= strandPoints1.length) continue;
+                    var p1 = strandPoints1[idx];
+                    var p2 = strandPoints2[idx];
+                    var phase = ((p1.y / waveLen) * Math.PI * 2 + t);
+                    var depth = Math.sin(phase);
+                    var alpha = 0.15 + Math.abs(depth) * 0.25;
+
+                    ctx.beginPath();
+                    ctx.moveTo(p1.x, p1.y);
+                    ctx.lineTo(p2.x, p2.y);
+                    ctx.strokeStyle = 'rgba(247,147,26,' + alpha.toFixed(2) + ')';
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+
+                    // Label on rung
+                    var lx = (p1.x + p2.x) / 2;
+                    var ly = p1.y;
+                    ctx.save();
+                    ctx.font = '600 ' + (8 + Math.abs(depth) * 2).toFixed(0) + 'px "SF Mono","Fira Code",monospace';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillStyle = 'rgba(245,240,235,' + (0.15 + Math.abs(depth) * 0.45).toFixed(2) + ')';
+                    ctx.fillText(labels[i], lx, ly);
+                    ctx.restore();
+                }
+
+                // Draw strand 1 (BC2 red)
+                ctx.beginPath();
+                for (var i = 0; i < strandPoints1.length; i++) {
+                    var p = strandPoints1[i];
+                    var phase = ((p.y / waveLen) * Math.PI * 2 + t);
+                    var depth = Math.sin(phase);
+                    ctx.lineWidth = 1.5 + Math.max(0, depth) * 1.5;
+                    if (i === 0) ctx.moveTo(p.x, p.y);
+                    else ctx.lineTo(p.x, p.y);
+                }
+                ctx.strokeStyle = 'rgba(239,68,68,0.6)';
+                ctx.stroke();
+
+                // Nodes on strand 1
+                for (var i = 0; i < strandPoints1.length; i += 8) {
+                    var p = strandPoints1[i];
+                    var phase = ((p.y / waveLen) * Math.PI * 2 + t);
+                    var depth = Math.sin(phase);
+                    var r = 2 + Math.max(0, depth) * 2;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(239,68,68,' + (0.3 + Math.max(0, depth) * 0.5).toFixed(2) + ')';
+                    ctx.fill();
+                }
+
+                // Draw strand 2 (BTC orange)
+                ctx.beginPath();
+                for (var i = 0; i < strandPoints2.length; i++) {
+                    var p = strandPoints2[i];
+                    var phase = ((p.y / waveLen) * Math.PI * 2 + t);
+                    var depth = -Math.sin(phase);
+                    ctx.lineWidth = 1.5 + Math.max(0, depth) * 1.5;
+                    if (i === 0) ctx.moveTo(p.x, p.y);
+                    else ctx.lineTo(p.x, p.y);
+                }
+                ctx.strokeStyle = 'rgba(247,147,26,0.6)';
+                ctx.stroke();
+
+                // Nodes on strand 2
+                for (var i = 0; i < strandPoints2.length; i += 8) {
+                    var p = strandPoints2[i];
+                    var phase = ((p.y / waveLen) * Math.PI * 2 + t);
+                    var depth = -Math.sin(phase);
+                    var r = 2 + Math.max(0, depth) * 2;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(247,147,26,' + (0.3 + Math.max(0, depth) * 0.5).toFixed(2) + ')';
+                    ctx.fill();
+                }
+
+                // Top/bottom labels
+                ctx.font = '600 9px "SF Mono","Fira Code",monospace';
+                ctx.textAlign = 'center';
+                ctx.fillStyle = 'rgba(239,68,68,0.5)';
+                ctx.fillText('BC2 · 2024', cx - amplitude * 0.6, 12);
+                ctx.fillStyle = 'rgba(247,147,26,0.5)';
+                ctx.fillText('BTC · 2009', cx - amplitude * 0.6, H - 6);
+
+                t += 0.012;
+                animId = requestAnimationFrame(draw);
+            }
+
+            resize();
+            window.addEventListener('resize', function() { if (isVisible) resize(); });
+
+            var obs = new IntersectionObserver(function(entries) {
+                entries.forEach(function(e) {
+                    if (e.isIntersecting && !isVisible) {
+                        isVisible = true;
+                        resize();
+                        draw();
+                    } else if (!e.isIntersecting && isVisible) {
+                        isVisible = false;
+                        if (animId) { cancelAnimationFrame(animId); animId = null; }
+                    }
+                });
+            }, { threshold: 0.1 });
+            obs.observe(wrap);
+        })();
+
     </script>
 
 </body>
