@@ -2638,6 +2638,8 @@
             var animId = null;
             var visible = false;
             var blockFlash = 0; // countdown for block-mined effect
+            var realTxCount = 0;
+            var blockJustMined = false;
 
             var colors = [
                 'rgba(99,102,241,A)',   // indigo - low fee
@@ -2693,6 +2695,7 @@
 
             function triggerBlockMined() {
                 blockFlash = 60; // frames
+                blockJustMined = true;
                 for (var i = 0; i < particles.length; i++) {
                     particles[i].collapsing = true;
                 }
@@ -2725,11 +2728,11 @@
                         // Rush toward center and shrink
                         var dx = cx - p.x, dy = cy - p.y;
                         var dist = Math.sqrt(dx * dx + dy * dy) || 1;
-                        p.x += dx / dist * 3;
-                        p.y += dy / dist * 3;
-                        p.r *= 0.96;
-                        p.alpha *= 0.97;
-                        if (p.r < 0.5 || p.alpha < 0.02) {
+                        p.x += dx / dist * 6;
+                        p.y += dy / dist * 6;
+                        p.r *= 0.92;
+                        p.alpha *= 0.93;
+                        if (dist < 15 || p.r < 0.3 || p.alpha < 0.01) {
                             p.alive = false;
                             continue;
                         }
@@ -2768,7 +2771,7 @@
                 }
 
                 // Respawn dead particles gradually after block collapse
-                if (respawnQueue > 0 && blockFlash < 30) {
+                if (respawnQueue > 0 && blockFlash < 10) {
                     var spawnsPerFrame = 2;
                     for (var j = 0; j < particles.length && spawnsPerFrame > 0; j++) {
                         if (!particles[j].alive) {
@@ -2796,7 +2799,14 @@
                 // Update count display
                 var aliveCount = 0;
                 for (var m = 0; m < particles.length; m++) if (particles[m].alive) aliveCount++;
-                if (countEl) countEl.textContent = aliveCount + ' unconfirmed';
+                if (countEl) {
+                    if (blockJustMined && blockFlash > 0) {
+                        countEl.textContent = '0 unconfirmed';
+                    } else {
+                        countEl.textContent = realTxCount + ' unconfirmed';
+                    }
+                    if (blockJustMined && blockFlash <= 0) blockJustMined = false;
+                }
             }
 
             // Visibility observer — only animate when on screen
@@ -2812,10 +2822,13 @@
             // Scale particle count based on actual mempool tx count
             window._mempoolHeatmap = {
                 setTxCount: function(n) {
-                    maxParticles = Math.max(15, Math.min(80, Math.round(n / 2)));
-                    // Adjust particle array
-                    while (particles.length < maxParticles) particles.push(spawnParticle());
-                    while (particles.length > maxParticles) particles.pop();
+                    realTxCount = n;
+                    if (!blockJustMined) {
+                        maxParticles = Math.max(15, Math.min(80, Math.round(n / 2)));
+                        // Adjust particle array
+                        while (particles.length < maxParticles) particles.push(spawnParticle());
+                        while (particles.length > maxParticles) particles.pop();
+                    }
                 },
                 blockMined: function() {
                     triggerBlockMined();
