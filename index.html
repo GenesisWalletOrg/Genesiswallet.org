@@ -2699,6 +2699,8 @@
                 for (var i = 0; i < particles.length; i++) {
                     particles[i].collapsing = true;
                 }
+                // Clear after 3 seconds regardless of visibility
+                setTimeout(function() { blockJustMined = false; }, 3000);
             }
 
             function draw(time) {
@@ -2822,13 +2824,8 @@
             window._mempoolHeatmap = {
                 setTxCount: function(n) {
                     realTxCount = n;
-                    if (blockJustMined && blockFlash <= 0) {
-                        // Collapse is done, new mempool data arrived — resume
-                        blockJustMined = false;
-                    }
                     if (!blockJustMined) {
-                        maxParticles = Math.max(0, Math.min(80, n));
-                        // Adjust particle array
+                        maxParticles = Math.max(1, Math.min(80, n));
                         while (particles.length < maxParticles) particles.push(spawnParticle());
                         while (particles.length > maxParticles) particles.pop();
                     }
