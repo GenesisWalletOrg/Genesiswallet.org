@@ -1216,8 +1216,8 @@
                     <div class="mining-title"><span class="blink"></span> Next Block &mdash; Currently Being Mined</div>
                     <div class="mining-stat"><div class="mining-stat-value gv" id="mnTxCount">&mdash;</div><div class="mining-stat-label">Pending Transactions</div></div>
                     <div class="mining-stat"><div class="mining-stat-value" id="mnSize">&mdash;</div><div class="mining-stat-label">Mempool Size</div></div>
-                    <div class="mining-stat"><div class="mining-stat-value" id="mnFee">&mdash;</div><div class="mining-stat-label">Low Fee (sat/vB)</div></div>
-                    <div class="mining-stat"><div class="mining-stat-value" id="mnMedFee">&mdash;</div><div class="mining-stat-label">Med Fee (sat/vB)</div></div>
+                    <div class="mining-stat"><div class="mining-stat-value" id="mnFee">&mdash;</div><div class="mining-stat-label">Low Fee (sat2/vB)</div></div>
+                    <div class="mining-stat"><div class="mining-stat-value" id="mnMedFee">&mdash;</div><div class="mining-stat-label">Med Fee (sat2/vB)</div></div>
                     <div class="mining-stat"><div class="mining-stat-value gv" id="mnHeight">&mdash;</div><div class="mining-stat-label">Next Height</div></div>
                     <div class="mining-stat"><div class="mining-stat-value" id="mnLastTime">&mdash;</div><div class="mining-stat-label">Last Block</div></div>
                 </div>
@@ -1231,9 +1231,9 @@
                 </div>
                 <canvas id="mempoolCanvas"></canvas>
                 <div class="mempool-heatmap-legend">
-                    <span class="mhl-item"><span class="mhl-dot" style="background:#F7931A;"></span>1 sat/vB</span>
-                    <span class="mhl-item"><span class="mhl-dot" style="background:#F97316;"></span>5 sat/vB</span>
-                    <span class="mhl-item"><span class="mhl-dot" style="background:#DC2626;"></span>20+ sat/vB</span>
+                    <span class="mhl-item"><span class="mhl-dot" style="background:#F7931A;"></span>1 sat2/vB</span>
+                    <span class="mhl-item"><span class="mhl-dot" style="background:#F97316;"></span>5 sat2/vB</span>
+                    <span class="mhl-item"><span class="mhl-dot" style="background:#DC2626;"></span>20+ sat2/vB</span>
                 </div>
             </div>
 
@@ -2651,11 +2651,11 @@
             var blockFlash = 0; // countdown for block-mined effect
             var realTxCount = 0;
             var blockJustMined = false;
-            var feeThresholds = [1, 2, 5, 10, 20]; // sat/vB boundaries
+            var feeThresholds = [1, 2, 5, 10, 20]; // sat2/vB boundaries
             var medianFee = 1; // current median fee from API
 
             var colors = [
-                'rgba(247,147,26,A)',   // gold - 1 sat/vB (minimum)
+                'rgba(247,147,26,A)',   // gold - 1 sat2/vB (minimum)
                 'rgba(245,158,11,A)',   // amber - low
                 'rgba(249,115,22,A)',   // orange - medium
                 'rgba(234,88,12,A)',    // dark orange - elevated
