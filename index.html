@@ -2364,13 +2364,21 @@
 
             var fees = await apiFetch('/v1/fees/recommended');
             if (!fees) fees = await apiFetch('/fees/recommended');
-            if (fees) setMining({ lowFee: fees.minimumFee || fees.economyFee || fees.hourFee, medFee: fees.halfHourFee || fees.fastestFee });
+            if (fees) {
+                setMining({ lowFee: fees.minimumFee || fees.economyFee || fees.hourFee, medFee: fees.halfHourFee || fees.fastestFee });
+                if (window._mempoolHeatmap) {
+                    window._mempoolHeatmap.setMedianFee(fees.halfHourFee || fees.economyFee || fees.minimumFee || 1);
+                }
+            }
 
             // Also try mempool-blocks for richer projected data
             var mpBlocks = await apiFetch('/v1/fees/mempool-blocks');
             if (mpBlocks && mpBlocks.length) {
                 var next = mpBlocks[0];
                 setMining({ txCount: next.nTx || mp && mp.count, size: next.blockVSize ? Math.round(next.blockVSize) : undefined });
+                if (next.medianFee != null && window._mempoolHeatmap) {
+                    window._mempoolHeatmap.setMedianFee(next.medianFee);
+                }
             }
         }
 
@@ -2404,7 +2412,10 @@
                             if (window._mempoolHeatmap) window._mempoolHeatmap.blockMined();
                         }
                         if (msg.mempoolInfo) setMining({ txCount: msg.mempoolInfo.size || msg.mempoolInfo.count, size: msg.mempoolInfo.bytes || msg.mempoolInfo.vsize || msg.mempoolInfo.usage });
-                        if (msg.fees) setMining({ lowFee: msg.fees.minimumFee || msg.fees.economyFee, medFee: msg.fees.halfHourFee || msg.fees.fastestFee });
+                        if (msg.fees) {
+                            setMining({ lowFee: msg.fees.minimumFee || msg.fees.economyFee, medFee: msg.fees.halfHourFee || msg.fees.fastestFee });
+                            if (window._mempoolHeatmap) window._mempoolHeatmap.setMedianFee(msg.fees.halfHourFee || msg.fees.economyFee || msg.fees.minimumFee || 1);
+                        }
                     } catch (e) { /* parse error */ }
                 };
 
@@ -2640,14 +2651,16 @@
             var blockFlash = 0; // countdown for block-mined effect
             var realTxCount = 0;
             var blockJustMined = false;
+            var feeThresholds = [1, 2, 5, 10, 20]; // sat/vB boundaries
+            var medianFee = 1; // current median fee from API
 
             var colors = [
-                'rgba(99,102,241,A)',   // indigo - low fee
-                'rgba(99,102,241,A)',
-                'rgba(139,92,246,A)',   // violet
-                'rgba(245,158,11,A)',   // amber - med fee
-                'rgba(249,115,22,A)',   // orange
-                'rgba(239,68,68,A)',    // red - high fee
+                'rgba(247,147,26,A)',   // gold - 1 sat/vB (minimum)
+                'rgba(245,158,11,A)',   // amber - low
+                'rgba(249,115,22,A)',   // orange - medium
+                'rgba(234,88,12,A)',    // dark orange - elevated
+                'rgba(220,38,38,A)',    // red - high
+                'rgba(185,28,28,A)',    // dark red - very high
             ];
 
             function resize() {
@@ -2662,10 +2675,16 @@
                 ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
             }
 
+            function getFeeTier() {
+                var ci = 0;
+                for (var f = 0; f < feeThresholds.length; f++) {
+                    if (medianFee >= feeThresholds[f]) ci = f;
+                }
+                return ci;
+            }
+
             function spawnParticle(x, y) {
-                var tier = Math.random();
-                var ci = tier < 0.4 ? 0 : tier < 0.6 ? 1 : tier < 0.75 ? 2 : tier < 0.88 ? 3 : tier < 0.95 ? 4 : 5;
-                var r = 2 + tier * 6;
+                var r = 2 + Math.random() * 4;
                 return {
                     x: x != null ? x : Math.random() * W,
                     y: y != null ? y : Math.random() * H,
@@ -2673,7 +2692,6 @@
                     vy: (Math.random() - 0.5) * 0.2,
                     r: r,
                     baseR: r,
-                    color: colors[ci],
                     alpha: 0.3 + Math.random() * 0.4,
                     phase: Math.random() * Math.PI * 2,
                     speed: 0.3 + Math.random() * 0.7,
@@ -2753,11 +2771,12 @@
                         p.r = p.baseR + Math.sin(t * 1.5 + p.phase) * 0.5;
                     }
 
-                    // Draw glow
+                    // Draw glow - use current fee tier color
+                    var feeColor = colors[getFeeTier()];
                     var grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r * 2.5);
-                    var c = p.color.replace('A', (p.alpha * 0.6).toFixed(2));
-                    var c2 = p.color.replace('A', '0');
-                    grad.addColorStop(0, p.color.replace('A', p.alpha.toFixed(2)));
+                    var c = feeColor.replace('A', (p.alpha * 0.6).toFixed(2));
+                    var c2 = feeColor.replace('A', '0');
+                    grad.addColorStop(0, feeColor.replace('A', p.alpha.toFixed(2)));
                     grad.addColorStop(0.4, c);
                     grad.addColorStop(1, c2);
                     ctx.save();
@@ -2767,7 +2786,7 @@
                     ctx.fillRect(-p.r * 2.5, -p.r * 2.5, p.r * 5, p.r * 5);
 
                     // Draw core
-                    ctx.fillStyle = p.color.replace('A', p.alpha.toFixed(2));
+                    ctx.fillStyle = feeColor.replace('A', p.alpha.toFixed(2));
                     ctx.fillRect(-p.r, -p.r, p.r * 2, p.r * 2);
                     ctx.restore();
                 }
@@ -2829,6 +2848,9 @@
                         while (particles.length < maxParticles) particles.push(spawnParticle());
                         while (particles.length > maxParticles) particles.pop();
                     }
+                },
+                setMedianFee: function(fee) {
+                    medianFee = fee || 1;
                 },
                 blockMined: function() {
                     triggerBlockMined();
