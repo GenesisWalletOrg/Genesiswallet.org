@@ -2634,7 +2634,7 @@
             var ctx = canvas.getContext('2d');
             var W, H, dpr;
             var particles = [];
-            var maxParticles = 20;
+            var maxParticles = 0;
             var animId = null;
             var visible = false;
             var blockFlash = 0; // countdown for block-mined effect
@@ -2827,7 +2827,7 @@
                         blockJustMined = false;
                     }
                     if (!blockJustMined) {
-                        maxParticles = Math.max(1, Math.min(80, Math.round(n / 2)));
+                        maxParticles = Math.max(0, Math.min(80, n));
                         // Adjust particle array
                         while (particles.length < maxParticles) particles.push(spawnParticle());
                         while (particles.length > maxParticles) particles.pop();
