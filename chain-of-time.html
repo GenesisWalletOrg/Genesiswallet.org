@@ -1,0 +1,1027 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chain of Time — BC2 Origin Story</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=DM+Serif+Display&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --gold: #F7931A; --gold-sec: #D4790E; --gold-lt: #FFB347;
+            --bg: #050505; --bg2: #0A0A0A;
+            --t1: #F5F0EB; --t2: #9A9188; --t3: #5C554E;
+            --red: #ef4444; --green: #22c55e; --indigo: #818cf8;
+            --orange: #f97316; --purple: #a855f7; --pink: #ec4899;
+            --mono: 'IBM Plex Mono', 'SF Mono', monospace;
+            --serif: 'DM Serif Display', serif;
+            --sans: 'DM Sans', sans-serif;
+        }
+        html { scroll-behavior: auto; }
+        body { font-family: var(--sans); background: var(--bg); color: var(--t1); line-height: 1.6; overflow-x: hidden; }
+        body::after {
+            content: ''; position: fixed; inset: -50%; width: 200%; height: 200%;
+            pointer-events: none; z-index: 9999; opacity: 0.015;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+            animation: grain 0.4s steps(1) infinite;
+        }
+        @keyframes grain { 0%{transform:translate(0,0)}25%{transform:translate(-2%,3%)}50%{transform:translate(1%,-2%)}75%{transform:translate(3%,1%)} }
+
+        /* ═══ INTRO ═══ */
+        .cot-intro {
+            min-height:85vh; display:flex; flex-direction:column;
+            align-items:center; justify-content:center;
+            text-align:center; padding:6rem 2rem; position:relative; overflow:hidden;
+        }
+        .cot-intro::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse at 50% 80%,rgba(247,147,26,0.06),transparent 60%); pointer-events:none; }
+        .cot-intro-label {
+            font-family:var(--mono); font-size:0.65rem; color:var(--gold);
+            text-transform:uppercase; letter-spacing:0.15em; font-weight:600;
+            display:flex; align-items:center; gap:0.5rem; margin-bottom:1.5rem;
+            opacity:0; transform:translateY(20px); animation:cotUp .8s ease forwards .2s;
+        }
+        .cot-intro-label .dot { width:6px; height:6px; background:var(--gold); border-radius:50%; box-shadow:0 0 10px rgba(247,147,26,.7); }
+        .cot-intro h2 {
+            font-family:var(--sans); font-size:clamp(2.4rem,4.5vw,3.6rem);
+            font-weight:700; line-height:1.1; letter-spacing:-0.03em; max-width:700px;
+            opacity:0; transform:translateY(20px); animation:cotUp .8s ease forwards .4s;
+        }
+        .cot-intro h2 .gold { background:linear-gradient(135deg,var(--gold-lt),var(--gold),var(--gold-sec)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+        .cot-intro p { font-size:1.05rem; color:var(--t2); max-width:520px; margin-top:1.5rem; line-height:1.7; opacity:0; transform:translateY(20px); animation:cotUp .8s ease forwards .6s; }
+        .cot-scroll-hint { margin-top:3rem; display:flex; flex-direction:column; align-items:center; gap:.5rem; opacity:0; animation:cotUp .8s ease forwards .8s; }
+        .cot-scroll-hint span { font-family:var(--mono); font-size:.6rem; color:var(--t3); text-transform:uppercase; letter-spacing:.12em; }
+        .cot-scroll-arrow { width:14px; height:14px; border-right:1.5px solid var(--gold); border-bottom:1.5px solid var(--gold); transform:translateY(0) rotate(45deg); animation:sBounce 2s ease-in-out infinite; }
+        @keyframes sBounce { 0%,100%{transform:translateY(0) rotate(45deg);opacity:1} 50%{transform:translateY(8px) rotate(45deg);opacity:.4} }
+        @keyframes cotUp { to{opacity:1;transform:translateY(0)} }
+
+        /* ═══ ERA PANELS ═══ */
+        .cot-era {
+            min-height:100vh; position:relative; display:flex;
+            align-items:center; padding:6rem 2rem 6rem 7rem; overflow:hidden;
+        }
+        .cot-era .era-bg {
+            position:absolute; inset:0; pointer-events:none;
+            opacity:0; transition:opacity 1.2s ease; z-index:0;
+        }
+        .cot-era.in-view .era-bg { opacity:1; }
+
+        /* Era backgrounds */
+        .era-crisis .era-bg { background:linear-gradient(180deg,rgba(80,20,10,.08),rgba(5,5,5,.95)); }
+        .era-crisis .era-bg::after { content:''; position:absolute; inset:0; background:radial-gradient(ellipse at 30% 40%,rgba(220,38,38,.06),transparent 50%); }
+        .era-genesis .era-bg { background:linear-gradient(180deg,rgba(0,20,0,.15),rgba(5,5,5,.95)); }
+        .era-genesis .era-bg::after { content:''; position:absolute; inset:0; background:radial-gradient(ellipse at 50% 50%,rgba(34,197,94,.04),transparent 50%),repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(34,197,94,.008) 3px,rgba(34,197,94,.008) 4px); }
+        .era-wildwest .era-bg { background:linear-gradient(180deg,rgba(15,10,5,.2),rgba(5,5,5,.95)); }
+        .era-wildwest .era-bg::after { content:''; position:absolute; inset:0; background:radial-gradient(ellipse at 40% 30%,rgba(247,147,26,.05),transparent 50%); }
+        .era-farewell .era-bg { background:linear-gradient(180deg,rgba(0,12,0,.12),rgba(5,5,5,.97)); }
+        .era-farewell .era-bg::after { content:''; position:absolute; inset:0; background:radial-gradient(ellipse at 50% 50%,rgba(34,197,94,.03),transparent 50%); }
+        .era-silkroad .era-bg { background:linear-gradient(180deg,rgba(10,5,5,.15),rgba(5,5,5,.95)); }
+        .era-silkroad .era-bg::after { content:''; position:absolute; inset:0; background:radial-gradient(ellipse at 40% 50%,rgba(148,163,184,.04),transparent 45%); }
+        .era-mtgox .era-bg { background:linear-gradient(180deg,rgba(30,5,5,.12),rgba(5,5,5,.95)); }
+        .era-mtgox .era-bg::after { content:''; position:absolute; inset:0; background:radial-gradient(ellipse at 50% 50%,rgba(239,68,68,.05),transparent 45%); }
+        .era-blockwars .era-bg { background:linear-gradient(180deg,rgba(30,5,5,.15),rgba(5,5,5,.95)); }
+        .era-blockwars .era-bg::after { content:''; position:absolute; inset:0; background:radial-gradient(ellipse at 25% 50%,rgba(239,68,68,.06),transparent 45%),radial-gradient(ellipse at 75% 50%,rgba(247,147,26,.06),transparent 45%); }
+        .era-cashgold .era-bg { background:linear-gradient(180deg,rgba(12,8,0,.15),rgba(5,5,5,.95)); }
+        .era-cashgold .era-bg::after { content:''; position:absolute; inset:0; background:radial-gradient(ellipse at 50% 40%,rgba(234,179,8,.05),transparent 50%); }
+        .era-institutional .era-bg { background:linear-gradient(180deg,rgba(5,5,20,.2),rgba(5,5,5,.95)); }
+        .era-institutional .era-bg::after { content:''; position:absolute; inset:0; background:radial-gradient(ellipse at 50% 40%,rgba(99,102,241,.04),transparent 50%); }
+        .era-ftx .era-bg { background:linear-gradient(180deg,rgba(30,5,5,.18),rgba(5,5,5,.95)); }
+        .era-ftx .era-bg::after { content:''; position:absolute; inset:0; background:radial-gradient(ellipse at 50% 40%,rgba(239,68,68,.07),transparent 45%); }
+        .era-ordinals .era-bg { background:linear-gradient(180deg,rgba(20,5,5,.12),rgba(5,5,5,.95)); }
+        .era-ordinals .era-bg::after { content:''; position:absolute; inset:0; background:radial-gradient(ellipse at 50% 50%,rgba(236,72,153,.04),transparent 40%),radial-gradient(ellipse at 30% 30%,rgba(168,85,247,.03),transparent 35%); }
+        .era-paperbtc .era-bg { background:linear-gradient(180deg,rgba(5,5,20,.2),rgba(5,5,5,.95)); }
+        .era-paperbtc .era-bg::after { content:''; position:absolute; inset:0; background:radial-gradient(ellipse at 40% 50%,rgba(99,102,241,.05),transparent 45%),radial-gradient(ellipse at 60% 40%,rgba(239,68,68,.04),transparent 40%); }
+        .era-abyss .era-bg { background:linear-gradient(180deg,rgba(15,0,20,.2),rgba(5,5,5,.95)); }
+        .era-abyss .era-bg::after { content:''; position:absolute; inset:0; background:radial-gradient(ellipse at 50% 50%,rgba(168,85,247,.05),transparent 45%); }
+        .era-rebirth .era-bg { background:linear-gradient(180deg,rgba(20,12,0,.2),rgba(5,5,5,.95)); }
+        .era-rebirth .era-bg::after { content:''; position:absolute; inset:0; background:radial-gradient(ellipse at 50% 40%,rgba(247,147,26,.08),transparent 50%); }
+        .era-conservative .era-bg { background:linear-gradient(180deg,rgba(20,12,0,.15),rgba(5,5,5,.95)); }
+        .era-conservative .era-bg::after { content:''; position:absolute; inset:0; background:radial-gradient(ellipse at 50% 50%,rgba(247,147,26,.06),transparent 50%); }
+
+        /* ═══ ERA CONTENT ═══ */
+        .era-inner { max-width:1100px; margin:0 auto; width:100%; display:grid; grid-template-columns:1fr 1fr; gap:4rem; align-items:center; position:relative; z-index:2; }
+        .era-inner.reverse { direction:rtl; }
+        .era-inner.reverse > * { direction:ltr; }
+        .era-inner.centered { grid-template-columns:1fr; text-align:center; justify-items:center; }
+
+        .era-year {
+            font-family:var(--mono); font-size:.6rem;
+            text-transform:uppercase; letter-spacing:.15em; font-weight:600;
+            display:inline-flex; align-items:center; gap:.5rem; margin-bottom:1rem;
+            padding:.3rem .8rem; border-radius:100px;
+            opacity:0; transform:translateY(20px);
+            transition:all .8s cubic-bezier(.16,1,.3,1);
+            color:var(--gold); border:1px solid rgba(247,147,26,.12); background:rgba(247,147,26,.06);
+        }
+        .cot-era.in-view .era-year { opacity:1; transform:translateY(0); }
+        .era-crisis .era-year, .era-mtgox .era-year, .era-ftx .era-year { color:var(--red); border-color:rgba(239,68,68,.2); background:rgba(239,68,68,.06); }
+        .era-genesis .era-year, .era-farewell .era-year { color:var(--green); border-color:rgba(34,197,94,.2); background:rgba(34,197,94,.06); }
+        .era-blockwars .era-year { color:var(--orange); border-color:rgba(249,115,22,.2); background:rgba(249,115,22,.06); }
+        .era-cashgold .era-year { color:#eab308; border-color:rgba(234,179,8,.2); background:rgba(234,179,8,.06); }
+        .era-institutional .era-year, .era-paperbtc .era-year { color:var(--indigo); border-color:rgba(129,140,248,.2); background:rgba(129,140,248,.06); }
+        .era-ordinals .era-year { color:var(--pink); border-color:rgba(236,72,153,.2); background:rgba(236,72,153,.06); }
+        .era-abyss .era-year { color:var(--purple); border-color:rgba(168,85,247,.2); background:rgba(168,85,247,.06); }
+        .era-silkroad .era-year { color:#94a3b8; border-color:rgba(148,163,184,.2); background:rgba(148,163,184,.06); }
+
+        .era-headline {
+            font-family:var(--serif); font-size:clamp(1.8rem,3.5vw,2.8rem);
+            line-height:1.15; letter-spacing:-0.02em; margin-bottom:1.25rem;
+            opacity:0; transform:translateY(30px);
+            transition:all 1s cubic-bezier(.16,1,.3,1) .15s;
+        }
+        .cot-era.in-view .era-headline { opacity:1; transform:translateY(0); }
+
+        .era-quote {
+            font-family:var(--serif); font-size:1.05rem; line-height:1.5;
+            font-style:italic; color:var(--t2); padding:1rem 1.5rem;
+            border-left:2px solid rgba(247,147,26,.3); background:rgba(247,147,26,.02);
+            border-radius:0 8px 8px 0; margin-bottom:1.5rem;
+            opacity:0; transform:translateX(-20px);
+            transition:all 1s cubic-bezier(.16,1,.3,1) .3s;
+        }
+        .cot-era.in-view .era-quote { opacity:1; transform:translateX(0); }
+        .era-crisis .era-quote, .era-mtgox .era-quote, .era-ftx .era-quote { border-left-color:rgba(239,68,68,.4); background:rgba(239,68,68,.02); }
+        .era-genesis .era-quote, .era-farewell .era-quote { border-left-color:rgba(34,197,94,.4); background:rgba(34,197,94,.02); }
+        .era-ordinals .era-quote { border-left-color:rgba(236,72,153,.3); background:rgba(236,72,153,.02); }
+        .era-cashgold .era-quote { border-left-color:rgba(234,179,8,.3); background:rgba(234,179,8,.02); }
+        .era-abyss .era-quote { border-left-color:rgba(168,85,247,.3); background:rgba(168,85,247,.02); }
+        .era-silkroad .era-quote { border-left-color:rgba(148,163,184,.3); background:rgba(148,163,184,.02); }
+        .era-paperbtc .era-quote { border-left-color:rgba(129,140,248,.3); background:rgba(129,140,248,.02); }
+
+        .era-body {
+            font-size:.95rem; color:var(--t2); line-height:1.7; max-width:480px;
+            opacity:0; transform:translateY(20px);
+            transition:all 1s cubic-bezier(.16,1,.3,1) .3s;
+        }
+        .cot-era.in-view .era-body { opacity:1; transform:translateY(0); }
+
+        .era-milestones {
+            display:flex; flex-wrap:wrap; gap:1rem; margin-top:1.5rem;
+            opacity:0; transform:translateY(20px);
+            transition:all 1s cubic-bezier(.16,1,.3,1) .45s;
+        }
+        .cot-era.in-view .era-milestones { opacity:1; transform:translateY(0); }
+        .era-milestone { padding:.6rem .85rem; border-radius:10px; background:rgba(255,255,255,.02); border:1px solid rgba(255,255,255,.05); }
+        .era-milestone-val { font-family:var(--mono); font-size:1rem; font-weight:700; color:var(--gold); }
+        .era-milestone-key { font-family:var(--mono); font-size:.5rem; color:var(--t3); text-transform:uppercase; letter-spacing:.06em; margin-top:.1rem; }
+
+        .era-visual {
+            display:flex; align-items:center; justify-content:center; position:relative;
+            opacity:0; transform:translateY(40px) scale(.95);
+            transition:all 1.2s cubic-bezier(.16,1,.3,1) .2s;
+        }
+        .cot-era.in-view .era-visual { opacity:1; transform:translateY(0) scale(1); }
+
+        /* ═══ VISUAL ELEMENTS ═══ */
+
+        /* Stone block monument */
+        .era-block {
+            width:220px; height:220px;
+            background:linear-gradient(165deg,#161412,#0c0b09);
+            border:1px solid rgba(247,147,26,.1); border-radius:12px;
+            display:flex; flex-direction:column; align-items:center; justify-content:center;
+            padding:1.5rem; position:relative; overflow:hidden;
+            box-shadow:0 20px 60px rgba(0,0,0,.5);
+        }
+        .era-block::before { content:''; position:absolute; inset:0; background-image:url("data:image/svg+xml,%3Csvg width='100' height='100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.65' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23n)' opacity='.04'/%3E%3C/svg%3E"); opacity:.5; pointer-events:none; }
+        .era-block::after { content:''; position:absolute; top:0; left:15%; width:70%; height:2px; background:linear-gradient(90deg,transparent,rgba(247,147,26,.4),transparent); box-shadow:0 0 15px rgba(247,147,26,.15); }
+        .era-block .block-height { font-family:var(--mono); font-size:.55rem; text-transform:uppercase; letter-spacing:.12em; position:relative; z-index:1; color:var(--gold); }
+        .era-block .block-hash { font-family:var(--mono); font-size:.4rem; color:var(--t3); word-break:break-all; text-align:center; line-height:1.5; position:relative; z-index:1; }
+        .era-block .block-hash .zeros { color:var(--gold); font-weight:600; }
+        .era-block .block-icon { font-size:2.5rem; margin-bottom:.75rem; position:relative; z-index:1; }
+
+        /* Terminal window */
+        .era-terminal {
+            width:280px; background:#0a0f0a; border:1px solid rgba(34,197,94,.12);
+            border-radius:10px; overflow:hidden; box-shadow:0 20px 60px rgba(0,0,0,.5);
+            font-family:var(--mono); font-size:.65rem;
+        }
+        .era-terminal .term-bar { display:flex; align-items:center; gap:.4rem; padding:.5rem .75rem; background:rgba(34,197,94,.04); border-bottom:1px solid rgba(34,197,94,.08); }
+        .era-terminal .term-dot { width:7px; height:7px; border-radius:50%; }
+        .era-terminal .term-title { color:rgba(34,197,94,.4); font-size:.5rem; margin-left:.5rem; }
+        .era-terminal .term-body { padding:.75rem 1rem; line-height:1.8; }
+        .era-terminal .term-line { color:rgba(34,197,94,.6); }
+        .era-terminal .term-line .cmd { color:rgba(34,197,94,.9); }
+        .era-terminal .term-line .fade { opacity:.35; }
+        .era-terminal .term-cursor { display:inline-block; width:6px; height:12px; background:rgba(34,197,94,.7); animation:blink 1s step-end infinite; vertical-align:middle; margin-left:2px; }
+        @keyframes blink { 50%{opacity:0} }
+
+        /* Terminal variants */
+        .era-terminal.purple { background:#0a050f; border-color:rgba(168,85,247,.12); }
+        .era-terminal.purple .term-bar { background:rgba(168,85,247,.04); border-bottom-color:rgba(168,85,247,.08); }
+        .era-terminal.purple .term-title { color:rgba(168,85,247,.4); }
+        .era-terminal.purple .term-line { color:rgba(168,85,247,.6); }
+        .era-terminal.purple .term-line .cmd { color:rgba(168,85,247,.9); }
+        .era-terminal.purple .term-cursor { background:rgba(168,85,247,.7); }
+        .era-terminal.purple .term-line .warn { color:rgba(239,68,68,.7); }
+        .era-terminal.purple .term-line .proposed { color:rgba(168,85,247,.8); }
+
+        .era-terminal.red { background:#0f0505; border-color:rgba(239,68,68,.12); }
+        .era-terminal.red .term-bar { background:rgba(239,68,68,.04); border-bottom-color:rgba(239,68,68,.08); }
+        .era-terminal.red .term-title { color:rgba(239,68,68,.4); }
+        .era-terminal.red .term-line { color:rgba(239,68,68,.55); }
+        .era-terminal.red .term-line .cmd { color:rgba(239,68,68,.85); }
+        .era-terminal.red .term-cursor { background:rgba(239,68,68,.7); }
+
+        .era-terminal.gray { background:#0a0a0c; border-color:rgba(148,163,184,.12); }
+        .era-terminal.gray .term-bar { background:rgba(148,163,184,.04); border-bottom-color:rgba(148,163,184,.08); }
+        .era-terminal.gray .term-title { color:rgba(148,163,184,.4); }
+        .era-terminal.gray .term-line { color:rgba(148,163,184,.55); }
+        .era-terminal.gray .term-line .cmd { color:rgba(148,163,184,.85); }
+        .era-terminal.gray .term-cursor { background:rgba(148,163,184,.7); }
+
+        /* Whitepaper visual */
+        .era-paper {
+            width:260px; padding:2rem 1.75rem;
+            background:linear-gradient(165deg,#1a1814,#0f0e0b);
+            border:1px solid rgba(234,179,8,.1); border-radius:4px;
+            box-shadow:0 20px 60px rgba(0,0,0,.5); position:relative; overflow:hidden;
+        }
+        .era-paper::before { content:''; position:absolute; inset:0; background-image:url("data:image/svg+xml,%3Csvg width='100' height='100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.65' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23n)' opacity='.04'/%3E%3C/svg%3E"); opacity:.5; pointer-events:none; }
+        .era-paper .paper-title { font-family:var(--serif); font-size:.95rem; color:var(--t1); line-height:1.4; position:relative; z-index:1; }
+        .era-paper .paper-author { font-family:var(--mono); font-size:.55rem; color:var(--t3); margin-top:.75rem; position:relative; z-index:1; }
+        .era-paper .paper-line { height:4px; background:rgba(255,255,255,.03); border-radius:2px; margin-top:.6rem; position:relative; z-index:1; }
+        .era-paper .paper-line.short { width:60%; }
+        .era-paper .paper-strike { text-decoration:line-through; color:var(--t3); text-decoration-color:rgba(239,68,68,.5); text-decoration-thickness:1.5px; }
+        .era-paper .paper-gold { color:var(--gold); font-weight:600; }
+
+        /* Spam block mosaic */
+        .era-spam-block {
+            width:220px; height:220px;
+            background:#0a0a0a; border:1px solid rgba(236,72,153,.12);
+            border-radius:12px; overflow:hidden; position:relative;
+            box-shadow:0 20px 60px rgba(0,0,0,.5);
+        }
+        .era-spam-block .sb-header { padding:.5rem .65rem; border-bottom:1px solid rgba(255,255,255,.04); font-family:var(--mono); font-size:.5rem; color:var(--t3); display:flex; justify-content:space-between; }
+        .era-spam-block .sb-grid { display:grid; grid-template-columns:repeat(10,1fr); gap:1px; padding:4px; }
+        .era-spam-block .sb-cell { aspect-ratio:1; border-radius:1.5px; }
+        .era-spam-block .sb-footer { position:absolute; bottom:0; left:0; right:0; padding:.4rem .65rem; font-family:var(--mono); font-size:.45rem; color:var(--t3); text-align:center; background:linear-gradient(transparent,rgba(10,10,10,.95)); }
+
+        /* Split visual */
+        .era-split-visual { display:flex; gap:.75rem; align-items:center; }
+        .split-chain { width:100px; height:180px; background:linear-gradient(165deg,#161412,#0c0b09); border-radius:10px; padding:1rem; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; position:relative; overflow:hidden; }
+        .split-chain::before { content:''; position:absolute; top:0; left:10%; width:80%; height:2px; }
+        .split-btc { border:1px solid rgba(247,147,26,.15); }
+        .split-btc::before { background:linear-gradient(90deg,transparent,rgba(247,147,26,.5),transparent)!important; }
+        .split-bch { border:1px solid rgba(34,197,94,.15); }
+        .split-bch::before { background:linear-gradient(90deg,transparent,rgba(34,197,94,.5),transparent)!important; }
+        .split-chain .sc-label { font-family:var(--mono); font-size:.55rem; text-transform:uppercase; letter-spacing:.1em; font-weight:600; }
+        .split-btc .sc-label { color:var(--gold); }
+        .split-bch .sc-label { color:var(--green); }
+        .split-chain .sc-size { font-family:var(--mono); font-size:1.4rem; font-weight:700; color:var(--t1); margin:.5rem 0 .25rem; }
+        .split-chain .sc-unit { font-family:var(--mono); font-size:.5rem; color:var(--t3); }
+        .split-divider { width:2px; height:120px; background:linear-gradient(180deg,transparent,rgba(239,68,68,.4),transparent); position:relative; }
+        .split-divider::after { content:'⚡'; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-size:1.2rem; filter:drop-shadow(0 0 8px rgba(239,68,68,.5)); }
+
+        /* Glass card */
+        .era-glass-card {
+            width:240px; padding:2rem;
+            background:linear-gradient(135deg,rgba(99,102,241,.06),rgba(15,15,25,.8));
+            border:1px solid rgba(99,102,241,.12); border-radius:16px;
+            backdrop-filter:blur(10px); box-shadow:0 20px 60px rgba(0,0,0,.4); text-align:center;
+        }
+        .era-glass-card .gc-icon { font-size:2rem; margin-bottom:.75rem; }
+        .era-glass-card .gc-val { font-family:var(--mono); font-size:1.8rem; font-weight:700; background:linear-gradient(135deg,#818cf8,#c4b5fd); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+        .era-glass-card .gc-label { font-family:var(--mono); font-size:.55rem; color:var(--t3); text-transform:uppercase; letter-spacing:.08em; margin-top:.25rem; }
+        .era-glass-card .gc-sub { font-size:.75rem; color:var(--t2); margin-top:.75rem; line-height:1.5; }
+
+        /* Custody chain visual for Paper BTC */
+        .custody-chain {
+            display:flex; flex-direction:column; align-items:center; gap:0; width:220px;
+        }
+        .custody-node {
+            width:100%; padding:.55rem .75rem; border-radius:8px;
+            font-family:var(--mono); font-size:.55rem; text-align:center;
+            position:relative;
+        }
+        .custody-node .cn-label { font-weight:600; text-transform:uppercase; letter-spacing:.06em; }
+        .custody-node .cn-sub { font-size:.42rem; color:var(--t3); margin-top:.1rem; }
+        .custody-arrow {
+            width:1px; height:16px; position:relative;
+        }
+        .custody-arrow::after {
+            content:'▼'; position:absolute; bottom:-4px; left:50%; transform:translateX(-50%);
+            font-size:.45rem;
+        }
+
+        /* Timeline bar */
+        .era-timeline-bar { width:280px; position:relative; padding:1rem 0; }
+        .tlb-track { width:100%; height:4px; background:rgba(255,255,255,.04); border-radius:2px; position:relative; overflow:visible; }
+        .tlb-fill { height:100%; border-radius:2px; }
+        .tlb-ticks { display:flex; justify-content:space-between; margin-top:.75rem; }
+        .tlb-tick { text-align:center; }
+        .tlb-tick-label { font-family:var(--mono); font-size:.4rem; color:var(--t3); text-transform:uppercase; letter-spacing:.04em; }
+        .tlb-tick-ver { font-family:var(--mono); font-size:.5rem; font-weight:600; }
+        .tlb-wall { position:absolute; top:-8px; width:3px; height:20px; background:var(--gold); border-radius:1px; box-shadow:0 0 12px rgba(247,147,26,.5); }
+        .tlb-wall-label { position:absolute; top:-22px; transform:translateX(-50%); font-family:var(--mono); font-size:.5rem; color:var(--gold); font-weight:700; white-space:nowrap; text-transform:uppercase; letter-spacing:.06em; }
+        .tlb-after { position:absolute; top:-2px; right:0; height:8px; border-radius:0 2px 2px 0; background:repeating-linear-gradient(90deg,rgba(168,85,247,.15),rgba(168,85,247,.15) 4px,transparent 4px,transparent 8px); }
+
+        /* Seized banner */
+        .seized-banner {
+            position:absolute; top:50%; left:50%; transform:translate(-50%,-50%) rotate(-15deg);
+            font-family:var(--mono); font-size:1rem; font-weight:700; color:var(--red);
+            text-transform:uppercase; letter-spacing:.15em;
+            padding:.4rem 1.5rem; border:2px solid var(--red);
+            background:rgba(239,68,68,.08); z-index:5;
+            box-shadow:0 0 20px rgba(239,68,68,.15);
+        }
+
+        /* ═══ CONNECTORS ═══ */
+        .era-connector { height:80px; display:flex; align-items:center; justify-content:center; position:relative; }
+        .era-connector::before { content:''; width:1px; height:100%; background:linear-gradient(180deg,transparent,rgba(247,147,26,.12),transparent); }
+
+        /* ═══ FINALE ═══ */
+        .cot-finale {
+            min-height:80vh; display:flex; flex-direction:column;
+            align-items:center; justify-content:center; text-align:center;
+            padding:6rem 2rem; position:relative; overflow:hidden;
+        }
+        .cot-finale::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse at 50% 60%,rgba(247,147,26,.08),transparent 50%); pointer-events:none; }
+        .cot-finale h2 { font-family:var(--serif); font-size:clamp(2rem,4vw,3.2rem); line-height:1.15; max-width:600px; position:relative; z-index:2; }
+        .cot-finale h2 .gold { background:linear-gradient(135deg,var(--gold-lt),var(--gold)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+        .cot-finale p { font-size:1rem; color:var(--t2); max-width:460px; margin-top:1.5rem; line-height:1.7; position:relative; z-index:2; }
+        .cot-finale .tagline { font-family:var(--mono); font-size:.7rem; color:var(--gold); text-transform:uppercase; letter-spacing:.12em; font-weight:600; margin-top:2.5rem; position:relative; z-index:2; }
+
+        /* ═══ SPINE ═══ */
+        .cot-spine { position:fixed; left:2.5rem; top:0; bottom:0; width:2px; z-index:100; pointer-events:none; opacity:0; transition:opacity .5s; }
+        .cot-spine.visible { opacity:1; }
+        .cot-spine .spine-track { position:absolute; top:0; left:0; width:2px; height:100%; background:rgba(255,255,255,.04); }
+        .cot-spine .spine-progress { position:absolute; top:0; left:0; width:2px; height:0%; background:linear-gradient(180deg,var(--gold),rgba(247,147,26,.3)); box-shadow:0 0 8px rgba(247,147,26,.3); transition:height .1s linear; }
+        .cot-spine .spine-dot { position:absolute; left:50%; transform:translateX(-50%); width:8px; height:8px; border-radius:50%; background:var(--bg); border:1.5px solid rgba(255,255,255,.1); transition:all .4s; }
+        .cot-spine .spine-dot.active { transform:translateX(-50%) scale(1.3); }
+        .cot-spine .spine-dot-label { position:absolute; left:16px; top:50%; transform:translateY(-50%); font-family:var(--mono); font-size:.38rem; color:var(--t3); white-space:nowrap; text-transform:uppercase; letter-spacing:.06em; opacity:0; transition:opacity .3s,color .3s; }
+        .cot-spine .spine-dot.active .spine-dot-label { opacity:1; }
+
+        /* ═══ PARTICLES ═══ */
+        #cotParticles { position:fixed; inset:0; pointer-events:none; z-index:1; opacity:0; transition:opacity .5s; }
+        #cotParticles.visible { opacity:1; }
+
+        /* ═══ RESPONSIVE ═══ */
+        @media(max-width:768px) {
+            .era-inner { grid-template-columns:1fr; gap:2rem; }
+            .era-inner.reverse { direction:ltr; }
+            .era-visual { order:-1; }
+            .cot-era { padding-left:3rem; }
+            .cot-spine { left:1rem; }
+            .cot-spine .spine-dot-label { display:none; }
+            .era-terminal { width:260px; }
+            .era-paper { width:240px; }
+            .era-spam-block { width:200px; height:200px; }
+            .era-timeline-bar { width:250px; }
+            .custody-chain { width:200px; }
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="cotParticles"></canvas>
+<div class="cot-spine" id="cotSpine"><div class="spine-track"></div><div class="spine-progress" id="spineProgress"></div></div>
+
+<section class="cot-section" id="chainOfTime">
+
+    <!-- INTRO -->
+    <div class="cot-intro">
+        <div class="cot-intro-label"><span class="dot"></span> Chain of Time</div>
+        <h2>Every chain has<br>an <span class="gold">origin story.</span></h2>
+        <p>From a financial crisis that broke the world's trust in banks, to a government collapse that proved the lesson was never learned — and the slow corruption of the vision that was supposed to prevent it all.</p>
+        <div class="cot-scroll-hint"><span>Scroll to begin</span><div class="cot-scroll-arrow"></div></div>
+    </div>
+
+    <!-- 1. THE CRISIS (2008) -->
+    <div class="cot-era era-crisis" data-era="crisis">
+        <div class="era-bg"></div>
+        <div class="era-inner">
+            <div class="era-content">
+                <div class="era-year">September 15, 2008</div>
+                <h3 class="era-headline">The world watches<br>a bank die.</h3>
+                <div class="era-quote">"Lehman Brothers, burdened by $60 billion in soured real-estate holdings, filed a Chapter 11 bankruptcy petition."</div>
+                <div class="era-body">The collapse triggers a global financial crisis. Governments print $700 billion in emergency bailouts. Trust in traditional finance shatters — and somewhere, a pseudonymous cryptographer begins writing code.</div>
+                <div class="era-milestones">
+                    <div class="era-milestone"><div class="era-milestone-val" style="color:var(--red)">$700B</div><div class="era-milestone-key">TARP Bailout</div></div>
+                    <div class="era-milestone"><div class="era-milestone-val" style="color:var(--red)">-57%</div><div class="era-milestone-key">S&P 500 Crash</div></div>
+                </div>
+            </div>
+            <div class="era-visual">
+                <div class="era-block" style="border-color:rgba(239,68,68,.15)">
+                    <div class="block-icon">🏦</div>
+                    <div class="block-height" style="color:var(--red)">Lehman Brothers</div>
+                    <div class="block-hash">158 years of banking<br>erased in a weekend.<br><span style="color:var(--red);font-weight:600;font-size:.5rem;display:block;margin-top:.5rem">BANKRUPT</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. THE GENESIS (2009) -->
+    <div class="era-connector"></div>
+    <div class="cot-era era-genesis" data-era="genesis">
+        <div class="era-bg"></div>
+        <div class="era-inner reverse">
+            <div class="era-content">
+                <div class="era-year">January 3, 2009</div>
+                <h3 class="era-headline">A message carved<br>into the first block.</h3>
+                <div class="era-quote">"The Times 03/Jan/2009 Chancellor on brink of second bailout for banks"</div>
+                <div class="era-body">Satoshi Nakamoto mines Bitcoin's genesis block, embedding a newspaper headline as a timestamp and a statement of purpose. SHA-256 proof-of-work. 21 million hard cap. 10-minute blocks. A peer-to-peer electronic cash system in 26,000 lines of code.</div>
+                <div class="era-milestones">
+                    <div class="era-milestone"><div class="era-milestone-val" style="color:var(--green)">Block #0</div><div class="era-milestone-key">Genesis Block</div></div>
+                    <div class="era-milestone"><div class="era-milestone-val" style="color:var(--green)">21M</div><div class="era-milestone-key">Hard Cap</div></div>
+                    <div class="era-milestone"><div class="era-milestone-val" style="color:var(--green)">26K</div><div class="era-milestone-key">Lines of Code</div></div>
+                </div>
+            </div>
+            <div class="era-visual">
+                <div class="era-block" style="border-color:rgba(34,197,94,.15)">
+                    <div class="block-height" style="color:var(--green)">Bitcoin · Block #0</div>
+                    <div class="block-icon">₿</div>
+                    <div class="block-hash"><span class="zeros" style="color:var(--green)">00000000</span>0019d6689c085ae<br>165831e934ff763ae46a2<br>a6c172b3f1b60a8ce26f</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. THE WILD WEST (2010) -->
+    <div class="era-connector"></div>
+    <div class="cot-era era-wildwest" data-era="wildwest">
+        <div class="era-bg"></div>
+        <div class="era-inner">
+            <div class="era-content">
+                <div class="era-year">2010 · The Wild West</div>
+                <h3 class="era-headline">10,000 BTC for<br>two pizzas.</h3>
+                <div class="era-body">Bitcoin proves it can transfer value. CPU miners give way to GPUs, then ASICs. The experiment becomes an economy. Satoshi's code does exactly what it was designed to do — and nothing more.</div>
+                <div class="era-milestones">
+                    <div class="era-milestone"><div class="era-milestone-val">$0.003</div><div class="era-milestone-key">First Price</div></div>
+                    <div class="era-milestone"><div class="era-milestone-val">$1,147</div><div class="era-milestone-key">First Peak</div></div>
+                </div>
+            </div>
+            <div class="era-visual">
+                <div class="era-block">
+                    <div class="block-height">Block #57,043</div>
+                    <div class="block-icon">🍕</div>
+                    <div class="block-hash">May 22, 2010<br>The first real-world<br>Bitcoin transaction.<br><span class="zeros" style="font-size:.5rem;display:block;margin-top:.3rem">10,000 BTC = 2 Pizzas</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. THE CREATOR WALKS AWAY (2011) -->
+    <div class="era-connector"></div>
+    <div class="cot-era era-farewell" data-era="farewell">
+        <div class="era-bg"></div>
+        <div class="era-inner reverse">
+            <div class="era-content">
+                <div class="era-year">April 26, 2011 · The Farewell</div>
+                <h3 class="era-headline">The creator<br>walks away.</h3>
+                <div class="era-quote">"I've moved on to other things. It's in good hands with Gavin and everyone."</div>
+                <div class="era-body">Satoshi's last known message. The person who understood the design best — its constraints, its elegance, its deliberate simplicity — disappears. The codebase is handed to a committee. From this moment forward, no one can speak for the original vision. And no one will know when to stop.</div>
+            </div>
+            <div class="era-visual">
+                <div class="era-terminal">
+                    <div class="term-bar">
+                        <div class="term-dot" style="background:#ef4444"></div>
+                        <div class="term-dot" style="background:#eab308"></div>
+                        <div class="term-dot" style="background:#22c55e"></div>
+                        <div class="term-title">satoshi@genesis:~</div>
+                    </div>
+                    <div class="term-body">
+                        <div class="term-line"><span class="cmd">From:</span> satoshi@vistomail.com</div>
+                        <div class="term-line"><span class="cmd">To:</span> mike@plan99.net</div>
+                        <div class="term-line"><span class="cmd">Date:</span> April 26, 2011</div>
+                        <div class="term-line" style="margin-top:.5rem;color:rgba(34,197,94,.45)">"I've moved on to other</div>
+                        <div class="term-line" style="color:rgba(34,197,94,.45)">things. It's in good hands</div>
+                        <div class="term-line" style="color:rgba(34,197,94,.45)">with Gavin and everyone."</div>
+                        <div class="term-line" style="margin-top:.5rem"><span class="fade">Connection closed.</span><span class="term-cursor"></span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5. SILK ROAD (2013) -->
+    <div class="era-connector"></div>
+    <div class="cot-era era-silkroad" data-era="silkroad">
+        <div class="era-bg"></div>
+        <div class="era-inner">
+            <div class="era-content">
+                <div class="era-year">October 1, 2013 · The Seizure</div>
+                <h3 class="era-headline">The state meets<br>the protocol.</h3>
+                <div class="era-body">The FBI seizes Silk Road and 144,000 BTC — not by breaking cryptography, but by finding a man. Bitcoin's math is sound. But keys held by people can be found, pressured, and taken. The protocol is beyond the law. The humans using it are not. Self-custody works. Trusting a middleman doesn't.</div>
+                <div class="era-milestones">
+                    <div class="era-milestone"><div class="era-milestone-val" style="color:#94a3b8">144K</div><div class="era-milestone-key">BTC Seized</div></div>
+                    <div class="era-milestone"><div class="era-milestone-val" style="color:#94a3b8">$28.5M</div><div class="era-milestone-key">At Time of Seizure</div></div>
+                </div>
+            </div>
+            <div class="era-visual">
+                <div class="era-terminal gray">
+                    <div class="term-bar">
+                        <div class="term-dot" style="background:#ef4444"></div>
+                        <div class="term-dot" style="background:#eab308"></div>
+                        <div class="term-dot" style="background:#94a3b8"></div>
+                        <div class="term-title">fbi.gov/silk-road</div>
+                    </div>
+                    <div class="term-body">
+                        <div class="term-line"><span class="cmd">OPERATION:</span> Onymous</div>
+                        <div class="term-line"><span class="cmd">TARGET:</span> Silk Road Market</div>
+                        <div class="term-line"><span class="cmd">METHOD:</span> Locate operator</div>
+                        <div class="term-line" style="margin-top:.3rem;color:rgba(239,68,68,.6)">SHA-256 not broken.</div>
+                        <div class="term-line" style="color:rgba(239,68,68,.6)">ECDSA not broken.</div>
+                        <div class="term-line" style="color:rgba(239,68,68,.6)">Blockchain not broken.</div>
+                        <div class="term-line" style="margin-top:.3rem;color:rgba(34,197,94,.5)">Human operational security:</div>
+                        <div class="term-line" style="color:rgba(239,68,68,.7);font-weight:600">BROKEN.</div>
+                        <div class="term-line" style="margin-top:.3rem"><span class="fade">$ The math always holds.</span><span class="term-cursor"></span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 6. MT. GOX (2014) -->
+    <div class="era-connector"></div>
+    <div class="cot-era era-mtgox" data-era="mtgox">
+        <div class="era-bg"></div>
+        <div class="era-inner reverse">
+            <div class="era-content">
+                <div class="era-year">February 2014 · The First Betrayal</div>
+                <h3 class="era-headline">850,000 BTC.<br>Gone.</h3>
+                <div class="era-quote">"Not your keys, not your coins."</div>
+                <div class="era-body">Mt. Gox handles 70% of all Bitcoin trades. Then it collapses — 850,000 BTC vanish. Customers trusted an exchange to hold their money. The exchange was a spreadsheet with a website. No cryptographic proof of reserves. No on-chain verification. Just a promise, broken. This was the first lesson. The world will not learn it.</div>
+                <div class="era-milestones">
+                    <div class="era-milestone"><div class="era-milestone-val" style="color:var(--red)">850K</div><div class="era-milestone-key">BTC Lost</div></div>
+                    <div class="era-milestone"><div class="era-milestone-val" style="color:var(--red)">70%</div><div class="era-milestone-key">Market Share</div></div>
+                    <div class="era-milestone"><div class="era-milestone-val" style="color:var(--red)">10 yrs</div><div class="era-milestone-key">To Partial Recovery</div></div>
+                </div>
+            </div>
+            <div class="era-visual">
+                <div class="era-block" style="border-color:rgba(239,68,68,.2);position:relative">
+                    <div class="block-icon" style="opacity:.3">₿</div>
+                    <div class="block-height" style="color:var(--red)">Mt. Gox Exchange</div>
+                    <div class="block-hash">Customer balance: <span style="color:var(--red)">850,000 BTC</span><br>Actual reserves: <span style="color:var(--red);font-weight:600">0</span><br><span style="font-size:.5rem;display:block;margin-top:.3rem;color:var(--t3)">Not your keys. Not your coins.</span></div>
+                    <div class="seized-banner" style="font-size:.7rem;border-color:var(--red)">INSOLVENT</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 7. THE BLOCK WARS (2015-2017) -->
+    <div class="era-connector"></div>
+    <div class="cot-era era-blockwars" data-era="blockwars">
+        <div class="era-bg"></div>
+        <div class="era-inner">
+            <div class="era-content">
+                <div class="era-year">2015 – 2017 · The Block Wars</div>
+                <h3 class="era-headline">The chain<br>splits in two.</h3>
+                <div class="era-body">The community fractures over block size. SegWit restructures how transactions are stored. Bitcoin Cash forks with bigger blocks. Neither side is wrong about scaling — but the culture war sets a precedent: you can rewrite the protocol whenever enough people agree. And agreeing gets easier every time.</div>
+                <div class="era-milestones">
+                    <div class="era-milestone"><div class="era-milestone-val" style="color:var(--orange)">Block #478,558</div><div class="era-milestone-key">BCH Fork Height</div></div>
+                    <div class="era-milestone"><div class="era-milestone-val" style="color:var(--orange)">Aug 1, 2017</div><div class="era-milestone-key">The Split</div></div>
+                </div>
+            </div>
+            <div class="era-visual">
+                <div class="era-split-visual">
+                    <div class="split-chain split-btc"><div class="sc-label">BTC</div><div class="sc-size">1 MB</div><div class="sc-unit">+ SegWit</div></div>
+                    <div class="split-divider"></div>
+                    <div class="split-chain split-bch"><div class="sc-label">BCH</div><div class="sc-size">8 MB</div><div class="sc-unit">Big Blocks</div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 8. FROM CASH TO GOLD -->
+    <div class="era-connector"></div>
+    <div class="cot-era era-cashgold" data-era="cashgold">
+        <div class="era-bg"></div>
+        <div class="era-inner reverse">
+            <div class="era-content">
+                <div class="era-year">2018+ · The Narrative Shift</div>
+                <h3 class="era-headline">They rewrote<br>the story.</h3>
+                <div class="era-quote">"Bitcoin: A Peer-to-Peer Electronic Cash System" — Satoshi Nakamoto, 2008</div>
+                <div class="era-body">The whitepaper says "electronic cash." Not digital gold. Not store of value. Not settlement layer. But after the block wars, Bitcoin's loudest voices abandon the payments thesis entirely. The vision Satoshi shipped becomes a slogan nobody means.</div>
+            </div>
+            <div class="era-visual">
+                <div class="era-paper">
+                    <div class="paper-title">Bitcoin: A Peer-to-Peer<br><span class="paper-strike">Electronic Cash System</span><br><span class="paper-gold">Digital Gold™</span></div>
+                    <div class="paper-author">Satoshi Nakamoto<br>satoshin@gmx.com</div>
+                    <div class="paper-line"></div><div class="paper-line short"></div><div class="paper-line"></div><div class="paper-line short"></div>
+                    <div style="margin-top:.75rem;font-family:var(--mono);font-size:.45rem;color:var(--t3);position:relative;z-index:1;line-height:1.6">
+                        Abstract: <span class="paper-strike" style="font-size:.42rem">A purely peer-to-peer version of electronic cash would allow online payments to be sent directly</span>
+                        <span style="color:var(--gold);font-size:.42rem;font-weight:600"> HODL</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 9. THE INSTITUTIONAL AGE -->
+    <div class="era-connector"></div>
+    <div class="cot-era era-institutional" data-era="institutional">
+        <div class="era-bg"></div>
+        <div class="era-inner">
+            <div class="era-content">
+                <div class="era-year">2020 – 2023 · The Institutional Age</div>
+                <h3 class="era-headline">The suits<br>arrive.</h3>
+                <div class="era-body">MicroStrategy buys billions. Tesla adds it to the balance sheet. BlackRock files for a spot ETF. Satoshi's code runs under fluorescent lights now. The cypherpunk experiment becomes a Wall Street product — and the codebase keeps growing to serve its new audience.</div>
+                <div class="era-milestones">
+                    <div class="era-milestone"><div class="era-milestone-val" style="color:var(--indigo)">$69,000</div><div class="era-milestone-key">ATH (Nov 2021)</div></div>
+                    <div class="era-milestone"><div class="era-milestone-val" style="color:var(--indigo)">ETF</div><div class="era-milestone-key">Spot Approved</div></div>
+                </div>
+            </div>
+            <div class="era-visual">
+                <div class="era-glass-card">
+                    <div class="gc-icon">🏛️</div>
+                    <div class="gc-val">ETF</div>
+                    <div class="gc-label">Spot Bitcoin ETF</div>
+                    <div class="gc-sub">BlackRock, Fidelity, Invesco<br>get their approval.<br><span style="font-size:.55rem;color:var(--t3)">Satoshi's code, repackaged.</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- 10. PAPER BITCOIN (ETF fractional reserve risk) -->
+    <div class="era-connector"></div>
+    <div class="cot-era era-paperbtc" data-era="paperbtc">
+        <div class="era-bg"></div>
+        <div class="era-inner">
+            <div class="era-content">
+                <div class="era-year">The Quiet Danger · Paper Bitcoin</div>
+                <h3 class="era-headline">You own a ticker.<br>Not a UTXO.</h3>
+                <div class="era-quote">"Fractional reserve banking is what the genesis block was written against."</div>
+                <div class="era-body">Spot ETFs hold Bitcoin "on your behalf" — through brokers, through custodians, through sub-custodians, through omnibus wallets you will never see. The chain of custody stretches so far from the blockchain that nobody can prove 1:1 backing. It's Mt. Gox in a suit. It's FTX with a regulatory filing. The same fractional reserve system the genesis block was written to escape — rebuilt on top of Bitcoin itself.</div>
+                <div class="era-milestones">
+                    <div class="era-milestone"><div class="era-milestone-val" style="color:var(--indigo)">0</div><div class="era-milestone-key">Keys You Hold</div></div>
+                    <div class="era-milestone"><div class="era-milestone-val" style="color:var(--indigo)">5+</div><div class="era-milestone-key">Layers of Custody</div></div>
+                </div>
+            </div>
+            <div class="era-visual">
+                <div class="custody-chain">
+                    <div class="custody-node" style="background:rgba(99,102,241,.06);border:1px solid rgba(99,102,241,.15)">
+                        <div class="cn-label" style="color:var(--t1)">You</div>
+                        <div class="cn-sub">Buy "Bitcoin" on broker app</div>
+                    </div>
+                    <div class="custody-arrow" style="background:rgba(99,102,241,.15)"><span style="color:rgba(99,102,241,.5)"></span></div>
+                    <div class="custody-node" style="background:rgba(99,102,241,.04);border:1px solid rgba(99,102,241,.1)">
+                        <div class="cn-label" style="color:var(--indigo)">Broker</div>
+                        <div class="cn-sub">Holds ETF shares on your behalf</div>
+                    </div>
+                    <div class="custody-arrow" style="background:rgba(99,102,241,.12)"><span style="color:rgba(99,102,241,.4)"></span></div>
+                    <div class="custody-node" style="background:rgba(99,102,241,.03);border:1px solid rgba(99,102,241,.08)">
+                        <div class="cn-label" style="color:rgba(129,140,248,.7)">ETF Fund</div>
+                        <div class="cn-sub">Claims to hold BTC</div>
+                    </div>
+                    <div class="custody-arrow" style="background:rgba(99,102,241,.1)"><span style="color:rgba(99,102,241,.3)"></span></div>
+                    <div class="custody-node" style="background:rgba(99,102,241,.02);border:1px solid rgba(99,102,241,.06)">
+                        <div class="cn-label" style="color:rgba(129,140,248,.5)">Custodian</div>
+                        <div class="cn-sub">Omnibus wallet. No proof of reserves.</div>
+                    </div>
+                    <div class="custody-arrow" style="background:rgba(239,68,68,.12)"><span style="color:rgba(239,68,68,.4)"></span></div>
+                    <div class="custody-node" style="background:rgba(239,68,68,.04);border:1px solid rgba(239,68,68,.12)">
+                        <div class="cn-label" style="color:var(--red)">Blockchain?</div>
+                        <div class="cn-sub" style="color:rgba(239,68,68,.5)">Maybe. You'll never know.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- 11. FTX COLLAPSE (Nov 2022) -->
+    <div class="era-connector"></div>
+    <div class="cot-era era-ftx" data-era="ftx">
+        <div class="era-bg"></div>
+        <div class="era-inner reverse">
+            <div class="era-content">
+                <div class="era-year">November 11, 2022 · The Fraud</div>
+                <h3 class="era-headline">$8 billion.<br>Customer funds.<br>Gone.</h3>
+                <div class="era-body">FTX — the second-largest crypto exchange, endorsed by senators, celebrities, and Super Bowl ads — collapses overnight. $8 billion in customer deposits vanish. Alameda Research gambled with customer funds. No proof of reserves. No on-chain verification. Just a database Sam Bankman-Fried could edit. Mt. Gox was the first lesson. FTX proved nobody learned.</div>
+                <div class="era-milestones">
+                    <div class="era-milestone"><div class="era-milestone-val" style="color:var(--red)">$8B</div><div class="era-milestone-key">Customer Funds Lost</div></div>
+                    <div class="era-milestone"><div class="era-milestone-val" style="color:var(--red)">25 yrs</div><div class="era-milestone-key">Prison Sentence</div></div>
+                </div>
+            </div>
+            <div class="era-visual">
+                <div class="era-terminal red">
+                    <div class="term-bar">
+                        <div class="term-dot" style="background:#ef4444"></div>
+                        <div class="term-dot" style="background:#eab308"></div>
+                        <div class="term-dot" style="background:#22c55e"></div>
+                        <div class="term-title">ftx.com/balances</div>
+                    </div>
+                    <div class="term-body">
+                        <div class="term-line"><span class="cmd">Customer deposits:</span></div>
+                        <div class="term-line" style="color:rgba(239,68,68,.8);font-size:.75rem;font-weight:700">$8,000,000,000</div>
+                        <div class="term-line" style="margin-top:.3rem"><span class="cmd">Actual reserves:</span></div>
+                        <div class="term-line" style="color:rgba(239,68,68,.9);font-size:.75rem;font-weight:700">Insufficient.</div>
+                        <div class="term-line" style="margin-top:.3rem"><span class="cmd">Proof of reserves:</span></div>
+                        <div class="term-line" style="color:rgba(239,68,68,.5)">None. Never was.</div>
+                        <div class="term-line" style="margin-top:.5rem;color:rgba(239,68,68,.35);font-size:.55rem">"Not your keys, not your coins"</div>
+                        <div class="term-line" style="color:rgba(239,68,68,.35);font-size:.55rem">was always the answer.<span class="term-cursor"></span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 12. ORDINALS / BRC-20 (2023) -->
+    <div class="era-connector"></div>
+    <div class="cot-era era-ordinals" data-era="ordinals">
+        <div class="era-bg"></div>
+        <div class="era-inner">
+            <div class="era-content">
+                <div class="era-year">January 2023 · The Flood</div>
+                <h3 class="era-headline">The chain becomes<br>a hard drive.</h3>
+                <div class="era-body">Ordinals inscribes JPEGs directly into Bitcoin blocks. Then BRC-20 tokens flood the mempool — memecoins named after dogs and frogs, minted on the base layer. Fees spike past $30 for a simple transfer. The people Satoshi built this for are priced out of their own network. The chain that was supposed to be electronic cash becomes the world's most expensive hard drive.</div>
+                <div class="era-milestones">
+                    <div class="era-milestone"><div class="era-milestone-val" style="color:var(--pink)">3.96 MB</div><div class="era-milestone-key">Largest Block</div></div>
+                    <div class="era-milestone"><div class="era-milestone-val" style="color:var(--red)">$31+</div><div class="era-milestone-key">Avg Fee (May '23)</div></div>
+                </div>
+            </div>
+            <div class="era-visual">
+                <div class="era-spam-block" id="spamBlock">
+                    <div class="sb-header"><span>Block #788,695</span><span style="color:#ec4899">3.96 MB</span></div>
+                    <div class="sb-grid" id="spamGrid"></div>
+                    <div class="sb-footer">~92% witness data (images) · ~8% real txns</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 13. THE COLLAPSE & BC2 GENESIS (Dec 2024) -->
+    <div class="era-connector"></div>
+    <div class="cot-era era-rebirth" data-era="rebirth">
+        <div class="era-bg"></div>
+        <div class="era-inner centered">
+            <div class="era-content" style="max-width:660px">
+                <div class="era-year">December 2024 · The Collapse & The Genesis</div>
+                <h3 class="era-headline" style="font-size:clamp(2rem,4.5vw,3.2rem)">Same crisis.<br>Same code.<br>Different decade.</h3>
+                <div class="era-body" style="max-width:580px;margin:0 auto">On December 4, 2024, the French government collapses in a no-confidence vote — crushed under sovereign debt, fifteen years after banks needed the same rescue. On December 12, BC2 mines its genesis block, embedding the headline as a direct echo of Satoshi's original message. Where Bitcoin's Block #0 recorded the failure of banks, BC2's Block #0 records the failure of the governments that bailed them out.</div>
+                <div class="era-body" style="max-width:580px;margin:.75rem auto 0;transition-delay:.35s">BC2 runs Bitcoin Core v27, updated to v29 — the same SHA-256 proof-of-work, the same 21 million hard cap, the same 10-minute block target. SegWit, Taproot, Schnorr — every battle-tested improvement from Bitcoin's fifteen-year history, included. BC2 isn't a clone from 2009. It's Bitcoin as it stands today, hashed at the moment the world proved the original thesis right again.</div>
+            </div>
+            <!-- Dual genesis blocks visual -->
+            <div class="era-visual" style="flex-direction:row;gap:1.5rem;flex-wrap:wrap;justify-content:center">
+                <div class="era-block" style="width:200px;height:230px;border-color:rgba(34,197,94,.12)">
+                    <div class="block-height" style="color:var(--green);font-size:.5rem">BTC · Block #0 · Jan 3, 2009</div>
+                    <div class="block-icon" style="margin:.5rem 0"><img src="data:image/png;base64,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" style="width:48px;height:48px;border-radius:50%;" alt="BTC"></div>
+                    <div class="block-hash" style="font-size:.42rem;line-height:1.6">
+                        <span style="color:var(--green);font-weight:600;font-size:.48rem;display:block;margin-bottom:.4rem">"The Times 03/Jan/2009<br>Chancellor on brink of<br>second bailout for banks"</span>
+                        <span style="color:var(--t3)">Banks fail. Code responds.</span>
+                    </div>
+                </div>
+                <div style="display:flex;align-items:center;color:var(--gold);font-family:var(--mono);font-size:1.2rem;font-weight:700">→</div>
+                <div class="era-block" style="width:200px;height:230px;border-color:rgba(247,147,26,.2);box-shadow:0 20px 60px rgba(0,0,0,.5),0 0 30px rgba(247,147,26,.06)">
+                    <div class="block-height" style="color:var(--gold);font-size:.5rem">BC2 · Block #0 · Dec 12, 2024</div>
+                    <div class="block-icon" style="margin:.5rem 0"><img src="data:image/png;base64,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" style="width:48px;height:48px;border-radius:50%;" alt="BC2"></div>
+                    <div class="block-hash" style="font-size:.42rem;line-height:1.6">
+                        <span style="color:var(--gold);font-weight:600;font-size:.48rem;display:block;margin-bottom:.4rem">"BBC News 12/04/2024<br>French government collapses<br>in no-confidence vote"</span>
+                        <span style="color:var(--t3)">Governments fail. Code endures.</span>
+                    </div>
+                </div>
+            </div>
+            <div class="era-milestones" style="justify-content:center;margin-top:1.5rem">
+                <div class="era-milestone"><div class="era-milestone-val">v29</div><div class="era-milestone-key">BTC Codebase</div></div>
+                <div class="era-milestone"><div class="era-milestone-val">SHA-256</div><div class="era-milestone-key">Same PoW</div></div>
+                <div class="era-milestone"><div class="era-milestone-val">21M</div><div class="era-milestone-key">Same Cap</div></div>
+                <div class="era-milestone"><div class="era-milestone-val">15 yrs</div><div class="era-milestone-key">Same Thesis</div></div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- 14. THE ABYSS -->
+    <div class="era-connector"></div>
+    <div class="cot-era era-abyss" data-era="abyss">
+        <div class="era-bg"></div>
+        <div class="era-inner reverse">
+            <div class="era-content">
+                <div class="era-year">2025 – 2026+ · The Abyss</div>
+                <h3 class="era-headline">They will<br>never stop.</h3>
+                <div class="era-body">OP_CAT. Covenants. CTV. CSFS. OP_VAULT. Recursive spending restrictions. New opcodes, new script types, new attack surfaces — a covenant soft fork is already being planned for 2026. The codebase that was 26,000 lines is now past 750,000. 285,000 lines changed in 2025 alone. The protocol has become a platform, and platforms never stop growing.</div>
+                <div class="era-milestones">
+                    <div class="era-milestone"><div class="era-milestone-val" style="color:var(--purple)">750K+</div><div class="era-milestone-key">Lines of Code</div></div>
+                    <div class="era-milestone"><div class="era-milestone-val" style="color:var(--purple)">285K</div><div class="era-milestone-key">Changed in 2025</div></div>
+                    <div class="era-milestone"><div class="era-milestone-val" style="color:var(--red)">28x</div><div class="era-milestone-key">Growth Since v0.1</div></div>
+                </div>
+            </div>
+            <div class="era-visual">
+                <div class="era-terminal purple">
+                    <div class="term-bar">
+                        <div class="term-dot" style="background:#ef4444"></div>
+                        <div class="term-dot" style="background:#eab308"></div>
+                        <div class="term-dot" style="background:#a855f7"></div>
+                        <div class="term-title">bitcoin-core:~/proposals $</div>
+                    </div>
+                    <div class="term-body">
+                        <div class="term-line"><span class="cmd">$</span> cat upcoming_soft_forks.txt</div>
+                        <div class="term-line" style="margin-top:.3rem"><span class="proposed">BIP-119</span> OP_CHECKTEMPLATEVERIFY</div>
+                        <div class="term-line"><span class="proposed">BIP-347</span> OP_CAT reintroduction</div>
+                        <div class="term-line"><span class="proposed">BIP-348</span> OP_CHECKSIGFROMSTACK</div>
+                        <div class="term-line"><span class="proposed">BIP-345</span> OP_VAULT custody</div>
+                        <div class="term-line"><span class="proposed">BIP-118</span> SIGHASH_ANYPREVOUT</div>
+                        <div class="term-line"><span class="proposed">BIP-360</span> Quantum witness discount</div>
+                        <div class="term-line" style="margin-top:.3rem"><span class="warn">⚠ Recursive covenants enabled</span></div>
+                        <div class="term-line"><span class="warn">⚠ Fork target: 2026</span></div>
+                        <div class="term-line" style="margin-top:.3rem"><span class="fade">How far is too far?</span><span class="term-cursor"></span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- 15. DRAWING THE LINE -->
+    <div class="era-connector"></div>
+    <div class="cot-era era-conservative" data-era="conservative">
+        <div class="era-bg"></div>
+        <div class="era-inner reverse">
+            <div class="era-content" style="max-width:520px">
+                <div class="era-year">The Preservation Thesis</div>
+                <h3 class="era-headline">Not a rollback.<br>A line in the sand.</h3>
+                <div class="era-body">BCH changed the block size. BSV changed everything. BTC will never stop changing — OP_CAT, covenants, quantum witness discounts, each one making the next easier to justify. BC2 accepts every upgrade through v29 and says: this is enough. The protocol is complete. Hold your own keys. Use your own node. Stop building the platform. Start using the money.</div>
+                <div class="era-body" style="margin-top:1rem;font-style:italic;color:var(--gold);transition-delay:.45s">Every other chain asks "what should Bitcoin become?"<br>BC2 says "stop building. Start using."</div>
+            </div>
+            <div class="era-visual">
+                <div class="era-timeline-bar">
+                    <div class="tlb-track">
+                        <div class="tlb-fill" style="width:72%;background:linear-gradient(90deg,rgba(34,197,94,.3),rgba(247,147,26,.4));border-radius:2px;"></div>
+                        <div class="tlb-after" style="left:72%;width:28%"></div>
+                        <div class="tlb-wall" style="left:72%"><div class="tlb-wall-label">BC2 draws the line</div></div>
+                    </div>
+                    <div class="tlb-ticks" style="margin-top:.75rem">
+                        <div class="tlb-tick"><div class="tlb-tick-ver" style="color:var(--green)">v0.1</div><div class="tlb-tick-label">2009</div></div>
+                        <div class="tlb-tick"><div class="tlb-tick-ver" style="color:var(--orange)">SegWit</div><div class="tlb-tick-label">2017</div></div>
+                        <div class="tlb-tick"><div class="tlb-tick-ver" style="color:var(--gold);font-weight:700">v29 ✦</div><div class="tlb-tick-label" style="color:var(--gold)">BC2</div></div>
+                        <div class="tlb-tick"><div class="tlb-tick-ver" style="color:var(--purple)">CAT?</div><div class="tlb-tick-label">2026+</div></div>
+                        <div class="tlb-tick"><div class="tlb-tick-ver" style="color:rgba(168,85,247,.4)">???</div><div class="tlb-tick-label">∞</div></div>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;margin-top:.75rem">
+                        <div style="font-family:var(--mono);font-size:.42rem;color:var(--gold);text-transform:uppercase;letter-spacing:.04em">✓ Battle-tested · Kept</div>
+                        <div style="font-family:var(--mono);font-size:.42rem;color:var(--purple);text-transform:uppercase;letter-spacing:.04em">✕ Uncharted · Refused</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FINALE -->
+    <div class="era-connector"></div>
+    <div class="cot-finale">
+        <h2>The chain <span class="gold">continues.</span></h2>
+        <p>GenesisWallet carries the finished protocol forward. Self-custody, open source, built on a protocol that said enough — in a world that never does.</p>
+        <div class="tagline">Same crisis · Same code · Different decade</div>
+    </div>
+
+</section>
+
+<script>
+(function() {
+    var eras = document.querySelectorAll('.cot-era');
+    var spine = document.getElementById('cotSpine');
+    var spineProgress = document.getElementById('spineProgress');
+    var section = document.getElementById('chainOfTime');
+    var canvas = document.getElementById('cotParticles');
+    var ctx = canvas.getContext('2d');
+
+    var eraColors = {
+        crisis:'#ef4444', genesis:'#22c55e', wildwest:'#F7931A', farewell:'#22c55e',
+        silkroad:'#94a3b8', mtgox:'#ef4444', blockwars:'#f97316', cashgold:'#eab308',
+        institutional:'#818cf8', ftx:'#ef4444', ordinals:'#ec4899',
+        paperbtc:'#818cf8', rebirth:'#F7931A', abyss:'#a855f7', conservative:'#F7931A'
+    };
+    var eraLabels = {
+        crisis:'2008', genesis:'2009', wildwest:'2010', farewell:'2011',
+        silkroad:'SILK RD', mtgox:'MT.GOX', blockwars:'2017', cashgold:'CASH→GOLD',
+        institutional:'WALL ST', ftx:'FTX', ordinals:'ORDINALS',
+        paperbtc:'PAPER ₿', rebirth:'BC2 GENESIS', abyss:'ABYSS', conservative:'THE LINE'
+    };
+
+    eras.forEach(function(era, i) {
+        var key = era.getAttribute('data-era');
+        var dot = document.createElement('div');
+        dot.className = 'spine-dot';
+        dot.style.top = ((i + 1) / (eras.length + 1) * 100) + '%';
+        dot.setAttribute('data-era', key);
+        var label = document.createElement('div');
+        label.className = 'spine-dot-label';
+        label.textContent = eraLabels[key] || '';
+        dot.appendChild(label);
+        spine.appendChild(dot);
+    });
+    var spineDots = spine.querySelectorAll('.spine-dot');
+
+    var eraObs = new IntersectionObserver(function(entries) {
+        entries.forEach(function(e) { if (e.isIntersecting) e.target.classList.add('in-view'); });
+    }, { threshold: 0.12, rootMargin: '0px 0px -50px 0px' });
+    eras.forEach(function(era) { eraObs.observe(era); });
+
+    var sectionInView = false;
+    var sectionObs = new IntersectionObserver(function(entries) {
+        sectionInView = entries[0].isIntersecting;
+        spine.classList.toggle('visible', sectionInView);
+        canvas.classList.toggle('visible', sectionInView);
+    }, { threshold: 0.005 });
+    sectionObs.observe(section);
+
+    function tick() {
+        requestAnimationFrame(tick);
+        if (!sectionInView) return;
+        var rect = section.getBoundingClientRect();
+        var pct = Math.max(0, Math.min(100, (-rect.top / (section.offsetHeight - window.innerHeight)) * 100));
+        spineProgress.style.height = pct + '%';
+        var activeIdx = -1;
+        eras.forEach(function(era, i) {
+            var r = era.getBoundingClientRect();
+            if (r.top + r.height / 2 < window.innerHeight * 0.65 && r.top + r.height / 2 > 0) activeIdx = i;
+        });
+        spineDots.forEach(function(dot, i) {
+            var key = dot.getAttribute('data-era');
+            var c = eraColors[key] || '#F7931A';
+            if (i === activeIdx) {
+                dot.classList.add('active');
+                dot.style.borderColor = c; dot.style.background = c;
+                dot.style.boxShadow = '0 0 10px ' + c + '80';
+                var lbl = dot.querySelector('.spine-dot-label');
+                if (lbl) lbl.style.color = c;
+            } else {
+                dot.classList.remove('active');
+                dot.style.borderColor = ''; dot.style.background = ''; dot.style.boxShadow = '';
+            }
+        });
+        var best = null, bestV = -1;
+        eras.forEach(function(era) {
+            var r = era.getBoundingClientRect();
+            var v = Math.max(0, Math.min(r.bottom, window.innerHeight) - Math.max(r.top, 0));
+            if (v > bestV) { bestV = v; best = era.getAttribute('data-era'); }
+        });
+        if (best && best !== currentEra) { currentEra = best; rebuildParticles(best); }
+    }
+    requestAnimationFrame(tick);
+
+    // PARTICLES
+    var W, H, dpr, particles = [], currentEra = 'none';
+    var pConfig = {
+        crisis:     { colors:['rgba(239,68,68,A)','rgba(180,83,9,A)'], shapes:['$','↓','▼','$'], count:25, speed:1.2, dir:1 },
+        genesis:    { colors:['rgba(34,197,94,A)','rgba(16,185,129,A)'], shapes:['0','1','₿','0','1'], count:30, speed:.6, dir:-1 },
+        wildwest:   { colors:['rgba(247,147,26,A)','rgba(234,179,8,A)'], shapes:['₿','◆','⬡'], count:18, speed:.8, dir:0 },
+        farewell:   { colors:['rgba(34,197,94,A)'], shapes:['_','…','>','_'], count:15, speed:.2, dir:-1 },
+        silkroad:   { colors:['rgba(148,163,184,A)','rgba(239,68,68,A)'], shapes:['⚖','🔒','▼'], count:16, speed:.7, dir:1 },
+        mtgox:      { colors:['rgba(239,68,68,A)','rgba(180,83,9,A)'], shapes:['₿','✕','0','✕'], count:22, speed:1, dir:1 },
+        blockwars:  { colors:['rgba(247,147,26,A)','rgba(239,68,68,A)'], shapes:['◁','▷','⚡'], count:18, speed:1.2, dir:0 },
+        cashgold:   { colors:['rgba(234,179,8,A)','rgba(247,147,26,A)'], shapes:['$','→','Au','$'], count:20, speed:.5, dir:-1 },
+        institutional:{ colors:['rgba(99,102,241,A)','rgba(148,163,184,A)'], shapes:['◇','▢','△'], count:12, speed:.3, dir:-1 },
+        ftx:        { colors:['rgba(239,68,68,A)'], shapes:['$','✕','↓','$','0'], count:30, speed:1.5, dir:1 },
+        ordinals:   { colors:['rgba(236,72,153,A)','rgba(168,85,247,A)','rgba(59,130,246,A)'], shapes:['🖼','◆','▪','$','●'], count:28, speed:.9, dir:1 },
+        paperbtc:   { colors:['rgba(99,102,241,A)','rgba(148,163,184,A)'], shapes:['📄','→','?','📄'], count:18, speed:.4, dir:1 },
+        abyss:      { colors:['rgba(168,85,247,A)','rgba(239,68,68,A)'], shapes:['{','}','fn','++','??','!'], count:30, speed:1, dir:1 },
+        rebirth:    { colors:['rgba(247,147,26,A)','rgba(220,38,38,A)','rgba(255,179,71,A)'], shapes:['◆','₿','⬡','◆'], count:30, speed:.5, dir:-1 },
+        conservative:{ colors:['rgba(247,147,26,A)','rgba(255,179,71,A)'], shapes:['◆','✦','₿','▮'], count:20, speed:.4, dir:-1 }
+    };
+    function resize() {
+        dpr = window.devicePixelRatio || 1;
+        W = window.innerWidth; H = window.innerHeight;
+        canvas.width = W * dpr; canvas.height = H * dpr;
+        canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+    function spawnP(cfg) {
+        return { x:Math.random()*W, y:Math.random()*H, vx:(Math.random()-.5)*cfg.speed*.5, vy:cfg.dir*(.2+Math.random()*cfg.speed), alpha:0, target:.12+Math.random()*.2, shape:cfg.shapes[Math.floor(Math.random()*cfg.shapes.length)], color:cfg.colors[Math.floor(Math.random()*cfg.colors.length)], size:8+Math.random()*5, phase:Math.random()*Math.PI*2, dying:false };
+    }
+    function rebuildParticles(era) {
+        var cfg = pConfig[era]; if (!cfg) return;
+        particles.forEach(function(p) { p.dying = true; });
+        for (var i = 0; i < cfg.count; i++) particles.push(spawnP(cfg));
+    }
+    function drawParticles(time) {
+        requestAnimationFrame(drawParticles);
+        if (!canvas.classList.contains('visible')) return;
+        ctx.clearRect(0, 0, W, H);
+        var t = time * .001;
+        for (var i = particles.length - 1; i >= 0; i--) {
+            var p = particles[i];
+            if (p.dying) { p.alpha -= .01; if (p.alpha <= 0) { particles.splice(i, 1); continue; } }
+            else { if (p.alpha < p.target) p.alpha += .006; }
+            p.x += p.vx + Math.sin(t * .5 + p.phase) * .3;
+            p.y += p.vy;
+            if (p.y > H + 20) p.y = -20; if (p.y < -20) p.y = H + 20;
+            if (p.x > W + 20) p.x = -20; if (p.x < -20) p.x = W + 20;
+            ctx.save();
+            ctx.font = p.size + 'px "IBM Plex Mono",monospace';
+            ctx.fillStyle = p.color.replace('A', p.alpha.toFixed(3));
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.globalAlpha = p.alpha;
+            ctx.fillText(p.shape, p.x, p.y);
+            ctx.restore();
+        }
+    }
+    resize(); window.addEventListener('resize', resize);
+    requestAnimationFrame(drawParticles);
+
+    // SPAM GRID
+    var spamGrid = document.getElementById('spamGrid');
+    if (spamGrid) {
+        var nC = ['#ec4899','#a855f7','#3b82f6','#06b6d4','#f97316','#eab308','#8b5cf6','#f43f5e','#14b8a6','#6366f1'];
+        for (var i = 0; i < 100; i++) {
+            var c = document.createElement('div'); c.className = 'sb-cell';
+            if (Math.random() > 0.08) { c.style.background = nC[Math.floor(Math.random()*nC.length)]; c.style.opacity = (.4+Math.random()*.5).toFixed(2); }
+            else { c.style.background = 'rgba(247,147,26,0.6)'; }
+            spamGrid.appendChild(c);
+        }
+    }
+})();
+</script>
+</body>
+</html>
