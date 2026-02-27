@@ -556,7 +556,7 @@
     // ═══════════════════════════════════════════
     var HOSTS = ['https://bc2.live', 'https://bitcoinii.space'];
     var activeHost = null;
-    var MAX_FISH = 300;
+    var MAX_FISH = 2000;
     var WHALE_DURATION = 6500;
 
     // ═══════════════════════════════════════════
@@ -945,6 +945,17 @@
         ctx.closePath();
         ctx.fillStyle = 'rgba(' + col.r + ',' + col.g + ',' + col.b + ',0.35)';
         ctx.fill();
+        // BC2 amber accent lines on tail
+        ctx.beginPath();
+        ctx.moveTo(-s * 0.05, -s * 0.02);
+        ctx.lineTo(-s * 0.4, -s * 0.26);
+        ctx.strokeStyle = 'rgba(247,147,26,0.4)';
+        ctx.lineWidth = Math.max(0.5, s * 0.03);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(-s * 0.05, s * 0.02);
+        ctx.lineTo(-s * 0.4, s * 0.26);
+        ctx.stroke();
         ctx.restore();
 
         // Eye
@@ -967,6 +978,13 @@
         ctx.closePath();
         ctx.fillStyle = 'rgba(' + col.r + ',' + col.g + ',' + col.b + ',0.25)';
         ctx.fill();
+        // BC2 amber accent line on dorsal
+        ctx.beginPath();
+        ctx.moveTo(s * 0.08, -s * 0.32);
+        ctx.quadraticCurveTo(s * 0.03, -s * 0.55, -s * 0.12, -s * 0.36);
+        ctx.strokeStyle = 'rgba(247,147,26,0.35)';
+        ctx.lineWidth = Math.max(0.5, s * 0.025);
+        ctx.stroke();
 
         ctx.restore();
         ctx.globalAlpha = 1;
@@ -1755,27 +1773,56 @@
         return null;
     }
 
-    // Populate fish from mempool recent transactions
+    // Populate fish from mempool — recent + full txid list
     async function fetchMempoolRecent() {
+        var totalAdded = 0;
+        var existing = {};
+        for (var f = 0; f < fishes.length; f++) {
+            if (fishes[f].txid) existing[fishes[f].txid] = true;
+        }
+
+        // 1) Recent transactions (have fee/value data)
         try {
             var recent = await apiFetch('/mempool/recent', 6000);
-            if (recent && Array.isArray(recent) && recent.length > 0) {
-                var added = 0;
-                for (var i = 0; i < recent.length && fishes.length < MAX_FISH; i++) {
+            if (recent && Array.isArray(recent)) {
+                for (var i = 0; i < recent.length; i++) {
                     var tx = recent[i];
+                    var id = tx.txid || ('tx_' + i);
+                    if (existing[id]) continue;
                     fishes.push(createFish({
-                        txid: tx.txid || ('tx_' + i),
+                        txid: id,
                         feeRate: tx.fee ? Math.max(1, Math.round(tx.fee / (tx.vsize || tx.weight / 4 || 200))) : (1 + Math.random() * 5),
                         value: tx.value || Math.round(Math.random() * 5e8),
                     }));
-                    added++;
+                    existing[id] = true;
+                    totalAdded++;
                 }
-                console.log('[Aquarium] Added ' + added + ' fish from mempool/recent');
-                updateFishCount();
-                feedInfo('Loaded <span class="feed-val">' + added + '</span> pending transactions from mempool');
-                return true;
             }
         } catch (e) { console.warn('[Aquarium] mempool/recent error:', e); }
+
+        // 2) Full mempool txid list (no fee data, but gets everything)
+        try {
+            var txids = await apiFetch('/mempool/txids', 8000);
+            if (txids && Array.isArray(txids)) {
+                for (var j = 0; j < txids.length; j++) {
+                    if (existing[txids[j]]) continue;
+                    fishes.push(createFish({
+                        txid: txids[j],
+                        feeRate: 1 + Math.random() * 8,
+                        value: Math.round(Math.random() * 5e8),
+                    }));
+                    existing[txids[j]] = true;
+                    totalAdded++;
+                }
+            }
+        } catch (e) { console.warn('[Aquarium] mempool/txids error:', e); }
+
+        if (totalAdded > 0) {
+            console.log('[Aquarium] Added ' + totalAdded + ' fish from mempool');
+            updateFishCount();
+            feedInfo('Loaded <span class="feed-val">' + totalAdded + '</span> pending transactions from mempool');
+            return true;
+        }
         return false;
     }
 
@@ -1839,7 +1886,7 @@
                     var msg = JSON.parse(ev.data);
 
                     // New transaction
-                    if (msg.tx && fishes.length < MAX_FISH) {
+                    if (msg.tx) {
                         var tx = msg.tx;
                         var txFee = tx.feeRate || tx.fee || (1 + Math.random() * 5);
                         var txVal = tx.value || Math.round(Math.random() * 5e8);
@@ -1913,12 +1960,12 @@
         // Periodic stats refresh
         setInterval(fetchMempoolStats, 60000);
 
-        // Periodic mempool/recent refresh to keep fish population current
+        // Periodic mempool sync to keep fish population current
         setInterval(async function() {
-            if (fishes.length < 30 && !whale) {
+            if (!whale) {
                 await fetchMempoolRecent();
             }
-        }, 30000);
+        }, 15000);
     }
 
     init();
