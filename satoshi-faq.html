@@ -1,0 +1,1340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Satoshi's FAQ Machine — BC2 / Bitcoin II</title>
+    <meta name="description" content="Ask Satoshi. A curated knowledge base drawn from Satoshi Nakamoto's writings, applied to BC2.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=VT323&family=IBM+Plex+Mono:wght@400;500;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --phosphor: #33ff33;
+            --phosphor-dim: #1a9e1a;
+            --phosphor-bright: #66ff66;
+            --phosphor-glow: rgba(51,255,51,0.15);
+            --phosphor-faint: rgba(51,255,51,0.06);
+            --amber: #F7931A;
+            --amber-dim: rgba(247,147,26,0.5);
+            --amber-glow: rgba(247,147,26,0.3);
+            --crt-bg: #0a0f0a;
+            --crt-dark: #060906;
+            --crt-bezel: #1a1a18;
+            --crt-frame: #111110;
+        }
+
+        html { height: 100%; }
+
+        body {
+            font-family: 'VT323', monospace;
+            background: #050505;
+            color: var(--phosphor);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* ════ Desk surface with ambient CRT spill ════ */
+        .desk {
+            min-height: 100vh;
+            background:
+                radial-gradient(ellipse 60% 35% at 50% 35%, rgba(51,255,51,0.025), transparent 70%),
+                radial-gradient(ellipse 40% 15% at 50% 65%, rgba(51,255,51,0.01), transparent),
+                linear-gradient(180deg, #070707 0%, #050505 50%, #030303 100%);
+            display: flex; flex-direction: column; align-items: center;
+            padding: 1.5rem;
+        }
+
+        /* ════ Monitor frame — textured plastic housing ════ */
+        .monitor {
+            width: 100%; max-width: 960px;
+            background:
+                /* Subtle plastic grain texture */
+                repeating-linear-gradient(
+                    135deg,
+                    transparent, transparent 2px,
+                    rgba(255,255,255,0.006) 2px, rgba(255,255,255,0.006) 3px
+                ),
+                /* Base gradient — lighter top edge catch, darker bottom */
+                linear-gradient(170deg, #1a1a18 0%, #131312 20%, #0e0e0d 50%, #0a0a09 90%, #080808 100%);
+            border-radius: 22px;
+            padding: 22px 22px 28px;
+            box-shadow:
+                /* Floor shadow */
+                0 50px 120px rgba(0,0,0,0.85),
+                0 20px 40px rgba(0,0,0,0.5),
+                /* Green screen spill onto desk */
+                0 0 100px rgba(51,255,51,0.02),
+                0 0 250px rgba(51,255,51,0.008),
+                /* Plastic edge highlights */
+                inset 0 1px 0 rgba(255,255,255,0.07),
+                inset 0 -1px 0 rgba(0,0,0,0.5),
+                inset 1px 0 0 rgba(255,255,255,0.02),
+                inset -1px 0 0 rgba(255,255,255,0.02);
+            position: relative;
+        }
+
+        /* Green glow reflecting off inside of frame from screen */
+        .monitor::before {
+            content: '';
+            position: absolute;
+            inset: 8px;
+            border-radius: 16px;
+            pointer-events: none;
+            z-index: 0;
+            background:
+                /* Top inner edge — bright green bounce */
+                linear-gradient(180deg, rgba(51,255,51,0.025) 0%, transparent 30%),
+                /* Bottom inner edge */
+                linear-gradient(0deg, rgba(51,255,51,0.015) 0%, transparent 20%),
+                /* Left/right edges */
+                linear-gradient(90deg, rgba(51,255,51,0.012) 0%, transparent 15%, transparent 85%, rgba(51,255,51,0.012) 100%);
+        }
+
+        /* Molding ridge around the bezel */
+        .monitor::after {
+            content: '';
+            position: absolute;
+            inset: 16px 16px 22px;
+            border-radius: 16px;
+            pointer-events: none;
+            z-index: 0;
+            border: 1px solid rgba(255,255,255,0.025);
+            box-shadow:
+                inset 0 0 0 1px rgba(0,0,0,0.3),
+                0 0 8px rgba(51,255,51,0.01);
+        }
+
+        /* Corner screws */
+        .monitor-screw {
+            position: absolute;
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 35% 35%, #222, #0a0a0a 60%, #050505);
+            box-shadow:
+                inset 0 1px 2px rgba(255,255,255,0.08),
+                inset 0 -1px 1px rgba(0,0,0,0.5),
+                0 0 3px rgba(0,0,0,0.5);
+            z-index: 5;
+        }
+        .monitor-screw::after {
+            content: '';
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%,-50%) rotate(35deg);
+            width: 5px; height: 1px;
+            background: rgba(0,0,0,0.6);
+            box-shadow: 0 0 1px rgba(0,0,0,0.3);
+        }
+        .monitor-screw.tl { top: 8px; left: 8px; }
+        .monitor-screw.tr { top: 8px; right: 8px; }
+        .monitor-screw.bl { bottom: 14px; left: 8px; }
+        .monitor-screw.br { bottom: 14px; right: 8px; }
+
+        /* Bezel — deeper inset groove with green edge glow */
+        .bezel {
+            background: linear-gradient(180deg, #1a1a17, #151514, #111110);
+            border-radius: 14px;
+            padding: 4px;
+            position: relative;
+            z-index: 1;
+            box-shadow:
+                inset 0 2px 12px rgba(0,0,0,0.8),
+                inset 0 -1px 0 rgba(255,255,255,0.025),
+                inset 1px 0 4px rgba(0,0,0,0.3),
+                inset -1px 0 4px rgba(0,0,0,0.3),
+                /* Green glow leaking from screen edges */
+                inset 0 0 20px rgba(51,255,51,0.012),
+                0 0 1px rgba(51,255,51,0.03);
+        }
+
+        /* ════ CRT Screen ════ */
+        .crt {
+            position: relative;
+            background:
+                radial-gradient(ellipse 100% 100% at 50% 50%, #0c120c, #080c08 50%, #050805 100%);
+            border-radius: 12px;
+            overflow: hidden;
+            height: min(75vh, 620px);
+        }
+
+        /* Scanlines — tighter, more visible */
+        .crt::before {
+            content: ''; position: absolute; inset: 0; z-index: 50;
+            pointer-events: none; border-radius: 12px;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 1px,
+                rgba(0,0,0,0.15) 1px,
+                rgba(0,0,0,0.15) 3px
+            );
+            animation: scanlineShimmer 8s linear infinite;
+        }
+        @keyframes scanlineShimmer {
+            0%, 100% { opacity: 0.7; }
+            50% { opacity: 0.85; }
+        }
+
+        /* Screen curvature vignette + inner glow */
+        .crt::after {
+            content: ''; position: absolute; inset: 0; z-index: 51;
+            pointer-events: none; border-radius: 12px;
+            background:
+                radial-gradient(ellipse 120% 120% at 50% 50%, transparent 50%, rgba(0,0,0,0.2) 70%, rgba(0,0,0,0.55) 100%);
+            box-shadow:
+                inset 0 0 120px rgba(51,255,51,0.015),
+                inset 0 0 300px rgba(0,0,0,0.4);
+        }
+
+        /* Horizontal scan bar — sweeps slowly down screen */
+        .scan-bar {
+            position: absolute; left: 0; right: 0;
+            height: 4px; z-index: 53;
+            pointer-events: none; border-radius: 12px;
+            background: linear-gradient(180deg,
+                transparent,
+                rgba(51,255,51,0.04) 30%,
+                rgba(51,255,51,0.07) 50%,
+                rgba(51,255,51,0.04) 70%,
+                transparent
+            );
+            box-shadow: 0 0 30px 10px rgba(51,255,51,0.015);
+            animation: scanBar 6s linear infinite;
+        }
+        @keyframes scanBar {
+            0%   { top: -4px; }
+            100% { top: 100%; }
+        }
+
+        /* (glass reflection removed) */
+
+        /* CRT static noise — canvas overlay */
+        .crt-noise {
+            position: absolute; inset: 0; z-index: 49;
+            pointer-events: none; border-radius: 12px;
+            opacity: 0.01;
+            mix-blend-mode: screen;
+        }
+        .crt-noise canvas {
+            width: 100%; height: 100%;
+            border-radius: 12px;
+            filter: blur(1px);
+        }
+
+        /* Flicker animation — subtle */
+        .crt-flicker {
+            position: absolute; inset: 0; z-index: 52;
+            pointer-events: none; border-radius: 12px;
+            animation: crtFlicker 0.1s infinite;
+            opacity: 0;
+        }
+        @keyframes crtFlicker {
+            0%  { opacity: 0; }
+            3%  { opacity: 0.02; background: rgba(51,255,51,0.015); }
+            6%  { opacity: 0; }
+            88% { opacity: 0; }
+            89% { opacity: 0.015; background: rgba(255,255,255,0.008); }
+            100%{ opacity: 0; }
+        }
+
+        /* RGB subpixel fringing — slight color offset on screen text */
+        .screen {
+            position: relative; z-index: 10;
+            padding: 1.5rem;
+            height: 100%;
+            display: flex; flex-direction: column;
+            overflow: hidden;
+            text-shadow:
+                0.3px 0 0 rgba(255,80,80,0.07),
+                -0.3px 0 0 rgba(80,80,255,0.07);
+        }
+
+        /* ════ Header bar ════ */
+        .header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid rgba(51,255,51,0.12);
+            margin-bottom: 1rem;
+            flex-shrink: 0;
+        }
+        .header-title {
+            font-size: 1.2rem; letter-spacing: 0.05em;
+            text-shadow: 0 0 8px rgba(51,255,51,0.4), 0 0 20px rgba(51,255,51,0.15);
+        }
+        .header-title .hl {
+            color: var(--amber);
+            text-shadow: 0 0 8px var(--amber-glow), 0 0 20px rgba(247,147,26,0.1);
+        }
+        .header-right {
+            display: flex; align-items: center; gap: 1rem;
+            font-size: 0.85rem; color: var(--phosphor-dim);
+            text-shadow: 0 0 6px rgba(51,255,51,0.15);
+        }
+        .blink-dot {
+            display: inline-block; width: 6px; height: 6px;
+            background: var(--phosphor); border-radius: 50%;
+            box-shadow: 0 0 4px var(--phosphor), 0 0 10px var(--phosphor), 0 0 20px rgba(51,255,51,0.3);
+            animation: blink 1.2s step-end infinite;
+        }
+        @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0; } }
+
+        /* ════ Topic buttons with phosphor bloom ════ */
+        .topics {
+            display: flex; flex-wrap: wrap; gap: 0.4rem;
+            margin-bottom: 1rem; flex-shrink: 0;
+        }
+        .topic-btn {
+            font-family: 'VT323', monospace;
+            font-size: 0.9rem;
+            padding: 0.25rem 0.65rem;
+            background: rgba(51,255,51,0.02);
+            border: 1px solid rgba(51,255,51,0.15);
+            border-radius: 3px;
+            color: var(--phosphor-dim);
+            cursor: pointer;
+            transition: all 0.2s;
+            letter-spacing: 0.03em;
+            text-shadow: 0 0 4px rgba(51,255,51,0.1);
+        }
+        .topic-btn:hover {
+            background: rgba(51,255,51,0.06);
+            border-color: rgba(51,255,51,0.4);
+            color: var(--phosphor);
+            box-shadow: 0 0 8px rgba(51,255,51,0.1), 0 0 20px rgba(51,255,51,0.05), inset 0 0 8px rgba(51,255,51,0.03);
+            text-shadow: 0 0 6px rgba(51,255,51,0.3);
+        }
+        .topic-btn.active {
+            background: rgba(51,255,51,0.08);
+            border-color: var(--phosphor-dim);
+            color: var(--phosphor-bright);
+            box-shadow: 0 0 10px rgba(51,255,51,0.15), 0 0 30px rgba(51,255,51,0.06), inset 0 0 12px rgba(51,255,51,0.04);
+            text-shadow: 0 0 8px rgba(51,255,51,0.5);
+        }
+
+        /* ════ Output area ════ */
+        .output {
+            flex: 1;
+            min-height: 0;
+            overflow-y: auto;
+            padding-right: 0.5rem;
+            margin-bottom: 0.75rem;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(51,255,51,0.15) transparent;
+            font-size: 1.05rem;
+            line-height: 1.55;
+        }
+        .output::-webkit-scrollbar { width: 3px; }
+        .output::-webkit-scrollbar-track { background: transparent; }
+        .output::-webkit-scrollbar-thumb { background: rgba(51,255,51,0.15); border-radius: 2px; }
+
+        /* Output entries — phosphor glow on text */
+        .entry { margin-bottom: 1.25rem; }
+        .entry-q {
+            color: var(--amber);
+            margin-bottom: 0.2rem;
+            text-shadow: 0 0 6px var(--amber-glow), 0 0 15px rgba(247,147,26,0.1);
+        }
+        .entry-q::before { content: '> '; color: var(--phosphor-dim); text-shadow: none; }
+        .entry-a {
+            color: var(--phosphor);
+            padding-left: 1rem;
+            border-left: 2px solid rgba(51,255,51,0.08);
+            text-shadow: 0 0 5px rgba(51,255,51,0.2), 0 0 12px rgba(51,255,51,0.06);
+        }
+        .entry-a .source {
+            display: block; margin-top: 0.4rem;
+            font-size: 0.8rem; color: var(--phosphor-dim);
+            font-style: italic;
+            text-shadow: 0 0 4px rgba(51,255,51,0.1);
+        }
+        .entry-a .bc2-note {
+            display: block; margin-top: 0.5rem;
+            padding: 0.4rem 0.6rem;
+            background: rgba(247,147,26,0.04);
+            border-left: 2px solid rgba(247,147,26,0.3);
+            color: var(--amber);
+            font-size: 0.9rem;
+            text-shadow: 0 0 6px rgba(247,147,26,0.2);
+        }
+
+        /* Phosphor persistence — new entries glow bright then fade */
+        @keyframes phosphorFadeIn {
+            0%   { opacity: 0; filter: brightness(2) blur(1px); }
+            30%  { opacity: 1; filter: brightness(1.6) blur(0.3px); }
+            100% { opacity: 1; filter: brightness(1) blur(0); }
+        }
+        .entry { animation: phosphorFadeIn 0.8s ease-out; }
+
+        .entry-system {
+            color: var(--phosphor-dim);
+            font-size: 0.9rem;
+            text-shadow: 0 0 4px rgba(51,255,51,0.15);
+        }
+        .entry-system .cmd {
+            color: var(--phosphor);
+            text-shadow: 0 0 6px rgba(51,255,51,0.3);
+        }
+        .entry-error {
+            color: #cc4444;
+            font-size: 0.95rem;
+            text-shadow: 0 0 6px rgba(204,68,68,0.3);
+        }
+
+        /* Topic list rendering */
+        .topic-list-item {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid rgba(51,255,51,0.04);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .topic-list-item:hover {
+            background: rgba(51,255,51,0.025);
+            padding-left: 0.5rem;
+        }
+        .topic-list-item .tl-q {
+            color: var(--phosphor);
+            text-shadow: 0 0 5px rgba(51,255,51,0.15);
+        }
+        .topic-list-item .tl-q::before {
+            content: '▸ '; color: var(--phosphor-dim);
+        }
+        .topic-list-item:hover .tl-q {
+            text-shadow: 0 0 8px rgba(51,255,51,0.35);
+        }
+        .topic-list-item:hover .tl-q::before {
+            color: var(--amber);
+            text-shadow: 0 0 6px var(--amber-glow);
+        }
+
+        /* Typewriter cursor — fat, glowing */
+        .typing-cursor {
+            display: inline-block;
+            width: 0.55em; height: 1.1em;
+            background: var(--phosphor);
+            vertical-align: text-bottom;
+            animation: cursorBlink 0.6s step-end infinite;
+            margin-left: 1px;
+            box-shadow: 0 0 4px var(--phosphor), 0 0 10px rgba(51,255,51,0.3);
+        }
+        @keyframes cursorBlink {
+            0%, 100% { opacity: 1; box-shadow: 0 0 4px var(--phosphor), 0 0 10px rgba(51,255,51,0.3); }
+            50% { opacity: 0; box-shadow: none; }
+        }
+
+        /* Welcome message */
+        .welcome {
+            color: var(--phosphor-dim);
+            margin-bottom: 1rem;
+            line-height: 1.6;
+            text-shadow: 0 0 4px rgba(51,255,51,0.12);
+        }
+        .welcome .title-art {
+            color: var(--phosphor);
+            font-size: 1rem;
+            margin-bottom: 0.75rem;
+            white-space: pre;
+            line-height: 1.2;
+            text-shadow: 0 0 8px rgba(51,255,51,0.4), 0 0 25px rgba(51,255,51,0.12);
+        }
+        .welcome .hint {
+            color: rgba(51,255,51,0.3);
+            font-size: 0.85rem;
+            text-shadow: none;
+        }
+
+        /* ════ Input area — glowing prompt ════ */
+        .input-area {
+            flex-shrink: 0;
+            display: flex; align-items: center;
+            border-top: 1px solid rgba(51,255,51,0.1);
+            padding-top: 0.75rem;
+        }
+        .prompt {
+            color: var(--amber);
+            font-size: 1.05rem;
+            margin-right: 0.5rem;
+            flex-shrink: 0;
+            user-select: none;
+            text-shadow: 0 0 6px var(--amber-glow), 0 0 15px rgba(247,147,26,0.1);
+        }
+        .cmd-input {
+            flex: 1;
+            background: transparent;
+            border: none; outline: none;
+            color: var(--phosphor);
+            font-family: 'VT323', monospace;
+            font-size: 1.05rem;
+            caret-color: var(--phosphor);
+            letter-spacing: 0.02em;
+            text-shadow: 0 0 6px rgba(51,255,51,0.3);
+        }
+        .cmd-input::placeholder {
+            color: rgba(51,255,51,0.15);
+            text-shadow: none;
+        }
+
+        /* ════ Monitor physical details ════ */
+        .monitor-brand {
+            text-align: center;
+            padding: 0.9rem 0 0;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.55rem;
+            letter-spacing: 0.3em;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.04);
+            text-shadow:
+                0 1px 0 rgba(255,255,255,0.02),
+                0 -1px 0 rgba(0,0,0,0.5);
+            position: relative;
+        }
+        /* Embossed brand plate */
+        .monitor-brand::before {
+            content: '';
+            position: absolute;
+            top: 6px; left: 50%; transform: translateX(-50%);
+            width: 200px; height: 16px;
+            border-radius: 2px;
+            background: linear-gradient(180deg, rgba(0,0,0,0.15), rgba(0,0,0,0.05));
+            border: 1px solid rgba(255,255,255,0.015);
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.3);
+            z-index: -1;
+        }
+
+        /* Power LED — pulsing glow with housing */
+        .monitor-led {
+            position: absolute; bottom: 14px; right: 28px;
+            width: 6px; height: 6px; border-radius: 50%;
+            background: radial-gradient(circle at 40% 40%, #66ff66, #33ff33 50%, #1a9e1a);
+            box-shadow:
+                0 0 3px var(--phosphor),
+                0 0 8px var(--phosphor),
+                0 0 16px rgba(51,255,51,0.4),
+                0 0 30px rgba(51,255,51,0.15);
+            animation: ledPulse 3s ease-in-out infinite;
+        }
+        /* LED housing ring */
+        .monitor-led::before {
+            content: '';
+            position: absolute;
+            inset: -3px;
+            border-radius: 50%;
+            border: 1px solid rgba(255,255,255,0.05);
+            background: radial-gradient(circle, transparent 50%, rgba(0,0,0,0.3));
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.4);
+        }
+        /* LED label */
+        .monitor-led::after {
+            content: 'PWR';
+            position: absolute;
+            top: -1px; right: 14px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.4rem;
+            letter-spacing: 0.15em;
+            color: rgba(255,255,255,0.04);
+            white-space: nowrap;
+        }
+        @keyframes ledPulse {
+            0%, 100% { opacity: 0.8; box-shadow: 0 0 3px var(--phosphor), 0 0 8px var(--phosphor), 0 0 16px rgba(51,255,51,0.3); }
+            50% { opacity: 1; box-shadow: 0 0 4px var(--phosphor), 0 0 12px var(--phosphor), 0 0 24px rgba(51,255,51,0.5), 0 0 40px rgba(51,255,51,0.15); }
+        }
+
+        /* Vent slots on monitor frame */
+        .monitor-vents {
+            position: absolute; top: 10px; right: 24px;
+            display: flex; gap: 3px;
+        }
+        .monitor-vents span {
+            display: block; width: 14px; height: 2px;
+            background: rgba(0,0,0,0.5);
+            border-radius: 1px;
+            box-shadow:
+                inset 0 -1px 0 rgba(255,255,255,0.015),
+                inset 0 1px 1px rgba(0,0,0,0.4);
+        }
+        /* Left-side vents */
+        .monitor-vents-l {
+            position: absolute; top: 10px; left: 24px;
+            display: flex; gap: 3px;
+        }
+        .monitor-vents-l span {
+            display: block; width: 14px; height: 2px;
+            background: rgba(0,0,0,0.5);
+            border-radius: 1px;
+            box-shadow:
+                inset 0 -1px 0 rgba(255,255,255,0.015),
+                inset 0 1px 1px rgba(0,0,0,0.4);
+        }
+
+        /* Back link */
+        .back-bar {
+            width: 100%; max-width: 960px;
+            padding: 0.75rem 0 0;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .back-link {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.7rem; color: rgba(255,255,255,0.12);
+            text-decoration: none; letter-spacing: 0.05em;
+            transition: color 0.3s, text-shadow 0.3s;
+        }
+        .back-link:hover { color: var(--phosphor-dim); text-shadow: 0 0 6px rgba(51,255,51,0.2); }
+        .help-hint {
+            font-family: 'VT323', monospace;
+            font-size: 0.8rem; color: rgba(51,255,51,0.18);
+        }
+
+        /* ════ Responsive ════ */
+        @media (max-width: 700px) {
+            .desk { padding: 0.5rem; }
+            .monitor { padding: 12px 12px 20px; border-radius: 16px; }
+            .monitor-screw { display: none; }
+            .monitor-vents-l { display: none; }
+            .screen { padding: 1rem; }
+            .header-title { font-size: 1rem; }
+            .topic-btn { font-size: 0.8rem; padding: 0.2rem 0.5rem; }
+            .output { font-size: 0.95rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="desk">
+    <!-- Monitor -->
+    <div class="monitor">
+        <div class="bezel">
+            <div class="crt">
+                <div class="crt-flicker"></div>
+                <div class="crt-noise"><canvas id="noiseCanvas"></canvas></div>
+                <div class="scan-bar"></div>
+                <div class="screen">
+                    <!-- Header -->
+                    <div class="header">
+                        <div class="header-title">SATOSHI FAQ MACHINE <span class="hl">v1.0</span></div>
+                        <div class="header-right">
+                            <span>BC2 KNOWLEDGE BASE</span>
+                            <span class="blink-dot"></span>
+                        </div>
+                    </div>
+
+                    <!-- Topics -->
+                    <div class="topics" id="topics"></div>
+
+                    <!-- Output -->
+                    <div class="output" id="output"></div>
+
+                    <!-- Input -->
+                    <div class="input-area">
+                        <span class="prompt">ASK&gt;</span>
+                        <input type="text" class="cmd-input" id="cmdInput" placeholder="Type a question or command... (try 'help')" autocomplete="off" spellcheck="false">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="monitor-led"></div>
+        <div class="monitor-screw tl"></div>
+        <div class="monitor-screw tr"></div>
+        <div class="monitor-screw bl"></div>
+        <div class="monitor-screw br"></div>
+        <div class="monitor-vents"><span></span><span></span><span></span><span></span><span></span></div>
+        <div class="monitor-vents-l"><span></span><span></span><span></span></div>
+        <div class="monitor-brand">Genesis Terminal &mdash; Model GW-2024</div>
+    </div>
+
+    <div class="back-bar">
+        <a href="index.html" class="back-link">&larr; Back to GenesisWallet</a>
+        <span class="help-hint">Type "help" for commands</span>
+    </div>
+</div>
+
+<script>
+(function() {
+    'use strict';
+
+    // ═══════════════════════════════════════════
+    //  KNOWLEDGE BASE
+    //  Sources: Bitcoin whitepaper, bitcointalk posts,
+    //  cryptography mailing list, Satoshi-Martti emails
+    // ═══════════════════════════════════════════
+
+    var DB = [
+
+    // ── WHY BITCOIN ──
+    {
+        topic: 'origins',
+        q: 'Why was Bitcoin created?',
+        a: '"The root problem with conventional currency is all the trust that\'s required to make it work. The central bank must be trusted not to debase the currency, but the history of fiat currencies is full of breaches of that trust. Banks must be trusted to hold our money and transfer it electronically, but they lend it out in waves of credit bubbles with barely a fraction in reserve."',
+        source: 'Satoshi Nakamoto, P2P Foundation, Feb 11 2009',
+        bc2: 'BC2 carries this same conviction forward. A parallel chain preserving the original Bitcoin code — because the need for trustless money hasn\'t changed.'
+    },
+    {
+        topic: 'origins',
+        q: 'What problem does proof-of-work solve?',
+        a: '"What is needed is an electronic payment system based on cryptographic proof instead of trust, allowing any two willing parties to transact directly with each other without the need for a trusted third party. Transactions that are computationally impractical to reverse would protect sellers from fraud."',
+        source: 'Bitcoin Whitepaper, Abstract, Oct 31 2008',
+        bc2: 'BC2 uses the same SHA-256 proof-of-work as Bitcoin — the most battle-tested consensus mechanism in history.'
+    },
+    {
+        topic: 'origins',
+        q: 'When did Satoshi start working on Bitcoin?',
+        a: '"I\'ve been working on a new electronic cash system that\'s fully peer-to-peer, with no trusted third party." Satoshi explained that he did it backwards — writing all the code first before convincing himself every problem was solvable, then writing the whitepaper.',
+        source: 'Cryptography mailing list, Nov 2008',
+        bc2: 'BC2 follows the same builder-first philosophy. Code was running before the marketing started. Ship, then talk.'
+    },
+    {
+        topic: 'origins',
+        q: 'What is the genesis block?',
+        a: 'The genesis block is the first block in the chain — block zero. Bitcoin\'s genesis block was mined on January 3, 2009 and embedded the message: "The Times 03/Jan/2009 Chancellor on brink of second bailout for banks." It serves as both a timestamp proof and a philosophical statement about why decentralized money matters.',
+        source: 'Bitcoin blockchain, Block 0, Jan 3 2009',
+        bc2: 'On December 4, 2024, the French government collapsed in a no-confidence vote — crushed under sovereign debt, fifteen years after banks needed the same rescue. On December 12, BC2 mined its genesis block embedding the headline: "BBC News 12/04/2024 French government collapses in no-confidence vote." Where Bitcoin\'s Block #0 recorded the failure of banks, BC2\'s Block #0 records the failure of the governments that bailed them out.'
+    },
+
+    // ── MINING & PROOF OF WORK ──
+    {
+        topic: 'mining',
+        q: 'How does mining work?',
+        a: '"The proof-of-work involves scanning for a value that when hashed with SHA-256, the hash begins with a number of zero bits. The average work required is exponential in the number of zero bits required and can be verified by executing a single hash. For our timestamp network, we implement the proof-of-work by incrementing a nonce in the block until a value is found that gives the block\'s hash the required zero bits."',
+        source: 'Bitcoin Whitepaper, Section 4, Oct 2008',
+        bc2: 'BC2 uses this identical SHA-256 mechanism. Same algorithm, same security guarantees. Miners compete to find blocks with the same fundamental math Satoshi designed.'
+    },
+    {
+        topic: 'mining',
+        q: 'Why is mining important for security?',
+        a: '"The network is robust in its unstructured simplicity. Nodes work all at once with little coordination. They do not need to be identified, since messages are not routed to any particular place and only need to be delivered on a best effort basis." Satoshi noted that an attacker would have to redo the proof-of-work of a block and all blocks after it, then surpass the cumulative work of honest nodes.',
+        source: 'Bitcoin Whitepaper, Section 5, Oct 2008',
+        bc2: 'As BC2 grows its hashrate, this same security model applies. Every miner that joins makes the chain exponentially harder to attack.'
+    },
+    {
+        topic: 'mining',
+        q: 'Should I run a node to help the network?',
+        a: 'Satoshi encouraged early participants to run nodes whenever possible, especially in the network\'s infancy. More nodes meant better security, faster relay of transactions, and stronger decentralization. Even non-mining nodes contribute by validating the blockchain and keeping peers honest.',
+        source: 'Satoshi to Martti Malmi, email correspondence, May 2009',
+        bc2: 'BC2 is in its earliest days right now — exactly the stage where running a node makes the biggest difference. The BC2 Core (Qt) wallet is a full node, so just by using the recommended wallet you\'re already supporting the network.'
+    },
+    {
+        topic: 'mining',
+        q: 'Can you mine with a regular computer?',
+        a: '"At first, every user would run a network node, but as the network grows beyond a certain point, it would be left more and more to specialists with server farms of specialized hardware." In the early days, Satoshi envisioned every user as a miner.',
+        source: 'Satoshi Nakamoto, bitcointalk, Nov 2008',
+        bc2: 'BC2 is at the beautiful stage where regular hardware still matters. The difficulty is low and the chain is young — the same window early Bitcoiners had in 2009.'
+    },
+    {
+        topic: 'mining',
+        q: 'What about mining pools?',
+        a: 'Mining pools allow miners to combine computational resources and share block rewards proportionally. This reduces variance — instead of waiting months for a solo block, pool miners get steady smaller payouts. The tradeoff is some centralization in block construction, which is why having multiple competing pools matters for network health.',
+        source: 'Evolved from Satoshi\'s design; first pools emerged 2010',
+        bc2: 'BC2 has close to 50 mining pools competing for blocks. This pool diversity is exceptionally healthy for decentralization and gives miners real options.'
+    },
+
+    // ── 21 MILLION SUPPLY ──
+    {
+        topic: 'supply',
+        q: 'Why is the supply limited to 21 million?',
+        a: '"The total circulation will be 21,000,000 coins. It will be distributed to network nodes when they make blocks, with the amount cut in half every 4 years." Satoshi explained that a planned increase in money supply doesn\'t necessarily cause inflation — if adoption grows at the same rate, prices remain stable.',
+        source: 'Satoshi Nakamoto, bitcointalk, Feb 2009',
+        bc2: 'BC2 preserves the exact same 21 million cap. Same emission schedule, same halving intervals. The monetary policy is written in code, not decided by committee.'
+    },
+    {
+        topic: 'supply',
+        q: 'What happens at each halving?',
+        a: '"Coins have to get initially distributed somehow, and a constant rate seems like the best formula." The reward starts at 50 coins per block and halves every 210,000 blocks — roughly every four years — creating a predictable, decreasing inflation rate that asymptotically approaches zero.',
+        source: 'Satoshi Nakamoto, bitcointalk, Nov 2008',
+        bc2: 'BC2 launched at 50 BC2 per block, just like Bitcoin did in 2009. The first halving hasn\'t happened yet — we\'re in the high-emission era where early miners are rewarded most.'
+    },
+    {
+        topic: 'supply',
+        q: 'What happens when all coins are mined?',
+        a: '"In a few decades when the reward gets too small, the transaction fee will become the main compensation for nodes. I\'m sure that in 20 years there will either be very large transaction volume or no volume."',
+        source: 'Satoshi Nakamoto, bitcointalk, Feb 2010',
+        bc2: 'BC2 follows the same long-term fee model. As block rewards decrease through halvings, transaction fees sustain the miners. The economics are identical to Bitcoin\'s original design.'
+    },
+    {
+        topic: 'supply',
+        q: 'If coins are lost, does the supply shrink?',
+        a: '"Lost coins only make everyone else\'s coins worth slightly more. Think of it as a donation to everyone."',
+        source: 'Satoshi Nakamoto, bitcointalk, Jun 2010',
+        bc2: 'Same principle on BC2. Lost coins are permanently gone — there\'s no admin key, no recovery mechanism, no supply increase. Only 21 million will ever exist.'
+    },
+
+    // ── DECENTRALIZATION ──
+    {
+        topic: 'decentralization',
+        q: 'Why does decentralization matter?',
+        a: '"Governments are good at cutting off the heads of centrally controlled networks like Napster, but pure P2P networks like Gnutella and Tor seem to be holding their own." Satoshi noted that people dismissed e-currency as a lost cause because of past failures, but argued it was only the centrally controlled nature of those systems that doomed them.',
+        source: 'Satoshi Nakamoto, P2P Foundation, Feb 2009',
+        bc2: 'BC2 inherits Bitcoin\'s fully decentralized architecture. No foundation, no CEO, no central servers. The code runs and the network decides.'
+    },
+    {
+        topic: 'decentralization',
+        q: 'What happens if a government tries to ban it?',
+        a: '"It\'s very attractive to the libertarian viewpoint if we can explain it properly. I\'m better with code than with words though." Satoshi recognized that a distributed network spanning many countries would be practically impossible to shut down simultaneously.',
+        source: 'Satoshi Nakamoto, email to Martti Malmi, May 2009',
+        bc2: 'BC2 nodes run in dozens of countries. The same censorship resistance Satoshi designed into Bitcoin protects BC2 by the same mathematical guarantees.'
+    },
+
+    // ── TRANSACTIONS & FEES ──
+    {
+        topic: 'transactions',
+        q: 'How do transaction fees work?',
+        a: 'Satoshi designed nodes to eventually be compensated by transaction fees alone once the block reward diminishes. The fee is determined by market competition among transactions for limited space in each block — higher fees get confirmed faster.',
+        source: 'Bitcoin Whitepaper + bitcointalk posts, 2008-2010',
+        bc2: 'BC2 fees are extremely low right now because blocks have room. This is the same low-fee environment Bitcoin had in its early years — ideal for everyday transactions.'
+    },
+    {
+        topic: 'transactions',
+        q: 'How fast are transactions confirmed?',
+        a: 'Each block takes about 10 minutes on average by design. Satoshi suggested that for smaller amounts, one confirmation is generally sufficient, while larger amounts warrant waiting for 6 confirmations, providing an extremely high level of security against double-spending.',
+        source: 'Bitcoin Whitepaper, Section 11 + bitcointalk, 2009',
+        bc2: 'BC2 targets 10-minute blocks, identical to Bitcoin. The difficulty adjustment algorithm ensures blocks stay on schedule regardless of hashrate changes.'
+    },
+    {
+        topic: 'transactions',
+        q: 'Can Bitcoin handle micropayments?',
+        a: 'Satoshi acknowledged that Bitcoin wasn\'t practical for very small micropayments like paying per web page hit. The transaction fee structure makes tiny amounts impractical. However, it works well for transactions large enough to justify the fee overhead.',
+        source: 'Satoshi Nakamoto, bitcointalk, 2010',
+        bc2: 'With BC2\'s current low-fee environment, smaller transactions are more practical than on Bitcoin\'s congested chain. The early-network advantage.'
+    },
+
+    // ── PRIVACY ──
+    {
+        topic: 'privacy',
+        q: 'Is Bitcoin/BC2 anonymous?',
+        a: '"The traditional banking model achieves a level of privacy by limiting access to information to the parties involved and the trusted third party. The necessity to announce all transactions publicly precludes this method, but privacy can still be maintained by breaking the flow of information in another place: by keeping public keys anonymous."',
+        source: 'Bitcoin Whitepaper, Section 10, Oct 2008',
+        bc2: 'BC2 supports the same pseudonymous model. Your addresses don\'t contain your name — privacy comes from separating your identity from your keys.'
+    },
+    {
+        topic: 'privacy',
+        q: 'How should I protect my privacy?',
+        a: '"As an additional firewall, a new key pair should be used for each transaction to keep them from being linked to a common owner." Satoshi warned that some linking is unavoidable with multi-input transactions, which necessarily reveal that their inputs belong to the same owner.',
+        source: 'Bitcoin Whitepaper, Section 10, Oct 2008',
+        bc2: 'BC2 Core wallet and Genesis Wallet both generate fresh addresses for each receive — following Satoshi\'s original privacy recommendation automatically.'
+    },
+
+    // ── SCALING ──
+    {
+        topic: 'scaling',
+        q: 'Can the blockchain scale to handle global payments?',
+        a: '"The bandwidth might not be as prohibitive as you think. A typical transaction would be about 400 bytes." Satoshi calculated that Visa\'s 37 billion annual transactions would require about 100GB of bandwidth — large but not impossible for dedicated nodes.',
+        source: 'Satoshi Nakamoto, cryptography mailing list, Nov 2008',
+        bc2: 'BC2 inherits Bitcoin\'s scaling through v29, including SegWit\'s effective block capacity increase. The chain benefits from fifteen years of Bitcoin\'s scaling optimizations while drawing the line at further protocol complexity.'
+    },
+    {
+        topic: 'scaling',
+        q: 'What about the block size debate?',
+        a: '"It can be phased in, like: if (blocknumber > 115000) maxblocksize = largerlimit." Satoshi proposed gradual, planned upgrades — building them into the code well ahead of time so older versions would be obsolete before the change took effect.',
+        source: 'Satoshi Nakamoto, bitcointalk, Oct 2010',
+        bc2: 'BC2 inherits every scaling improvement Bitcoin has made through v29 — SegWit, Taproot, Schnorr signatures — and considers the protocol complete. Every other chain asks what Bitcoin should become next. BC2 says: stop building. Start using.'
+    },
+
+    // ── WHAT IS BC2 ──
+    {
+        topic: 'bc2',
+        q: 'What is BC2?',
+        a: 'BC2 (Bitcoin II) is a fresh-start Bitcoin chain built on a simple thesis: the protocol is complete. Built from Bitcoin Core v27 and upgraded to v29, BC2 includes every battle-tested improvement from Bitcoin\'s fifteen-year history — SegWit, Taproot, Schnorr — and draws a line. Same SHA-256 proof-of-work, same 21 million cap, same 10-minute blocks. Not a rollback to 2009. A line in the sand at 2024.',
+        source: 'BC2 Project Documentation',
+        bc2: null
+    },
+    {
+        topic: 'bc2',
+        q: 'Why does BC2 exist if Bitcoin already exists?',
+        a: 'Bitcoin will never stop changing. OP_CAT, covenants, CTV, CSFS, OP_VAULT — recursive spending restrictions, new opcodes, new script types, new attack surfaces. The codebase that was 26,000 lines is now past 750,000. The protocol has become a platform, and platforms never stop growing. BC2 accepts every upgrade through v29 and says: this is enough. The protocol is complete. Hold your own keys. Use your own node. Stop building the platform. Start using the money.',
+        source: 'BC2 Project Philosophy',
+        bc2: null
+    },
+    {
+        topic: 'bc2',
+        q: 'How is BC2 different from a Bitcoin fork?',
+        a: 'BC2 is not a fork of Bitcoin\'s blockchain — it doesn\'t share transaction history or balances. It\'s a fresh chain launched from a new genesis block with its own network. The codebase started as a fork of Bitcoin Core v27, has since been upgraded to v29, and the chain started from scratch on December 12, 2024. No premine, no ICO, no airdrop.',
+        source: 'BC2 Technical Documentation',
+        bc2: null
+    },
+    {
+        topic: 'bc2',
+        q: 'What wallet should I use for BC2?',
+        a: 'The recommended wallet is BC2 Core (Qt), the full node wallet that ships with the BC2 software. Running the Core wallet means you\'re also running a node — validating transactions, relaying blocks, and directly strengthening the network. For mobile, Genesis Wallet is an Android wallet forked from BlueWallet with BC2 network support.',
+        source: 'BC2 Project Documentation',
+        bc2: null
+    },
+    {
+        topic: 'bc2',
+        q: 'How is BC2 different from BCH or BSV?',
+        a: 'BCH changed the block size. BSV changed everything. Both were forks of Bitcoin\'s live blockchain — they shared transaction history and existing balances. BC2 is fundamentally different: it\'s a fresh chain from a new genesis block with no shared history. And where BCH and BSV disagreed with Bitcoin\'s technical direction, BC2 accepts every upgrade through v29 — SegWit, Taproot, Schnorr — and simply says: this is where we stop. Not a rebellion. A preservation.',
+        source: 'BC2 Project Philosophy',
+        bc2: null
+    },
+    {
+        topic: 'bc2',
+        q: 'What is the preservation thesis?',
+        a: 'The Bitcoin codebase that was 26,000 lines is now past 750,000. OP_CAT, covenants, CTV, CSFS, OP_VAULT, quantum witness discounts — each change makes the next easier to justify. The protocol has become a platform, and platforms never stop growing. BC2 accepts every battle-tested improvement through v29 and declares the protocol complete. Not a rollback. A line in the sand. Hold your own keys. Use your own node. Stop building. Start using.',
+        source: 'Chain of Time — BC2 Origin Story',
+        bc2: null
+    },
+
+    // ── PHILOSOPHY ──
+    {
+        topic: 'philosophy',
+        q: 'What did Satoshi think about trust?',
+        a: '"The root problem with conventional currency is all the trust that\'s required to make it work." Satoshi\'s solution was a peer-to-peer system based entirely on cryptographic proof — no mint, no central authority. Verify, don\'t trust.',
+        source: 'Satoshi Nakamoto, P2P Foundation, Feb 2009',
+        bc2: 'BC2 is built on this same principle of trustlessness. Verify, don\'t trust. Run a node, check the math yourself.'
+    },
+    {
+        topic: 'philosophy',
+        q: 'Did Satoshi care about financial freedom?',
+        a: 'Satoshi noted Bitcoin\'s appeal to libertarian ideals: "It\'s very attractive to the libertarian viewpoint if we can explain it properly." The system was designed so no single entity could control, censor, or reverse transactions — conventional currency requires trust, but cryptographic currency requires only math.',
+        source: 'Satoshi Nakamoto, various correspondences, 2009',
+        bc2: 'BC2 carries this cypherpunk ethos. No company behind it. No legal entity. Just code, math, and the people who choose to run it.'
+    },
+    {
+        topic: 'philosophy',
+        q: 'What did Satoshi say about Bitcoin\'s future?',
+        a: '"I\'m sure that in 20 years there will either be very large transaction volume or no volume." Satoshi took a long-term view, designing the fee model to sustain the network for decades — understanding that Bitcoin\'s success was not guaranteed, only made possible.',
+        source: 'Satoshi Nakamoto, bitcointalk, Feb 2010',
+        bc2: 'Sixteen years into that timeline for Bitcoin, the answer is clear — massive transaction volume. BC2 starts the clock again, on a protocol that\'s been declared complete.'
+    },
+    {
+        topic: 'philosophy',
+        q: 'Why did Satoshi disappear?',
+        a: 'Satoshi\'s departure is central to Bitcoin\'s strength. A decentralized system shouldn\'t depend on its creator. By leaving, Satoshi proved that Bitcoin could survive without any single leader — the ultimate test of decentralization. The code speaks for itself.',
+        source: 'Satoshi\'s last known communications, Apr 2011',
+        bc2: 'BC2 embraces this leaderless philosophy. The project is community-driven. If the lead developer disappeared tomorrow, the chain would keep producing blocks every 10 minutes.'
+    }
+
+    ];
+
+    // Topic metadata
+    var TOPICS = [
+        { id: 'origins', label: 'Origins', icon: '◈' },
+        { id: 'mining', label: 'Mining', icon: '⛏' },
+        { id: 'supply', label: '21M Supply', icon: '◆' },
+        { id: 'decentralization', label: 'Decentralization', icon: '⬡' },
+        { id: 'transactions', label: 'Transactions', icon: '⇄' },
+        { id: 'privacy', label: 'Privacy', icon: '◉' },
+        { id: 'scaling', label: 'Scaling', icon: '▦' },
+        { id: 'bc2', label: 'BC2', icon: '₿' },
+        { id: 'philosophy', label: 'Philosophy', icon: '✧' },
+    ];
+
+    // ═══════════════════════════════════════════
+    //  DOM REFS
+    // ═══════════════════════════════════════════
+    var output = document.getElementById('output');
+    var cmdInput = document.getElementById('cmdInput');
+    var topicsEl = document.getElementById('topics');
+    var activeTopic = null;
+    var isTyping = false;
+
+    // ═══════════════════════════════════════════
+    //  BUILD TOPIC BUTTONS
+    // ═══════════════════════════════════════════
+    TOPICS.forEach(function(t) {
+        var btn = document.createElement('button');
+        btn.className = 'topic-btn';
+        btn.setAttribute('data-topic', t.id);
+        btn.textContent = t.icon + ' ' + t.label;
+        btn.addEventListener('click', function() {
+            selectTopic(t.id);
+        });
+        topicsEl.appendChild(btn);
+    });
+
+    // ═══════════════════════════════════════════
+    //  WELCOME MESSAGE
+    // ═══════════════════════════════════════════
+    function showWelcome() {
+        var w = document.createElement('div');
+        w.className = 'welcome';
+        w.innerHTML =
+            '<div class="title-art">' +
+            ' ╔═══════════════════════════════════════════╗\n' +
+            ' ║   SATOSHI\'S FAQ MACHINE  ·  BC2 v1.0     ║\n' +
+            ' ║   Wisdom from the whitepaper & beyond     ║\n' +
+            ' ╚═══════════════════════════════════════════╝</div>' +
+            'A curated knowledge base drawn from Satoshi Nakamoto\'s\n' +
+            'writings — whitepaper, forum posts, emails, and mailing\n' +
+            'list archives — applied to the BC2 network.\n\n' +
+            '<span class="hint">Click a topic above to browse, or type a question below.\n' +
+            'Commands: help, topics, clear, about, random</span>';
+        output.appendChild(w);
+    }
+    showWelcome();
+
+    // ═══════════════════════════════════════════
+    //  TOPIC SELECTION
+    // ═══════════════════════════════════════════
+    function selectTopic(topicId) {
+        if (isTyping) return;
+
+        // Update button states
+        activeTopic = topicId;
+        document.querySelectorAll('.topic-btn').forEach(function(btn) {
+            btn.classList.toggle('active', btn.getAttribute('data-topic') === topicId);
+        });
+
+        // Get entries for this topic
+        var entries = DB.filter(function(e) { return e.topic === topicId; });
+        var topicMeta = TOPICS.find(function(t) { return t.id === topicId; });
+
+        // Show topic header + clickable list
+        var div = document.createElement('div');
+        div.className = 'entry';
+        var header = document.createElement('div');
+        header.className = 'entry-system';
+        header.innerHTML = '── <span class="cmd">' + topicMeta.icon + ' ' + topicMeta.label.toUpperCase() + '</span> ── ' + entries.length + ' entries found ──';
+        div.appendChild(header);
+
+        entries.forEach(function(e, idx) {
+            var item = document.createElement('div');
+            item.className = 'topic-list-item';
+            item.innerHTML = '<span class="tl-q">' + e.q + '</span>';
+            item.addEventListener('click', function() {
+                showAnswer(e);
+            });
+            div.appendChild(item);
+        });
+
+        output.appendChild(div);
+        scrollToBottom();
+    }
+
+    // ═══════════════════════════════════════════
+    //  SHOW ANSWER (with typewriter effect)
+    // ═══════════════════════════════════════════
+    function showAnswer(entry) {
+        if (isTyping) return;
+
+        var div = document.createElement('div');
+        div.className = 'entry';
+
+        // Question
+        var qEl = document.createElement('div');
+        qEl.className = 'entry-q';
+        qEl.textContent = entry.q;
+        div.appendChild(qEl);
+
+        // Answer container
+        var aEl = document.createElement('div');
+        aEl.className = 'entry-a';
+        div.appendChild(aEl);
+
+        output.appendChild(div);
+        scrollToBottom();
+
+        // Typewriter the answer
+        typeText(aEl, entry.a, function() {
+            // Add source
+            if (entry.source) {
+                var srcEl = document.createElement('span');
+                srcEl.className = 'source';
+                srcEl.textContent = '— ' + entry.source;
+                aEl.appendChild(srcEl);
+            }
+            // Add BC2 note
+            if (entry.bc2) {
+                var bc2El = document.createElement('span');
+                bc2El.className = 'bc2-note';
+                bc2El.textContent = '⟐ BC2: ' + entry.bc2;
+                aEl.appendChild(bc2El);
+            }
+            scrollToBottom();
+        });
+    }
+
+    function typeText(container, text, callback) {
+        isTyping = true;
+        var i = 0;
+        var textNode = document.createTextNode('');
+        var cursor = document.createElement('span');
+        cursor.className = 'typing-cursor';
+        container.appendChild(textNode);
+        container.appendChild(cursor);
+
+        var speed = 12; // ms per char
+        var chunkSize = 2; // chars per tick for speed
+
+        function tick() {
+            if (i < text.length) {
+                var end = Math.min(i + chunkSize, text.length);
+                textNode.textContent += text.substring(i, end);
+                i = end;
+                scrollToBottom();
+                setTimeout(tick, speed);
+            } else {
+                cursor.remove();
+                isTyping = false;
+                if (callback) callback();
+            }
+        }
+        tick();
+    }
+
+    // ═══════════════════════════════════════════
+    //  FUZZY SEARCH
+    // ═══════════════════════════════════════════
+    function searchDB(query) {
+        query = query.toLowerCase().trim();
+        if (!query) return [];
+
+        var words = query.split(/\s+/).filter(function(w) { return w.length > 1; });
+        if (!words.length) return [];
+
+        var scored = DB.map(function(entry) {
+            var text = (entry.q + ' ' + entry.a + ' ' + entry.topic + ' ' + (entry.bc2 || '')).toLowerCase();
+            var score = 0;
+
+            // Exact phrase match in question (highest value)
+            if (entry.q.toLowerCase().indexOf(query) !== -1) score += 50;
+
+            // Word matches
+            words.forEach(function(w) {
+                // Question word match
+                if (entry.q.toLowerCase().indexOf(w) !== -1) score += 20;
+                // Answer/body match
+                if (text.indexOf(w) !== -1) score += 5;
+                // Topic match
+                if (entry.topic.indexOf(w) !== -1) score += 15;
+            });
+
+            // Keyword boosters
+            var boosts = {
+                'mine': 'mining', 'miner': 'mining', 'hash': 'mining', 'sha': 'mining', 'pow': 'mining', 'pool': 'mining',
+                'supply': 'supply', '21': 'supply', 'million': 'supply', 'halving': 'supply', 'halvening': 'supply', 'cap': 'supply', 'inflation': 'supply', 'lost': 'supply', 'coin': 'supply',
+                'decentral': 'decentralization', 'p2p': 'decentralization', 'peer': 'decentralization', 'node': 'decentralization', 'ban': 'decentralization', 'government': 'decentralization', 'censor': 'decentralization',
+                'fee': 'transactions', 'transaction': 'transactions', 'speed': 'transactions', 'confirm': 'transactions', 'fast': 'transactions', 'micro': 'transactions', 'payment': 'transactions',
+                'privacy': 'privacy', 'anonym': 'privacy', 'private': 'privacy', 'identity': 'privacy',
+                'scale': 'scaling', 'block size': 'scaling', 'segwit': 'scaling', 'capacity': 'scaling',
+                'bc2': 'bc2', 'bitcoin ii': 'bc2', 'genesis': 'bc2', 'wallet': 'bc2', 'fork': 'bc2', 'sister': 'bc2', 'bch': 'bc2', 'bsv': 'bc2', 'preservation': 'bc2', 'complete': 'bc2', 'line': 'bc2', 'v29': 'bc2', 'v27': 'bc2', 'op_cat': 'bc2', 'covenant': 'bc2', 'core': 'bc2', 'qt': 'bc2',
+                'trust': 'philosophy', 'freedom': 'philosophy', 'future': 'philosophy', 'disappear': 'philosophy', 'why': 'origins', 'create': 'origins', 'start': 'origins',
+            };
+
+            words.forEach(function(w) {
+                Object.keys(boosts).forEach(function(keyword) {
+                    if (w.indexOf(keyword) !== -1 || keyword.indexOf(w) !== -1) {
+                        if (entry.topic === boosts[keyword]) score += 10;
+                    }
+                });
+            });
+
+            return { entry: entry, score: score };
+        });
+
+        return scored
+            .filter(function(s) { return s.score > 0; })
+            .sort(function(a, b) { return b.score - a.score; })
+            .slice(0, 5)
+            .map(function(s) { return s.entry; });
+    }
+
+    // ═══════════════════════════════════════════
+    //  COMMAND HANDLER
+    // ═══════════════════════════════════════════
+    function handleCommand(input) {
+        if (isTyping) return;
+        var raw = input.trim();
+        if (!raw) return;
+
+        var cmd = raw.toLowerCase();
+
+        // System commands
+        if (cmd === 'help') {
+            addSystemMsg(
+                'COMMANDS:\n' +
+                '  <span class="cmd">help</span>      — Show this message\n' +
+                '  <span class="cmd">topics</span>    — List all topics\n' +
+                '  <span class="cmd">clear</span>     — Clear screen\n' +
+                '  <span class="cmd">random</span>    — Random Satoshi wisdom\n' +
+                '  <span class="cmd">about</span>     — About this terminal\n' +
+                '  <span class="cmd">all</span>       — Show every entry\n\n' +
+                'Or just type a question — "what is mining?",\n' +
+                '"why 21 million?", "how do fees work?", etc.'
+            );
+            return;
+        }
+
+        if (cmd === 'clear' || cmd === 'cls') {
+            output.innerHTML = '';
+            showWelcome();
+            return;
+        }
+
+        if (cmd === 'topics') {
+            var lines = 'AVAILABLE TOPICS:\n\n';
+            TOPICS.forEach(function(t) {
+                var count = DB.filter(function(e) { return e.topic === t.id; }).length;
+                lines += '  ' + t.icon + ' <span class="cmd">' + t.label.toUpperCase().padEnd(20) + '</span> ' + count + ' entries\n';
+            });
+            lines += '\nClick a topic button above or type a topic name.';
+            addSystemMsg(lines);
+            return;
+        }
+
+        if (cmd === 'about') {
+            addSystemMsg(
+                'SATOSHI FAQ MACHINE v1.0\n' +
+                'Genesis Terminal Model GW-2024\n\n' +
+                'A curated, searchable knowledge base built from\n' +
+                'Satoshi Nakamoto\'s known public writings:\n\n' +
+                '  · Bitcoin whitepaper (Oct 31, 2008)\n' +
+                '  · Cryptography mailing list posts (2008-2009)\n' +
+                '  · Bitcointalk.org forum posts (2009-2010)\n' +
+                '  · Satoshi-Martti Malmi email correspondence\n' +
+                '  · P2P Foundation posts\n\n' +
+                'All quotes are paraphrased and adapted for BC2 context.\n' +
+                'This is NOT an AI chatbot — it\'s a curated archive.\n\n' +
+                '<span class="cmd">' + DB.length + ' entries</span> across <span class="cmd">' + TOPICS.length + ' topics</span>'
+            );
+            return;
+        }
+
+        if (cmd === 'random') {
+            var entry = DB[Math.floor(Math.random() * DB.length)];
+            showAnswer(entry);
+            return;
+        }
+
+        if (cmd === 'all') {
+            DB.forEach(function(entry) {
+                var div = document.createElement('div');
+                div.className = 'topic-list-item';
+                div.innerHTML = '<span class="tl-q">' + entry.q + '</span>';
+                div.addEventListener('click', function() { showAnswer(entry); });
+                output.appendChild(div);
+            });
+            scrollToBottom();
+            return;
+        }
+
+        // Check if it's a topic name
+        var matchedTopic = TOPICS.find(function(t) {
+            return t.id === cmd || t.label.toLowerCase() === cmd;
+        });
+        if (matchedTopic) {
+            selectTopic(matchedTopic.id);
+            return;
+        }
+
+        // Fuzzy search
+        var results = searchDB(raw);
+
+        if (results.length === 0) {
+            addErrorMsg('No matching entries for "' + raw + '"\nTry different keywords, or type "topics" to browse.');
+            return;
+        }
+
+        if (results.length === 1) {
+            // Direct match — show the answer
+            showAnswer(results[0]);
+        } else {
+            // Multiple results — show as clickable list
+            var div = document.createElement('div');
+            div.className = 'entry';
+            var header = document.createElement('div');
+            header.className = 'entry-system';
+            header.innerHTML = '── Found <span class="cmd">' + results.length + '</span> matching entries for "<span class="cmd">' + escHtml(raw) + '</span>" ──';
+            div.appendChild(header);
+
+            results.forEach(function(entry) {
+                var item = document.createElement('div');
+                item.className = 'topic-list-item';
+                item.innerHTML = '<span class="tl-q">' + entry.q + '</span>';
+                item.addEventListener('click', function() { showAnswer(entry); });
+                div.appendChild(item);
+            });
+
+            output.appendChild(div);
+            scrollToBottom();
+        }
+    }
+
+    function escHtml(s) {
+        return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    function addSystemMsg(html) {
+        var div = document.createElement('div');
+        div.className = 'entry entry-system';
+        div.innerHTML = html;
+        output.appendChild(div);
+        scrollToBottom();
+    }
+
+    function addErrorMsg(text) {
+        var div = document.createElement('div');
+        div.className = 'entry entry-error';
+        div.textContent = text;
+        output.appendChild(div);
+        scrollToBottom();
+    }
+
+    function scrollToBottom() {
+        requestAnimationFrame(function() {
+            output.scrollTop = output.scrollHeight;
+        });
+    }
+
+    // ═══════════════════════════════════════════
+    //  INPUT HANDLING
+    // ═══════════════════════════════════════════
+    cmdInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            var val = cmdInput.value;
+            cmdInput.value = '';
+            handleCommand(val);
+        }
+    });
+
+    // Focus input on any key press in the page
+    document.addEventListener('keydown', function(e) {
+        if (e.target === cmdInput) return;
+        if (e.key.length === 1 && !e.ctrlKey && !e.metaKey) {
+            cmdInput.focus();
+        }
+    });
+
+    // Click anywhere on screen focuses input
+    document.querySelector('.screen').addEventListener('click', function(e) {
+        if (!window.getSelection().toString() && !e.target.closest('.topic-btn') && !e.target.closest('.topic-list-item')) {
+            cmdInput.focus();
+        }
+    });
+
+    // Auto-focus
+    cmdInput.focus();
+
+})();
+</script>
+
+<!-- CRT noise generator -->
+<script>
+(function() {
+    var canvas = document.getElementById('noiseCanvas');
+    if (!canvas) return;
+    var ctx = canvas.getContext('2d');
+    // Low res for chunky grain + performance
+    var w = 320, h = 200;
+    canvas.width = w;
+    canvas.height = h;
+    var imgData = ctx.createImageData(w, h);
+    var buf = imgData.data;
+
+    function drawNoise() {
+        for (var i = 0; i < buf.length; i += 4) {
+            var v = (Math.random() * 255) | 0;
+            buf[i]     = v * 0.2;  // R — slight green tint
+            buf[i + 1] = v;        // G — full
+            buf[i + 2] = v * 0.2;  // B — slight green tint
+            buf[i + 3] = v;        // A — varies with brightness
+        }
+        ctx.putImageData(imgData, 0, 0);
+    }
+
+    // ~12fps — enough to feel alive, not enough to burn CPU
+    setInterval(drawNoise, 80);
+    drawNoise();
+})();
+</script>
+</body>
+</html>

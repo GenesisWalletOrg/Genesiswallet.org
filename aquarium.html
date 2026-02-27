@@ -1,0 +1,1929 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BC2 Mempool Aquarium — Live Transaction Fish Tank</title>
+    <meta name="description" content="Watch BC2 transactions swim as bioluminescent creatures in a deep-sea aquarium. Real mempool data, visualized.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=DM+Serif+Display&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --gold: #F7931A;
+            --gold-lt: #FFB347;
+            --gold-deep: #B8860B;
+            --abyss: #020810;
+            --deep: #040E1A;
+            --mid: #0A1628;
+            --surface: #0F1F35;
+            --glass: rgba(15,31,53,0.6);
+            --t1: #E8EDF5;
+            --t2: #7B8FA8;
+            --t3: #3D5068;
+            --fee-low: #F7931A;
+            --fee-med: #F97316;
+            --fee-high: #EF4444;
+            --fee-urgent: #DC2626;
+            --biolum: #4AEABC;
+            --biolum2: #38BDF8;
+        }
+
+        html { height: 100%; }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--abyss);
+            color: var(--t1);
+            line-height: 1.6;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        /* ════ Deep sea gradient background ════ */
+        .ocean-bg {
+            position: fixed; inset: 0; z-index: 0; pointer-events: none;
+            background:
+                radial-gradient(ellipse 80% 50% at 50% 0%, rgba(15,31,53,0.8), transparent),
+                radial-gradient(ellipse 60% 60% at 20% 80%, rgba(56,189,248,0.03), transparent),
+                radial-gradient(ellipse 50% 50% at 80% 60%, rgba(74,234,188,0.02), transparent),
+                linear-gradient(180deg, #030C18 0%, #020810 30%, #010408 100%);
+        }
+
+        /* Caustic light rays from surface */
+        .caustics {
+            position: fixed; top: 0; left: 0; width: 100%; height: 35vh;
+            pointer-events: none; z-index: 1; opacity: 0.25;
+            background:
+                conic-gradient(from 200deg at 30% 0%, transparent 42%, rgba(56,189,248,0.03) 44%, transparent 46%),
+                conic-gradient(from 160deg at 55% 0%, transparent 43%, rgba(74,234,188,0.025) 45%, transparent 47%),
+                conic-gradient(from 185deg at 75% 0%, transparent 41%, rgba(120,160,220,0.02) 44%, transparent 47%);
+            animation: causticsShift 18s ease-in-out infinite;
+            filter: blur(1px);
+        }
+        @keyframes causticsShift {
+            0%,100% { transform: scaleX(1); opacity: 0.25; }
+            33% { transform: scaleX(1.03) translateX(-0.5%); opacity: 0.3; }
+            66% { transform: scaleX(0.98) translateX(0.5%); opacity: 0.2; }
+        }
+
+        /* Floating particles (marine snow) */
+        .marine-snow { position: fixed; inset: 0; pointer-events: none; z-index: 1; overflow: hidden; }
+        .snow-particle {
+            position: absolute; border-radius: 50%; opacity: 0;
+            animation: snowFall linear infinite;
+        }
+        @keyframes snowFall {
+            0% { opacity: 0; transform: translateY(-5vh) translateX(0); }
+            10% { opacity: 0.4; }
+            90% { opacity: 0.4; }
+            100% { opacity: 0; transform: translateY(105vh) translateX(var(--drift)); }
+        }
+
+        /* ════ Header ════ */
+        .aquarium-header {
+            position: relative; z-index: 10;
+            padding: 1.5rem 2rem;
+            display: flex; align-items: center; justify-content: space-between;
+            border-bottom: 1px solid rgba(56,189,248,0.06);
+            background: rgba(2,8,16,0.7);
+            backdrop-filter: blur(20px);
+        }
+        .header-left { display: flex; align-items: center; gap: 1rem; }
+        .header-logo {
+            display: flex; align-items: center; gap: 0.6rem;
+            text-decoration: none; color: var(--t1);
+        }
+        .logo-icon {
+            width: 36px; height: 36px; border-radius: 10px;
+            background: linear-gradient(135deg, rgba(247,147,26,0.15), rgba(74,234,188,0.1));
+            border: 1px solid rgba(247,147,26,0.2);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.2rem; position: relative; overflow: hidden;
+        }
+        .logo-icon::after {
+            content: ''; position: absolute; inset: 0;
+            background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.15), transparent 60%);
+        }
+        .logo-text { display: flex; flex-direction: column; line-height: 1.1; }
+        .logo-text .brand { font-family: 'DM Serif Display', serif; font-size: 1.15rem; }
+        .logo-text .sub { font-family: 'JetBrains Mono', monospace; font-size: 0.55rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--biolum); opacity: 0.8; }
+
+        .header-status {
+            display: flex; align-items: center; gap: 1.5rem;
+        }
+        .status-pill {
+            display: flex; align-items: center; gap: 0.4rem;
+            font-family: 'JetBrains Mono', monospace; font-size: 0.7rem;
+            color: var(--t2); padding: 0.3rem 0.75rem;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 100px;
+        }
+        .status-pill .dot {
+            width: 6px; height: 6px; border-radius: 50%;
+            box-shadow: 0 0 8px currentColor;
+        }
+        .dot-live { background: #4ade80; color: #4ade80; }
+        .dot-connecting { background: var(--gold); color: var(--gold); animation: dotBlink 1s ease-in-out infinite; }
+        .dot-offline { background: #ef4444; color: #ef4444; }
+        @keyframes dotBlink { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+        .back-link {
+            display: flex; align-items: center; gap: 0.4rem;
+            text-decoration: none; color: var(--t3); font-size: 0.8rem;
+            transition: color 0.3s;
+        }
+        .back-link:hover { color: var(--gold); }
+        .back-link svg { width: 16px; height: 16px; }
+
+        /* ════ Main Tank ════ */
+        .tank-wrapper {
+            position: relative; z-index: 5;
+            margin: 0 auto;
+            max-width: 1400px;
+            padding: 1.5rem 2rem;
+        }
+
+        .tank {
+            position: relative;
+            width: 100%;
+            height: 65vh;
+            min-height: 400px;
+            max-height: 700px;
+            border-radius: 20px;
+            overflow: hidden;
+            border: 1px solid rgba(56,189,248,0.06);
+            box-shadow:
+                0 0 120px rgba(56,189,248,0.03),
+                0 40px 100px rgba(0,0,0,0.6),
+                inset 0 0 200px rgba(0,0,0,0.5),
+                inset 0 1px 0 rgba(56,189,248,0.05);
+            background: linear-gradient(180deg,
+                #071422 0%,
+                #040E1A 15%,
+                #030A14 40%,
+                #020710 70%,
+                #010408 100%);
+            cursor: crosshair;
+        }
+
+        /* Glass reflection — top-left highlight, bottom-right subtle */
+        .tank::before {
+            content: ''; position: absolute; inset: 0; z-index: 100; pointer-events: none;
+            border-radius: 20px;
+            background:
+                linear-gradient(155deg, rgba(56,189,248,0.05) 0%, rgba(56,189,248,0.01) 15%, transparent 35%),
+                linear-gradient(200deg, transparent 65%, rgba(74,234,188,0.015) 100%),
+                radial-gradient(ellipse 80% 40% at 50% 100%, rgba(20,15,8,0.4), transparent);
+        }
+        /* Vignette */
+        .tank::after {
+            content: ''; position: absolute; inset: 0; z-index: 3; pointer-events: none;
+            border-radius: 20px;
+            background: radial-gradient(ellipse 70% 65% at 50% 45%, transparent 50%, rgba(1,4,8,0.6) 100%);
+        }
+
+        .tank-canvas {
+            position: absolute; inset: 0;
+            width: 100%; height: 100%;
+        }
+
+        /* Tank overlay UI */
+        .tank-overlay {
+            position: absolute; inset: 0; z-index: 50; pointer-events: none;
+            padding: 1.25rem;
+        }
+
+        .tank-title {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.6rem; letter-spacing: 0.12em;
+            text-transform: uppercase; color: rgba(56,189,248,0.4);
+        }
+
+        .tank-stats {
+            position: absolute; top: 1.25rem; right: 1.25rem;
+            display: flex; flex-direction: column; gap: 0.4rem;
+            align-items: flex-end;
+        }
+        .tank-stat {
+            font-family: 'JetBrains Mono', monospace; font-size: 0.65rem;
+            color: rgba(232,237,245,0.5);
+            background: rgba(0,0,0,0.3);
+            padding: 0.2rem 0.5rem; border-radius: 4px;
+            backdrop-filter: blur(4px);
+        }
+        .tank-stat strong { color: var(--biolum); font-weight: 600; }
+
+        /* Depth markers */
+        .depth-markers {
+            position: absolute; left: 1.25rem; top: 50%;
+            transform: translateY(-50%);
+            display: flex; flex-direction: column; gap: 2rem;
+        }
+        .depth-mark {
+            font-family: 'JetBrains Mono', monospace; font-size: 0.5rem;
+            color: rgba(56,189,248,0.2); letter-spacing: 0.05em;
+            display: flex; align-items: center; gap: 0.35rem;
+        }
+        .depth-mark::before {
+            content: ''; width: 12px; height: 1px;
+            background: rgba(56,189,248,0.15);
+        }
+
+        /* Block mined flash overlay */
+        .block-flash-overlay {
+            position: absolute; inset: 0; z-index: 90; pointer-events: none;
+            opacity: 0; transition: opacity 0.3s;
+            background: radial-gradient(ellipse at 50% 50%, rgba(247,147,26,0.15), transparent 70%);
+        }
+        .block-flash-overlay.active {
+            animation: blockFlash 2s ease-out forwards;
+        }
+        @keyframes blockFlash {
+            0% { opacity: 1; }
+            20% { opacity: 0.8; }
+            100% { opacity: 0; }
+        }
+
+        /* ════ Control Panel ════ */
+        .controls {
+            position: relative; z-index: 10;
+            max-width: 1400px; margin: 0 auto;
+            padding: 0 2rem 1.5rem;
+            display: grid; grid-template-columns: 1fr 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .control-panel {
+            background: rgba(15,31,53,0.5);
+            border: 1px solid rgba(56,189,248,0.06);
+            border-radius: 14px; padding: 1.25rem;
+            backdrop-filter: blur(12px);
+        }
+        .control-panel-title {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.6rem; letter-spacing: 0.1em;
+            text-transform: uppercase; color: var(--biolum);
+            margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.4rem;
+        }
+        .control-panel-title svg { width: 14px; height: 14px; stroke: var(--biolum); fill: none; stroke-width: 2; }
+
+        /* Legend */
+        .legend-items { display: flex; flex-direction: column; gap: 0.5rem; }
+        .legend-item {
+            display: flex; align-items: center; gap: 0.6rem;
+            font-size: 0.78rem; color: var(--t2);
+        }
+        .legend-fish {
+            width: 28px; height: 12px; border-radius: 50%;
+            position: relative; flex-shrink: 0;
+        }
+        .legend-fish::after {
+            content: ''; position: absolute; right: -4px; top: 2px;
+            width: 0; height: 0;
+            border-top: 4px solid transparent; border-bottom: 4px solid transparent;
+            border-left: 6px solid;
+            border-left-color: inherit;
+        }
+        .legend-fish.low { background: var(--fee-low); border-left-color: var(--fee-low); }
+        .legend-fish.med { background: var(--fee-med); border-left-color: var(--fee-med); }
+        .legend-fish.high { background: var(--fee-high); border-left-color: var(--fee-high); }
+        .legend-fish.urgent { background: var(--fee-urgent); border-left-color: var(--fee-urgent); }
+
+        /* Stats panel */
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; }
+        .stat-box { text-align: center; }
+        .stat-value {
+            font-family: 'JetBrains Mono', monospace; font-size: 1.1rem;
+            font-weight: 600; color: var(--t1);
+        }
+        .stat-value.gold { color: var(--gold); }
+        .stat-value.cyan { color: var(--biolum); }
+        .stat-label {
+            font-size: 0.65rem; color: var(--t3);
+            text-transform: uppercase; letter-spacing: 0.06em;
+        }
+
+        /* Activity Feed */
+        .feed-container {
+            height: 160px; overflow-y: auto; overflow-x: hidden;
+            display: flex; flex-direction: column; gap: 0;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(56,189,248,0.15) transparent;
+        }
+        .feed-container::-webkit-scrollbar { width: 4px; }
+        .feed-container::-webkit-scrollbar-track { background: transparent; }
+        .feed-container::-webkit-scrollbar-thumb { background: rgba(56,189,248,0.15); border-radius: 2px; }
+        .feed-empty {
+            font-family: 'JetBrains Mono', monospace; font-size: 0.68rem;
+            color: var(--t3); text-align: center; padding: 2rem 0;
+            animation: dotBlink 2s ease-in-out infinite;
+        }
+        .feed-item {
+            display: flex; align-items: flex-start; gap: 0.5rem;
+            padding: 0.35rem 0; border-bottom: 1px solid rgba(56,189,248,0.04);
+            animation: feedSlideIn 0.3s ease-out;
+            flex-shrink: 0;
+        }
+        @keyframes feedSlideIn {
+            from { opacity: 0; transform: translateY(-6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .feed-icon {
+            flex-shrink: 0; width: 18px; height: 18px;
+            border-radius: 5px; display: flex; align-items: center;
+            justify-content: center; font-size: 0.6rem; margin-top: 1px;
+        }
+        .feed-icon.tx { background: rgba(247,147,26,0.1); }
+        .feed-icon.block { background: rgba(74,234,188,0.1); }
+        .feed-icon.info { background: rgba(56,189,248,0.1); }
+        .feed-text {
+            font-family: 'JetBrains Mono', monospace; font-size: 0.65rem;
+            color: var(--t2); line-height: 1.45; flex: 1; min-width: 0;
+        }
+        .feed-text .feed-val { color: var(--gold); font-weight: 600; }
+        .feed-text .feed-block { color: var(--biolum); font-weight: 600; }
+        .feed-text .feed-fee { color: var(--fee-med); }
+        .feed-time {
+            font-family: 'JetBrains Mono', monospace; font-size: 0.55rem;
+            color: var(--t3); flex-shrink: 0; margin-top: 2px;
+        }
+
+        /* ════ Tooltip ════ */
+        .fish-tooltip {
+            position: fixed; z-index: 200; pointer-events: none;
+            background: rgba(4,14,26,0.92);
+            border: 1px solid rgba(56,189,248,0.15);
+            border-radius: 10px; padding: 0.75rem 1rem;
+            backdrop-filter: blur(16px);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.68rem; color: var(--t2);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5), 0 0 30px rgba(56,189,248,0.04);
+            opacity: 0; transition: opacity 0.2s;
+            max-width: 260px;
+            line-height: 1.6;
+        }
+        .fish-tooltip.visible { opacity: 1; }
+        .fish-tooltip .tt-value { color: var(--gold); font-weight: 600; font-size: 0.85rem; }
+        .fish-tooltip .tt-label { color: var(--t3); }
+        .fish-tooltip .tt-fee { color: var(--fee-med); }
+        .fish-tooltip .tt-hash { color: var(--t3); font-size: 0.55rem; word-break: break-all; opacity: 0.6; }
+
+        /* ════ Block mined notification ════ */
+        .block-notif {
+            position: fixed; top: 5rem; left: 50%; transform: translateX(-50%) translateY(-20px);
+            z-index: 500;
+            background: rgba(4,14,26,0.9);
+            border: 1px solid rgba(247,147,26,0.3);
+            border-radius: 12px; padding: 1rem 1.5rem;
+            backdrop-filter: blur(16px);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 40px rgba(247,147,26,0.08);
+            display: flex; align-items: center; gap: 0.75rem;
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.4s, transform 0.4s;
+        }
+        .block-notif.show {
+            opacity: 1; transform: translateX(-50%) translateY(0);
+        }
+        .block-notif-icon {
+            width: 40px; height: 40px; border-radius: 10px;
+            background: rgba(247,147,26,0.1);
+            border: 1px solid rgba(247,147,26,0.2);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.3rem;
+        }
+        .block-notif-text { display: flex; flex-direction: column; }
+        .block-notif-title {
+            font-family: 'JetBrains Mono', monospace; font-size: 0.75rem;
+            font-weight: 600; color: var(--gold); letter-spacing: 0.03em;
+        }
+        .block-notif-detail {
+            font-size: 0.7rem; color: var(--t2);
+        }
+
+        /* ════ Responsive ════ */
+        @media (max-width: 900px) {
+            .controls { grid-template-columns: 1fr; }
+            .tank { height: 55vh; min-height: 320px; }
+            .aquarium-header { padding: 1rem 1.25rem; flex-wrap: wrap; gap: 0.5rem; }
+            .header-status { gap: 0.75rem; }
+            .tank-wrapper { padding: 1rem 1rem; }
+            .controls { padding: 0 1rem 1rem; }
+            .depth-markers { display: none; }
+        }
+        @media (max-width: 600px) {
+            .tank { height: 50vh; min-height: 280px; border-radius: 14px; }
+            .controls { gap: 0.75rem; }
+            .control-panel { padding: 1rem; }
+            .back-link span { display: none; }
+            .status-pill { font-size: 0.6rem; padding: 0.25rem 0.6rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="ocean-bg"></div>
+<div class="caustics"></div>
+<div class="marine-snow" id="marineSnow"></div>
+
+<!-- Tooltip -->
+<div class="fish-tooltip" id="tooltip"></div>
+
+<!-- Block mined notification -->
+<div class="block-notif" id="blockNotif">
+    <div class="block-notif-icon">⛏</div>
+    <div class="block-notif-text">
+        <div class="block-notif-title" id="notifTitle">Block Mined!</div>
+        <div class="block-notif-detail" id="notifDetail"></div>
+    </div>
+</div>
+
+<!-- Header -->
+<header class="aquarium-header">
+    <div class="header-left">
+        <a href="index.html" class="header-logo">
+            <div class="logo-icon">🐟</div>
+            <div class="logo-text">
+                <span class="brand">Mempool Aquarium</span>
+                <span class="sub">BC2 Network — Live</span>
+            </div>
+        </a>
+    </div>
+    <div class="header-status">
+        <div class="status-pill" id="statusPill">
+            <span class="dot dot-connecting" id="statusDot"></span>
+            <span id="statusText">Connecting…</span>
+        </div>
+        <a href="index.html" class="back-link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            <span>GenesisWallet</span>
+        </a>
+    </div>
+</header>
+
+<!-- Tank -->
+<div class="tank-wrapper">
+    <div class="tank" id="tank">
+        <canvas class="tank-canvas" id="tankCanvas"></canvas>
+
+        <!-- Flash overlay for block events -->
+        <div class="block-flash-overlay" id="blockFlash"></div>
+
+        <!-- Overlay info -->
+        <div class="tank-overlay">
+            <div class="tank-title">◆ BC2 Mempool — Transaction Aquarium</div>
+            <div class="tank-stats">
+                <div class="tank-stat"><strong id="fishCount">0</strong> creatures</div>
+                <div class="tank-stat">Block <strong id="nextBlock">—</strong></div>
+                <div class="tank-stat" id="lastBlockStat" style="display:none">Last: <strong id="lastBlockTime">—</strong></div>
+            </div>
+            <div class="depth-markers">
+                <div class="depth-mark">High Priority</div>
+                <div class="depth-mark">Medium</div>
+                <div class="depth-mark">Low Priority</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Controls -->
+<div class="controls">
+    <!-- Legend -->
+    <div class="control-panel">
+        <div class="control-panel-title">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+            Creature Guide
+        </div>
+        <div class="legend-items">
+            <div class="legend-item"><div class="legend-fish low"></div>Low fee (1–2 sat2/vB) — Drifters</div>
+            <div class="legend-item"><div class="legend-fish med"></div>Medium fee (3–10 sat2/vB) — Swimmers</div>
+            <div class="legend-item"><div class="legend-fish high"></div>High fee (11–50 sat2/vB) — Sprinters</div>
+            <div class="legend-item"><div class="legend-fish urgent"></div>Urgent fee (50+ sat2/vB) — Blazers</div>
+            <div class="legend-item" style="margin-top:0.3rem;font-size:0.7rem;color:var(--t3);">
+                Size = transaction value &nbsp;·&nbsp; Speed = fee priority<br>
+                Click tank to inspect &nbsp;·&nbsp; Hover a fish for details
+            </div>
+        </div>
+    </div>
+
+    <!-- Network stats -->
+    <div class="control-panel">
+        <div class="control-panel-title">
+            <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            Network Vitals
+        </div>
+        <div class="stats-grid">
+            <div class="stat-box">
+                <div class="stat-value gold" id="statTxCount">—</div>
+                <div class="stat-label">Mempool TXs</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value cyan" id="statMempoolSize">—</div>
+                <div class="stat-label">Mempool Size</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value" id="statLowFee">—</div>
+                <div class="stat-label">Low Fee</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value" id="statMedFee">—</div>
+                <div class="stat-label">Med Fee</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Activity Feed -->
+    <div class="control-panel">
+        <div class="control-panel-title">
+            <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            Live Activity
+        </div>
+        <div class="feed-container" id="feedContainer">
+            <div class="feed-empty">Waiting for network events…</div>
+        </div>
+    </div>
+</div>
+
+<script>
+(function() {
+    'use strict';
+
+    // ═══════════════════════════════════════════
+    //  CONFIGURATION
+    // ═══════════════════════════════════════════
+    var HOSTS = ['https://bc2.live', 'https://bitcoinii.space'];
+    var activeHost = null;
+    var MAX_FISH = 300;
+    var WHALE_DURATION = 6500;
+
+    // ═══════════════════════════════════════════
+    //  CANVAS SETUP
+    // ═══════════════════════════════════════════
+    var canvas = document.getElementById('tankCanvas');
+    var ctx = canvas.getContext('2d');
+    var dpr = window.devicePixelRatio || 1;
+    var W = 0, H = 0;
+
+    function resize() {
+        var rect = canvas.parentElement.getBoundingClientRect();
+        W = rect.width;
+        H = rect.height;
+        canvas.width = W * dpr;
+        canvas.height = H * dpr;
+        canvas.style.width = W + 'px';
+        canvas.style.height = H + 'px';
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    // ═══════════════════════════════════════════
+    //  FISH DATA
+    // ═══════════════════════════════════════════
+    var fishes = [];
+    var nextFishId = 0;
+
+    // Fee rate → color
+    function feeColor(feeRate) {
+        if (feeRate <= 2) return { r: 247, g: 147, b: 26, hex: '#F7931A' };    // gold
+        if (feeRate <= 10) return { r: 249, g: 115, b: 22, hex: '#F97316' };   // orange
+        if (feeRate <= 50) return { r: 239, g: 68, b: 68, hex: '#EF4444' };    // red
+        return { r: 220, g: 38, b: 38, hex: '#DC2626' };                        // deep red
+    }
+
+    // Value → fish size (logarithmic)
+    function valueToSize(valueSat) {
+        var btc = valueSat / 1e8;
+        if (btc <= 0) btc = 0.001;
+        var s = 8 + Math.log10(btc + 0.001) * 8 + Math.sqrt(btc) * 3;
+        return Math.max(6, Math.min(40, s));
+    }
+
+    // Fee → speed
+    function feeToSpeed(feeRate) {
+        return 0.3 + Math.min(feeRate, 100) * 0.02;
+    }
+
+    function createFish(opts) {
+        var fee = opts.feeRate || 1;
+        var val = opts.value || 50000;
+        var col = feeColor(fee);
+        var size = valueToSize(val);
+        var speed = feeToSpeed(fee);
+        var dir = Math.random() > 0.5 ? 1 : -1;
+
+        // Priority zones: high fee fish swim higher (toward surface)
+        var yZone;
+        if (fee > 50) yZone = 0.05 + Math.random() * 0.25;
+        else if (fee > 10) yZone = 0.15 + Math.random() * 0.35;
+        else if (fee > 2) yZone = 0.3 + Math.random() * 0.4;
+        else yZone = 0.5 + Math.random() * 0.45;
+
+        return {
+            id: nextFishId++,
+            txid: opts.txid || ('sim_' + Math.random().toString(36).substr(2, 12)),
+            value: val,
+            feeRate: fee,
+            size: size,
+            color: col,
+            x: opts.spawnX != null ? opts.spawnX : (dir > 0 ? -size * 2 : W + size * 2),
+            y: opts.spawnY != null ? opts.spawnY : (yZone * H),
+            vx: speed * dir,
+            vy: (Math.random() - 0.5) * 0.3,
+            dir: dir,
+            tailPhase: Math.random() * Math.PI * 2,
+            tailSpeed: 3 + speed * 2,
+            glowPhase: Math.random() * Math.PI * 2,
+            alive: true,
+            age: 0,
+            scooped: false,
+            scoopTime: 0,
+            isUser: opts.isUser || false,
+            // Wander behavior
+            wanderAngle: Math.random() * Math.PI * 2,
+            wanderTimer: Math.random() * 200,
+            yTarget: yZone * H,
+        };
+    }
+
+    // ═══════════════════════════════════════════
+    //  WHALE (block mined event)
+    // ═══════════════════════════════════════════
+    var whale = null;
+
+    function spawnWhale(blockHeight, txCount) {
+        var startX = -180;
+        var endX = W + 200;
+        whale = {
+            x: startX,
+            y: H * 0.35,
+            targetX: endX,
+            width: 160,
+            height: 70,
+            progress: 0,
+            duration: WHALE_DURATION,
+            startTime: performance.now(),
+            blockHeight: blockHeight,
+            txCount: txCount || 0,
+            scoopedCount: 0,
+            mouthOpen: 0,
+        };
+
+        // Flash
+        var flash = document.getElementById('blockFlash');
+        flash.classList.remove('active');
+        void flash.offsetWidth;
+        flash.classList.add('active');
+
+        // Notification
+        showBlockNotif(blockHeight, txCount);
+    }
+
+    function updateWhale(now) {
+        if (!whale) return;
+        var elapsed = now - whale.startTime;
+        whale.progress = Math.min(1, elapsed / whale.duration);
+
+        // Ease in-out
+        var t = whale.progress;
+        var ease = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+
+        whale.x = -180 + ease * (whale.targetX + 180);
+        whale.y = H * 0.4 + Math.sin(t * Math.PI * 2) * 40;
+        whale.mouthOpen = 0.3 + Math.sin(t * Math.PI * 6) * 0.3;
+
+        // Sediment kick — whale disturbs the seabed as it passes
+        if (!whale._lastSedX) whale._lastSedX = whale.x;
+        if (whale.x - whale._lastSedX > 35) {
+            spawnSediment(whale.x + whale.width * 0.5);
+            whale._lastSedX = whale.x;
+        }
+
+        // Scoop ALL fish the whale's leading edge has passed
+        // The mouth is on the RIGHT side (front), so scoop anything behind the mouth
+        var mouthX = whale.x + whale.width;
+        for (var i = fishes.length - 1; i >= 0; i--) {
+            var f = fishes[i];
+            if (f.scooped) continue;
+            // Scoop any fish whose x position is behind the whale's mouth
+            // Full tank height — the whale is a wall sweeping across
+            if (f.x < mouthX - whale.width * 0.3) {
+                f.scooped = true;
+                f.scoopTime = now;
+                whale.scoopedCount++;
+            }
+        }
+
+        if (whale.progress >= 1) {
+            // Scoop any remaining stragglers
+            for (var i = 0; i < fishes.length; i++) {
+                if (!fishes[i].scooped) {
+                    fishes[i].scooped = true;
+                    fishes[i].scoopTime = now;
+                }
+            }
+            // Small delay then remove all scooped
+            setTimeout(function() {
+                fishes = fishes.filter(function(f) { return !f.scooped; });
+                whale = null;
+                updateFishCount();
+            }, 1200);
+        }
+    }
+
+    function drawWhale() {
+        if (!whale) return;
+        ctx.save();
+        // Clip to tank bounds so glow never bleeds outside
+        ctx.beginPath();
+        ctx.rect(0, 0, W, H);
+        ctx.clip();
+
+        var wx = whale.x;
+        var wy = whale.y;
+        var w = whale.width;
+        var h = whale.height;
+        var mouth = whale.mouthOpen;
+
+        // Draw a sweeping "net" curtain behind the whale — full tank height
+        var netAlpha = 0.04 + whale.progress * 0.02;
+        var netStartX = Math.max(0, wx + w);
+        var netEndX = Math.max(0, wx - 40);
+        if (netStartX > netEndX) {
+            var netGrad = ctx.createLinearGradient(netStartX, 0, netEndX, 0);
+            netGrad.addColorStop(0, 'rgba(247,147,26,' + netAlpha.toFixed(3) + ')');
+            netGrad.addColorStop(1, 'rgba(247,147,26,0)');
+            ctx.fillStyle = netGrad;
+            ctx.fillRect(netEndX, 0, netStartX - netEndX, H);
+        }
+
+        ctx.translate(wx, wy);
+
+        // Body glow — clamped radius so it fades naturally
+        var glowCX = w * 0.5;
+        var glowR = w * 0.8;
+        var grd = ctx.createRadialGradient(glowCX, 0, 5, glowCX, 0, glowR);
+        grd.addColorStop(0, 'rgba(247,147,26,0.18)');
+        grd.addColorStop(0.6, 'rgba(247,147,26,0.06)');
+        grd.addColorStop(1, 'rgba(247,147,26,0)');
+        ctx.fillStyle = grd;
+        ctx.beginPath();
+        ctx.arc(glowCX, 0, glowR, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Main body — mouth on RIGHT, tail on LEFT
+        ctx.beginPath();
+        // Mouth right side (opening)
+        ctx.moveTo(w, -h * 0.15 * mouth);
+        // Top curve from mouth to back
+        ctx.bezierCurveTo(w * 0.8, -h * 0.55, w * 0.4, -h * 0.6, w * 0.2, -h * 0.35);
+        // Tail junction top
+        ctx.bezierCurveTo(w * 0.08, -h * 0.2, 0, -h * 0.15, -w * 0.05, -h * 0.1);
+        // Tail fin top
+        ctx.lineTo(-w * 0.2, -h * 0.55);
+        // Tail notch
+        ctx.lineTo(-w * 0.08, 0);
+        // Tail fin bottom
+        ctx.lineTo(-w * 0.2, h * 0.55);
+        // Tail junction bottom
+        ctx.lineTo(-w * 0.05, h * 0.1);
+        ctx.bezierCurveTo(0, h * 0.15, w * 0.08, h * 0.2, w * 0.2, h * 0.35);
+        // Bottom curve from back to mouth
+        ctx.bezierCurveTo(w * 0.4, h * 0.6, w * 0.8, h * 0.55, w, h * 0.15 * mouth);
+        ctx.closePath();
+
+        var bodyGrad = ctx.createLinearGradient(0, -h * 0.5, 0, h * 0.5);
+        bodyGrad.addColorStop(0, 'rgba(247,147,26,0.18)');
+        bodyGrad.addColorStop(0.5, 'rgba(247,147,26,0.1)');
+        bodyGrad.addColorStop(1, 'rgba(184,134,11,0.12)');
+        ctx.fillStyle = bodyGrad;
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(247,147,26,0.45)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Belly highlight
+        ctx.beginPath();
+        ctx.ellipse(w * 0.5, h * 0.05, w * 0.3, h * 0.15, 0, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255,255,255,0.03)';
+        ctx.fill();
+
+        // Eye (near the mouth / front-right)
+        ctx.beginPath();
+        ctx.arc(w * 0.75, -h * 0.15, 5, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(247,147,26,0.9)';
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(w * 0.76, -h * 0.15, 2.5, 0, Math.PI * 2);
+        ctx.fillStyle = '#fff';
+        ctx.fill();
+
+        // Dorsal fin
+        ctx.beginPath();
+        ctx.moveTo(w * 0.5, -h * 0.5);
+        ctx.quadraticCurveTo(w * 0.45, -h * 0.85, w * 0.3, -h * 0.55);
+        ctx.lineTo(w * 0.38, -h * 0.45);
+        ctx.closePath();
+        ctx.fillStyle = 'rgba(247,147,26,0.15)';
+        ctx.fill();
+
+        // Pectoral fin
+        ctx.beginPath();
+        ctx.moveTo(w * 0.55, h * 0.25);
+        ctx.quadraticCurveTo(w * 0.4, h * 0.55, w * 0.3, h * 0.35);
+        ctx.lineTo(w * 0.42, h * 0.22);
+        ctx.closePath();
+        ctx.fillStyle = 'rgba(247,147,26,0.1)';
+        ctx.fill();
+
+        // Mouth line
+        ctx.beginPath();
+        ctx.moveTo(w * 0.98, -h * 0.02);
+        ctx.quadraticCurveTo(w * 0.88, 0, w * 0.98, h * 0.02);
+        ctx.strokeStyle = 'rgba(247,147,26,0.3)';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        // Label
+        ctx.font = '600 11px "JetBrains Mono", monospace';
+        ctx.textAlign = 'center';
+        ctx.fillStyle = 'rgba(247,147,26,0.8)';
+        ctx.fillText('⛏ BLOCK #' + (whale.blockHeight || '?'), w * 0.45, h * 0.9);
+
+        if (whale.scoopedCount > 0) {
+            ctx.font = '500 9px "JetBrains Mono", monospace';
+            ctx.fillStyle = 'rgba(247,147,26,0.5)';
+            ctx.fillText(whale.scoopedCount + ' txns scooped', w * 0.45, h * 1.1);
+        }
+
+        ctx.restore();
+    }
+
+    // ═══════════════════════════════════════════
+    //  FISH RENDERING
+    // ═══════════════════════════════════════════
+    function drawFish(f, now) {
+        var s = f.size;
+        var col = f.color;
+
+        if (f.scooped) {
+            // Animate being scooped toward whale's mouth
+            var st = (now - f.scoopTime) / 1000;
+            if (st > 1) return;
+            var alpha = 1 - st;
+            ctx.globalAlpha = alpha * alpha;
+            // Shrink and drift toward whale mouth (right side of whale)
+            var targetX = whale ? whale.x + whale.width * 0.9 : f.x + 50;
+            var targetY = whale ? whale.y : f.y;
+            f.x += (targetX - f.x) * 0.06;
+            f.y += (targetY - f.y) * 0.04;
+            // Shrink the fish
+            s *= (1 - st * 0.7);
+            if (s < 1) { ctx.globalAlpha = 1; return; }
+        }
+
+        ctx.save();
+        ctx.translate(f.x, f.y);
+        if (f.dir < 0) ctx.scale(-1, 1);
+
+        // Tail wiggle
+        var tailAngle = Math.sin(f.tailPhase) * 0.3;
+
+        // Bioluminescent glow
+        var glowPulse = 0.5 + Math.sin(f.glowPhase) * 0.3;
+        var glowRadius = s * (1.8 + glowPulse * 0.5);
+        var glow = ctx.createRadialGradient(0, 0, s * 0.2, 0, 0, glowRadius);
+        glow.addColorStop(0, 'rgba(' + col.r + ',' + col.g + ',' + col.b + ',' + (0.12 * glowPulse).toFixed(3) + ')');
+        glow.addColorStop(1, 'rgba(' + col.r + ',' + col.g + ',' + col.b + ',0)');
+        ctx.fillStyle = glow;
+        ctx.beginPath();
+        ctx.arc(0, 0, glowRadius, 0, Math.PI * 2);
+        ctx.fill();
+
+        // User-spawned ring
+        if (f.isUser) {
+            var ringPulse = 0.4 + Math.sin(f.glowPhase * 1.5) * 0.3;
+            ctx.beginPath();
+            ctx.arc(0, 0, s * 1.5, 0, Math.PI * 2);
+            ctx.strokeStyle = 'rgba(74,234,188,' + ringPulse.toFixed(2) + ')';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+        }
+
+        // Body
+        ctx.beginPath();
+        ctx.moveTo(s * 0.9, 0);
+        ctx.bezierCurveTo(s * 0.7, -s * 0.45, -s * 0.3, -s * 0.4, -s * 0.5, -s * 0.15);
+        ctx.bezierCurveTo(-s * 0.6, 0, -s * 0.6, 0, -s * 0.5, s * 0.15);
+        ctx.bezierCurveTo(-s * 0.3, s * 0.4, s * 0.7, s * 0.45, s * 0.9, 0);
+        ctx.closePath();
+
+        var bodyGrad = ctx.createLinearGradient(-s * 0.5, -s * 0.3, s * 0.5, s * 0.3);
+        bodyGrad.addColorStop(0, 'rgba(' + col.r + ',' + col.g + ',' + col.b + ',' + (0.7 + glowPulse * 0.2).toFixed(2) + ')');
+        bodyGrad.addColorStop(0.6, 'rgba(' + col.r + ',' + col.g + ',' + col.b + ',0.5)');
+        bodyGrad.addColorStop(1, 'rgba(' + Math.round(col.r * 0.6) + ',' + Math.round(col.g * 0.6) + ',' + Math.round(col.b * 0.6) + ',0.4)');
+        ctx.fillStyle = bodyGrad;
+        ctx.fill();
+
+        // Body highlight
+        ctx.beginPath();
+        ctx.ellipse(s * 0.15, -s * 0.12, s * 0.35, s * 0.1, -0.2, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255,255,255,0.08)';
+        ctx.fill();
+
+        // Tail
+        ctx.save();
+        ctx.translate(-s * 0.5, 0);
+        ctx.rotate(tailAngle);
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(-s * 0.45, -s * 0.3);
+        ctx.quadraticCurveTo(-s * 0.3, 0, -s * 0.45, s * 0.3);
+        ctx.closePath();
+        ctx.fillStyle = 'rgba(' + col.r + ',' + col.g + ',' + col.b + ',0.35)';
+        ctx.fill();
+        ctx.restore();
+
+        // Eye
+        var eyeX = s * 0.45;
+        var eyeY = -s * 0.08;
+        ctx.beginPath();
+        ctx.arc(eyeX, eyeY, s * 0.09, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255,255,255,0.85)';
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(eyeX + s * 0.02, eyeY, s * 0.04, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(0,0,0,0.8)';
+        ctx.fill();
+
+        // Fin (dorsal)
+        ctx.beginPath();
+        ctx.moveTo(s * 0.1, -s * 0.3);
+        ctx.quadraticCurveTo(s * 0.05, -s * 0.6, -s * 0.15, -s * 0.35);
+        ctx.lineTo(-s * 0.05, -s * 0.25);
+        ctx.closePath();
+        ctx.fillStyle = 'rgba(' + col.r + ',' + col.g + ',' + col.b + ',0.25)';
+        ctx.fill();
+
+        ctx.restore();
+        ctx.globalAlpha = 1;
+    }
+
+    // ═══════════════════════════════════════════
+    //  BUBBLE PARTICLES
+    // ═══════════════════════════════════════════
+    var bubbles = [];
+
+    function spawnBubble(x, y, intensity) {
+        var count = Math.floor(2 + intensity * 3);
+        for (var i = 0; i < count; i++) {
+            bubbles.push({
+                x: x + (Math.random() - 0.5) * 20,
+                y: y + (Math.random() - 0.5) * 10,
+                r: 1 + Math.random() * 3,
+                vy: -(0.5 + Math.random() * 1.5) * intensity,
+                vx: (Math.random() - 0.5) * 0.5,
+                life: 1,
+                decay: 0.005 + Math.random() * 0.01,
+            });
+        }
+    }
+
+    function updateBubbles() {
+        for (var i = bubbles.length - 1; i >= 0; i--) {
+            var b = bubbles[i];
+            b.x += b.vx;
+            b.y += b.vy;
+            b.vy *= 0.99;
+            b.life -= b.decay;
+            if (b.life <= 0 || b.y < 0) {
+                bubbles.splice(i, 1);
+            }
+        }
+    }
+
+    function drawBubbles() {
+        for (var i = 0; i < bubbles.length; i++) {
+            var b = bubbles[i];
+            ctx.beginPath();
+            ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(56,189,248,' + (b.life * 0.3).toFixed(2) + ')';
+            ctx.fill();
+            ctx.strokeStyle = 'rgba(56,189,248,' + (b.life * 0.15).toFixed(2) + ')';
+            ctx.lineWidth = 0.5;
+            ctx.stroke();
+        }
+    }
+
+    // ═══════════════════════════════════════════
+    //  ENVIRONMENT — ethereal background layers
+    // ═══════════════════════════════════════════
+
+    // ── God Rays (animated light shafts from surface) ──
+    var godRays = [];
+    function generateGodRays() {
+        godRays = [];
+        var count = 5 + Math.floor(W / 250);
+        for (var i = 0; i < count; i++) {
+            godRays.push({
+                x: Math.random() * W,
+                width: 30 + Math.random() * 80,
+                length: H * (0.35 + Math.random() * 0.4),
+                angle: -0.08 + Math.random() * 0.16,
+                alpha: 0.01 + Math.random() * 0.025,
+                speed: 0.0003 + Math.random() * 0.0006,
+                phase: Math.random() * Math.PI * 2,
+                hue: Math.random() > 0.6 ? 'cyan' : 'gold',
+            });
+        }
+    }
+    generateGodRays();
+    window.addEventListener('resize', generateGodRays);
+
+    function drawGodRays(now) {
+        for (var i = 0; i < godRays.length; i++) {
+            var r = godRays[i];
+            var pulse = 0.5 + Math.sin(now * r.speed + r.phase) * 0.5;
+            var alpha = r.alpha * pulse;
+            if (alpha < 0.002) continue;
+
+            ctx.save();
+            ctx.translate(r.x, 0);
+            ctx.rotate(r.angle);
+
+            var grad = ctx.createLinearGradient(0, 0, 0, r.length);
+            if (r.hue === 'cyan') {
+                grad.addColorStop(0, 'rgba(56,189,248,' + (alpha * 1.5).toFixed(4) + ')');
+                grad.addColorStop(0.3, 'rgba(56,189,248,' + alpha.toFixed(4) + ')');
+                grad.addColorStop(1, 'rgba(56,189,248,0)');
+            } else {
+                grad.addColorStop(0, 'rgba(247,200,100,' + (alpha * 1.2).toFixed(4) + ')');
+                grad.addColorStop(0.3, 'rgba(247,180,80,' + (alpha * 0.7).toFixed(4) + ')');
+                grad.addColorStop(1, 'rgba(247,147,26,0)');
+            }
+
+            ctx.fillStyle = grad;
+            ctx.beginPath();
+            var halfW = r.width * 0.5;
+            var spreadW = halfW + r.length * 0.12;
+            ctx.moveTo(-halfW, 0);
+            ctx.lineTo(halfW, 0);
+            ctx.lineTo(spreadW, r.length);
+            ctx.lineTo(-spreadW, r.length);
+            ctx.closePath();
+            ctx.fill();
+            ctx.restore();
+        }
+    }
+
+    // ── Bioluminescent Orbs (slow drifting background particles) ──
+    var orbs = [];
+    function generateOrbs() {
+        orbs = [];
+        var count = 12 + Math.floor(W / 100);
+        for (var i = 0; i < count; i++) {
+            var hue = Math.random();
+            var r, g, b;
+            if (hue < 0.35) { r = 56; g = 189; b = 248; }       // cyan
+            else if (hue < 0.6) { r = 74; g = 234; b = 188; }    // teal
+            else if (hue < 0.8) { r = 120; g = 160; b = 220; }   // soft blue
+            else { r = 200; g = 180; b = 140; }                    // warm mote
+            orbs.push({
+                x: Math.random() * W,
+                y: Math.random() * H,
+                r: 1.5 + Math.random() * 4,
+                vx: (Math.random() - 0.5) * 0.08,
+                vy: -0.02 - Math.random() * 0.06,
+                cr: r, cg: g, cb: b,
+                alpha: 0.1 + Math.random() * 0.25,
+                phase: Math.random() * Math.PI * 2,
+                pulseSpeed: 0.0008 + Math.random() * 0.002,
+                glowR: 8 + Math.random() * 20,
+            });
+        }
+    }
+    generateOrbs();
+    window.addEventListener('resize', generateOrbs);
+
+    function drawOrbs(now) {
+        for (var i = 0; i < orbs.length; i++) {
+            var o = orbs[i];
+            // Drift
+            o.x += o.vx;
+            o.y += o.vy;
+            // Wrap
+            if (o.y < -o.glowR) { o.y = H + o.glowR; o.x = Math.random() * W; }
+            if (o.x < -o.glowR) o.x = W + o.glowR;
+            if (o.x > W + o.glowR) o.x = -o.glowR;
+
+            var pulse = 0.5 + Math.sin(now * o.pulseSpeed + o.phase) * 0.5;
+            var a = o.alpha * pulse;
+
+            // Outer glow
+            var glow = ctx.createRadialGradient(o.x, o.y, 0, o.x, o.y, o.glowR * (0.8 + pulse * 0.4));
+            glow.addColorStop(0, 'rgba(' + o.cr + ',' + o.cg + ',' + o.cb + ',' + (a * 0.5).toFixed(3) + ')');
+            glow.addColorStop(0.4, 'rgba(' + o.cr + ',' + o.cg + ',' + o.cb + ',' + (a * 0.15).toFixed(3) + ')');
+            glow.addColorStop(1, 'rgba(' + o.cr + ',' + o.cg + ',' + o.cb + ',0)');
+            ctx.fillStyle = glow;
+            ctx.beginPath();
+            ctx.arc(o.x, o.y, o.glowR * (0.8 + pulse * 0.4), 0, Math.PI * 2);
+            ctx.fill();
+
+            // Core
+            ctx.beginPath();
+            ctx.arc(o.x, o.y, o.r * (0.7 + pulse * 0.3), 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(' + o.cr + ',' + o.cg + ',' + o.cb + ',' + (a * 1.2).toFixed(3) + ')';
+            ctx.fill();
+        }
+    }
+
+    // ── Kelp / Seaweed ──
+    var kelps = [];
+    function generateKelp() {
+        kelps = [];
+        var count = 6 + Math.floor(W / 180);
+        for (var i = 0; i < count; i++) {
+            var segments = 5 + Math.floor(Math.random() * 6);
+            kelps.push({
+                x: W * 0.05 + Math.random() * W * 0.9,
+                segHeight: 12 + Math.random() * 18,
+                segments: segments,
+                width: 2 + Math.random() * 4,
+                phase: Math.random() * Math.PI * 2,
+                swaySpeed: 0.0006 + Math.random() * 0.001,
+                swayAmount: 3 + Math.random() * 8,
+                hue: Math.random() > 0.5 ? 'teal' : 'green',
+                alpha: 0.06 + Math.random() * 0.1,
+            });
+        }
+    }
+    generateKelp();
+    window.addEventListener('resize', generateKelp);
+
+    function drawKelp(now) {
+        for (var k = 0; k < kelps.length; k++) {
+            var kp = kelps[k];
+            var baseY = H - 8;
+            var sway = Math.sin(now * kp.swaySpeed + kp.phase);
+
+            ctx.beginPath();
+            ctx.moveTo(kp.x, baseY);
+
+            var px = kp.x;
+            for (var s = 0; s < kp.segments; s++) {
+                var progress = (s + 1) / kp.segments;
+                var y = baseY - (s + 1) * kp.segHeight;
+                var xOff = sway * kp.swayAmount * progress * progress;
+                px = kp.x + xOff;
+                ctx.lineTo(px, y);
+            }
+
+            var cr, cg, cb;
+            if (kp.hue === 'teal') { cr = 40; cg = 140; cb = 120; }
+            else { cr = 30; cg = 100; cb = 60; }
+
+            ctx.strokeStyle = 'rgba(' + cr + ',' + cg + ',' + cb + ',' + kp.alpha.toFixed(3) + ')';
+            ctx.lineWidth = kp.width;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.stroke();
+
+            // Leaf tip glow
+            var tipGlow = ctx.createRadialGradient(px, baseY - kp.segments * kp.segHeight, 0, px, baseY - kp.segments * kp.segHeight, 10);
+            tipGlow.addColorStop(0, 'rgba(' + cr + ',' + (cg + 60) + ',' + cb + ',' + (kp.alpha * 0.5).toFixed(3) + ')');
+            tipGlow.addColorStop(1, 'rgba(' + cr + ',' + cg + ',' + cb + ',0)');
+            ctx.fillStyle = tipGlow;
+            ctx.beginPath();
+            ctx.arc(px, baseY - kp.segments * kp.segHeight, 10, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    }
+
+    // ── Seabed ──
+    var seabedPoints = [];
+    function generateSeabed() {
+        seabedPoints = [];
+        var segments = Math.ceil(W / 15) + 2;
+        for (var i = 0; i <= segments; i++) {
+            var x = (i / segments) * W;
+            var baseY = H - 14 + Math.sin(i * 0.35) * 6 + Math.sin(i * 0.12 + 2) * 10 + Math.sin(i * 0.8) * 2;
+            seabedPoints.push({ x: x, y: baseY });
+        }
+    }
+    generateSeabed();
+    window.addEventListener('resize', generateSeabed);
+
+    function drawSeabed(now) {
+        if (!seabedPoints.length) return;
+
+        // Seabed glow patches (bioluminescent spots on the floor)
+        var patchCount = 4 + Math.floor(W / 300);
+        for (var p = 0; p < patchCount; p++) {
+            var px = W * (0.1 + (p / patchCount) * 0.8);
+            var py = H - 6;
+            var pulse = 0.4 + Math.sin(now * 0.0005 + p * 1.8) * 0.3;
+            var glowGrad = ctx.createRadialGradient(px, py, 0, px, py, 40 + pulse * 20);
+            glowGrad.addColorStop(0, 'rgba(74,234,188,' + (0.03 * pulse).toFixed(4) + ')');
+            glowGrad.addColorStop(0.5, 'rgba(56,189,248,' + (0.015 * pulse).toFixed(4) + ')');
+            glowGrad.addColorStop(1, 'rgba(56,189,248,0)');
+            ctx.fillStyle = glowGrad;
+            ctx.beginPath();
+            ctx.arc(px, py, 40 + pulse * 20, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // Sand fill
+        ctx.beginPath();
+        ctx.moveTo(0, H);
+        for (var i = 0; i < seabedPoints.length; i++) {
+            ctx.lineTo(seabedPoints[i].x, seabedPoints[i].y);
+        }
+        ctx.lineTo(W, H);
+        ctx.closePath();
+
+        var sandGrad = ctx.createLinearGradient(0, H - 25, 0, H);
+        sandGrad.addColorStop(0, 'rgba(35,25,15,0.25)');
+        sandGrad.addColorStop(0.5, 'rgba(28,20,12,0.4)');
+        sandGrad.addColorStop(1, 'rgba(18,12,6,0.55)');
+        ctx.fillStyle = sandGrad;
+        ctx.fill();
+
+        // Sand edge highlight
+        ctx.beginPath();
+        for (var i = 0; i < seabedPoints.length; i++) {
+            if (i === 0) ctx.moveTo(seabedPoints[i].x, seabedPoints[i].y);
+            else ctx.lineTo(seabedPoints[i].x, seabedPoints[i].y);
+        }
+        ctx.strokeStyle = 'rgba(74,234,188,0.04)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+    }
+
+    // ── Depth Fog ──
+    function drawDepthFog() {
+        // Top surface light band
+        var surfaceGrad = ctx.createLinearGradient(0, 0, 0, H * 0.15);
+        surfaceGrad.addColorStop(0, 'rgba(20,40,65,0.12)');
+        surfaceGrad.addColorStop(1, 'rgba(20,40,65,0)');
+        ctx.fillStyle = surfaceGrad;
+        ctx.fillRect(0, 0, W, H * 0.15);
+
+        // Mid-depth haze
+        var midGrad = ctx.createLinearGradient(0, H * 0.3, 0, H * 0.6);
+        midGrad.addColorStop(0, 'rgba(4,14,26,0)');
+        midGrad.addColorStop(0.5, 'rgba(6,18,32,0.06)');
+        midGrad.addColorStop(1, 'rgba(4,14,26,0)');
+        ctx.fillStyle = midGrad;
+        ctx.fillRect(0, H * 0.3, W, H * 0.3);
+
+        // Deep abyss at bottom
+        var abyssGrad = ctx.createLinearGradient(0, H * 0.75, 0, H);
+        abyssGrad.addColorStop(0, 'rgba(1,4,8,0)');
+        abyssGrad.addColorStop(1, 'rgba(1,4,8,0.2)');
+        ctx.fillStyle = abyssGrad;
+        ctx.fillRect(0, H * 0.75, W, H * 0.25);
+    }
+
+    // ── Water Surface Ripple ──
+    function drawSurface(now) {
+        var t = now * 0.001;
+        var surfaceY = 6;
+        var amplitude = 3;
+        var segments = Math.ceil(W / 8);
+
+        // Refraction band — lighter area above the wave
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        for (var i = 0; i <= segments; i++) {
+            var x = (i / segments) * W;
+            var y = surfaceY +
+                Math.sin(x * 0.012 + t * 0.8) * amplitude +
+                Math.sin(x * 0.025 - t * 1.1) * (amplitude * 0.5) +
+                Math.sin(x * 0.006 + t * 0.4) * (amplitude * 1.5);
+            ctx.lineTo(x, y);
+        }
+        ctx.lineTo(W, 0);
+        ctx.closePath();
+        var refrGrad = ctx.createLinearGradient(0, 0, 0, surfaceY + amplitude * 3);
+        refrGrad.addColorStop(0, 'rgba(30,55,85,0.25)');
+        refrGrad.addColorStop(0.5, 'rgba(56,189,248,0.06)');
+        refrGrad.addColorStop(1, 'rgba(56,189,248,0)');
+        ctx.fillStyle = refrGrad;
+        ctx.fill();
+        ctx.restore();
+
+        // Main wave line
+        ctx.beginPath();
+        for (var i = 0; i <= segments; i++) {
+            var x = (i / segments) * W;
+            var y = surfaceY +
+                Math.sin(x * 0.012 + t * 0.8) * amplitude +
+                Math.sin(x * 0.025 - t * 1.1) * (amplitude * 0.5) +
+                Math.sin(x * 0.006 + t * 0.4) * (amplitude * 1.5);
+            if (i === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+        }
+        ctx.strokeStyle = 'rgba(56,189,248,0.12)';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        // Second thinner wave slightly below
+        ctx.beginPath();
+        for (var i = 0; i <= segments; i++) {
+            var x = (i / segments) * W;
+            var y = surfaceY + 4 +
+                Math.sin(x * 0.015 + t * 0.6 + 1.5) * (amplitude * 0.6) +
+                Math.sin(x * 0.03 - t * 0.9 + 0.8) * (amplitude * 0.3);
+            if (i === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+        }
+        ctx.strokeStyle = 'rgba(56,189,248,0.05)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        // Highlight sparkles along the wave crest
+        for (var i = 0; i < segments; i += 3) {
+            var x = (i / segments) * W;
+            var y = surfaceY +
+                Math.sin(x * 0.012 + t * 0.8) * amplitude +
+                Math.sin(x * 0.025 - t * 1.1) * (amplitude * 0.5) +
+                Math.sin(x * 0.006 + t * 0.4) * (amplitude * 1.5);
+            var sparkle = Math.sin(t * 2 + i * 0.7) * 0.5 + 0.5;
+            if (sparkle > 0.85) {
+                ctx.beginPath();
+                ctx.arc(x, y, 1 + sparkle, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(180,220,255,' + ((sparkle - 0.85) * 4).toFixed(2) + ')';
+                ctx.fill();
+            }
+        }
+    }
+
+    // ── Sediment Particles (whale seabed kick) ──
+    var sediments = [];
+
+    function spawnSediment(x) {
+        var count = 8 + Math.floor(Math.random() * 8);
+        for (var i = 0; i < count; i++) {
+            sediments.push({
+                x: x + (Math.random() - 0.5) * 60,
+                y: H - 12 - Math.random() * 8,
+                r: 0.8 + Math.random() * 2,
+                vx: (Math.random() - 0.5) * 1.2,
+                vy: -(0.4 + Math.random() * 1.8),
+                life: 1,
+                decay: 0.004 + Math.random() * 0.008,
+                cr: 140 + Math.floor(Math.random() * 60),
+                cg: 110 + Math.floor(Math.random() * 40),
+                cb: 70 + Math.floor(Math.random() * 30),
+            });
+        }
+    }
+
+    function updateSediments() {
+        for (var i = sediments.length - 1; i >= 0; i--) {
+            var s = sediments[i];
+            s.x += s.vx;
+            s.y += s.vy;
+            s.vy += 0.008; // gentle gravity
+            s.vx *= 0.995;
+            s.life -= s.decay;
+            if (s.life <= 0 || s.y > H + 5) {
+                sediments.splice(i, 1);
+            }
+        }
+    }
+
+    function drawSediments() {
+        for (var i = 0; i < sediments.length; i++) {
+            var s = sediments[i];
+            var a = s.life * 0.35;
+            // Glow
+            var glow = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, s.r * 3);
+            glow.addColorStop(0, 'rgba(' + s.cr + ',' + s.cg + ',' + s.cb + ',' + (a * 0.3).toFixed(3) + ')');
+            glow.addColorStop(1, 'rgba(' + s.cr + ',' + s.cg + ',' + s.cb + ',0)');
+            ctx.fillStyle = glow;
+            ctx.beginPath();
+            ctx.arc(s.x, s.y, s.r * 3, 0, Math.PI * 2);
+            ctx.fill();
+            // Core
+            ctx.beginPath();
+            ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(' + s.cr + ',' + s.cg + ',' + s.cb + ',' + a.toFixed(3) + ')';
+            ctx.fill();
+        }
+    }
+
+    // ── Mouse tracking for fish repel ──
+    var mouseX = -999, mouseY = -999;
+    var mouseInTank = false;
+    var REPEL_RADIUS = 90;
+    var REPEL_FORCE = 0.35;
+
+    canvas.addEventListener('mousemove', function(e) {
+        var rect = canvas.getBoundingClientRect();
+        mouseX = e.clientX - rect.left;
+        mouseY = e.clientY - rect.top;
+        mouseInTank = true;
+    });
+    canvas.addEventListener('mouseleave', function() {
+        mouseInTank = false;
+        mouseX = -999;
+        mouseY = -999;
+    });
+
+    // ═══════════════════════════════════════════
+    //  UPDATE LOOP
+    // ═══════════════════════════════════════════
+    var lastTime = 0;
+    var frameBubbleTimer = 0;
+
+    function update(now) {
+        var dt = lastTime ? (now - lastTime) / 16.67 : 1;
+        lastTime = now;
+        if (dt > 3) dt = 3; // cap lag spikes
+
+        for (var i = 0; i < fishes.length; i++) {
+            var f = fishes[i];
+            if (f.scooped) continue;
+
+            f.age += dt;
+            f.tailPhase += f.tailSpeed * 0.02 * dt;
+            f.glowPhase += 0.015 * dt;
+
+            // Wander behavior
+            f.wanderTimer -= dt;
+            if (f.wanderTimer <= 0) {
+                f.wanderTimer = 80 + Math.random() * 200;
+                f.wanderAngle += (Math.random() - 0.5) * 1.2;
+                // Occasionally change Y target
+                if (Math.random() < 0.3) {
+                    f.yTarget = f.y + (Math.random() - 0.5) * H * 0.25;
+                    f.yTarget = Math.max(H * 0.05, Math.min(H * 0.9, f.yTarget));
+                }
+            }
+
+            // Steering toward yTarget
+            var yDiff = f.yTarget - f.y;
+            f.vy += yDiff * 0.0003 * dt;
+            f.vy *= 0.98; // damping
+
+            // Mouse repel
+            if (mouseInTank) {
+                var mdx = f.x - mouseX;
+                var mdy = f.y - mouseY;
+                var mDist = Math.sqrt(mdx * mdx + mdy * mdy);
+                if (mDist < REPEL_RADIUS && mDist > 1) {
+                    var repelStrength = (1 - mDist / REPEL_RADIUS) * REPEL_FORCE * dt;
+                    f.x += (mdx / mDist) * repelStrength * 8;
+                    f.y += (mdy / mDist) * repelStrength * 5;
+                    // Speed up tail wiggle when startled
+                    f.tailPhase += repelStrength * 2;
+                }
+            }
+
+            // Move
+            f.x += f.vx * dt;
+            f.y += f.vy * dt;
+
+            // Boundary: wrap horizontally
+            if (f.dir > 0 && f.x > W + f.size * 2) {
+                f.x = -f.size * 2;
+            } else if (f.dir < 0 && f.x < -f.size * 2) {
+                f.x = W + f.size * 2;
+            }
+
+            // Vertical bounds
+            if (f.y < f.size) { f.y = f.size; f.vy = Math.abs(f.vy) * 0.5; }
+            if (f.y > H - 22 - f.size) { f.y = H - 22 - f.size; f.vy = -Math.abs(f.vy) * 0.5; }
+
+            // Occasional bubbles from fast fish
+            frameBubbleTimer += dt;
+            if (frameBubbleTimer > 8 && Math.abs(f.vx) > 1.5 && Math.random() < 0.02) {
+                spawnBubble(f.x - f.dir * f.size * 0.3, f.y, 0.5);
+            }
+        }
+        if (frameBubbleTimer > 8) frameBubbleTimer = 0;
+
+        updateBubbles();
+        updateSediments();
+        updateWhale(now);
+    }
+
+    // ═══════════════════════════════════════════
+    //  MAIN RENDER LOOP
+    // ═══════════════════════════════════════════
+
+    // Separate update and draw into one RAF
+    function mainLoop(now) {
+        update(now);
+        ctx.clearRect(0, 0, W, H);
+
+        // Layer 1: God rays from surface
+        drawGodRays(now);
+
+        // Layer 2: Depth fog atmosphere
+        drawDepthFog();
+
+        // Layer 3: Background bioluminescent orbs
+        drawOrbs(now);
+
+        // Layer 4: Kelp / seaweed silhouettes
+        drawKelp(now);
+
+        // Layer 5: Seabed with glow patches
+        drawSeabed(now);
+
+        // Layer 6: Sediment dust (behind fish, in front of seabed)
+        drawSediments();
+
+        // Layer 7: Fish (sorted small→large for depth)
+        var sorted = fishes.slice().sort(function(a, b) { return a.size - b.size; });
+        for (var i = 0; i < sorted.length; i++) {
+            drawFish(sorted[i], now);
+        }
+
+        // Layer 8: Bubbles (foreground particles)
+        drawBubbles();
+
+        // Layer 9: Whale (top of everything)
+        drawWhale();
+
+        // Layer 10: Water surface ripple (very top)
+        drawSurface(now);
+
+        requestAnimationFrame(mainLoop);
+    }
+
+    requestAnimationFrame(mainLoop);
+
+    // ═══════════════════════════════════════════
+    //  UI UPDATES
+    // ═══════════════════════════════════════════
+    function updateFishCount() {
+        var el = document.getElementById('fishCount');
+        if (el) el.textContent = fishes.filter(function(f) { return !f.scooped; }).length;
+    }
+
+    function setStatus(state, text) {
+        var dot = document.getElementById('statusDot');
+        var txt = document.getElementById('statusText');
+        dot.className = 'dot dot-' + state;
+        txt.textContent = text;
+    }
+
+    function showBlockNotif(height, txCount) {
+        var notif = document.getElementById('blockNotif');
+        var title = document.getElementById('notifTitle');
+        var detail = document.getElementById('notifDetail');
+        title.textContent = 'Block #' + (height ? height.toLocaleString() : '?') + ' Mined!';
+        detail.textContent = (txCount || '?') + ' transactions scooped from the pool';
+        notif.classList.add('show');
+        setTimeout(function() { notif.classList.remove('show'); }, 4000);
+    }
+
+    // ═══════════════════════════════════════════
+    //  ACTIVITY FEED
+    // ═══════════════════════════════════════════
+    var feedContainer = document.getElementById('feedContainer');
+    var feedMax = 50;
+    var feedCount = 0;
+
+    function feedTime() {
+        var d = new Date();
+        var h = d.getHours().toString().padStart(2, '0');
+        var m = d.getMinutes().toString().padStart(2, '0');
+        var s = d.getSeconds().toString().padStart(2, '0');
+        return h + ':' + m + ':' + s;
+    }
+
+    function addFeedItem(type, html) {
+        // Remove empty state
+        var empty = feedContainer.querySelector('.feed-empty');
+        if (empty) empty.remove();
+
+        var item = document.createElement('div');
+        item.className = 'feed-item';
+
+        var iconClass = type === 'block' ? 'block' : type === 'tx' ? 'tx' : 'info';
+        var iconEmoji = type === 'block' ? '⛏' : type === 'tx' ? '🐟' : 'ℹ';
+
+        item.innerHTML =
+            '<div class="feed-icon ' + iconClass + '">' + iconEmoji + '</div>' +
+            '<div class="feed-text">' + html + '</div>' +
+            '<div class="feed-time">' + feedTime() + '</div>';
+
+        // Insert at top
+        feedContainer.insertBefore(item, feedContainer.firstChild);
+        feedCount++;
+
+        // Trim old items
+        while (feedCount > feedMax) {
+            var last = feedContainer.lastElementChild;
+            if (last) { feedContainer.removeChild(last); feedCount--; }
+            else break;
+        }
+    }
+
+    function feedTx(valueSat, feeRate, txid) {
+        var btc = valueSat / 1e8;
+        var valStr = btc >= 1 ? btc.toFixed(2) : btc >= 0.01 ? btc.toFixed(4) : btc.toFixed(6);
+        var shortId = txid ? txid.substring(0, 8) + '…' : '';
+        var feeStr = Math.round(feeRate) + ' sat2/vB';
+        addFeedItem('tx',
+            '<span class="feed-val">' + valStr + ' BC2</span> entered the pool' +
+            ' · <span class="feed-fee">' + feeStr + '</span>' +
+            (shortId ? ' <span style="color:var(--t3);font-size:0.55rem;">' + shortId + '</span>' : '')
+        );
+    }
+
+    function feedBlock(height, txCount, scooped) {
+        addFeedItem('block',
+            '<span class="feed-block">Block #' + (height ? height.toLocaleString() : '?') + '</span> mined — ' +
+            (scooped || txCount || '?') + ' txns scooped'
+        );
+    }
+
+    function feedInfo(msg) {
+        addFeedItem('info', msg);
+    }
+
+    // ═══════════════════════════════════════════
+    //  TOOLTIP / HOVER
+    // ═══════════════════════════════════════════
+    var tooltip = document.getElementById('tooltip');
+    var hoveredFish = null;
+
+    canvas.addEventListener('mousemove', function(e) {
+        var rect = canvas.getBoundingClientRect();
+        var mx = e.clientX - rect.left;
+        var my = e.clientY - rect.top;
+
+        // Find closest fish
+        var closest = null;
+        var closestDist = 999;
+        for (var i = 0; i < fishes.length; i++) {
+            var f = fishes[i];
+            if (f.scooped) continue;
+            var dx = mx - f.x;
+            var dy = my - f.y;
+            var dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < f.size * 1.5 && dist < closestDist) {
+                closest = f;
+                closestDist = dist;
+            }
+        }
+
+        if (closest) {
+            hoveredFish = closest;
+            var btcVal = (closest.value / 1e8).toFixed(closest.value > 1e8 ? 2 : 4);
+            tooltip.innerHTML =
+                '<div class="tt-value">' + btcVal + ' BC2</div>' +
+                '<div>Fee: <span class="tt-fee">' + closest.feeRate + ' sat2/vB</span></div>' +
+                '<div>Size: ' + closest.size.toFixed(0) + 'px · Speed: ' + Math.abs(closest.vx).toFixed(1) + '</div>' +
+                (closest.isUser ? '<div style="color:var(--biolum);margin-top:2px;">✦ Your transaction</div>' : '') +
+                '<div class="tt-hash">' + closest.txid + '</div>';
+            tooltip.classList.add('visible');
+            tooltip.style.left = Math.min(e.clientX + 15, window.innerWidth - 280) + 'px';
+            tooltip.style.top = (e.clientY - 10) + 'px';
+        } else {
+            hoveredFish = null;
+            tooltip.classList.remove('visible');
+        }
+    });
+
+    canvas.addEventListener('mouseleave', function() {
+        hoveredFish = null;
+        tooltip.classList.remove('visible');
+    });
+
+    // ═══════════════════════════════════════════
+    //  MARINE SNOW PARTICLES
+    // ═══════════════════════════════════════════
+    var snowContainer = document.getElementById('marineSnow');
+
+    function spawnSnow() {
+        var p = document.createElement('div');
+        p.className = 'snow-particle';
+        var size = 1 + Math.random() * 2;
+        p.style.width = size + 'px';
+        p.style.height = size + 'px';
+        p.style.left = Math.random() * 100 + '%';
+        p.style.background = Math.random() > 0.5 ? 'rgba(56,189,248,0.3)' : 'rgba(255,255,255,0.2)';
+        p.style.animationDuration = (15 + Math.random() * 25) + 's';
+        p.style.animationDelay = (Math.random() * 10) + 's';
+        p.style.setProperty('--drift', (Math.random() * 40 - 20) + 'px');
+        snowContainer.appendChild(p);
+        p.addEventListener('animationend', function() { p.remove(); });
+    }
+    for (var i = 0; i < 20; i++) setTimeout(spawnSnow, i * 300);
+    setInterval(spawnSnow, 2000);
+
+    // ═══════════════════════════════════════════
+    //  BC2 API INTEGRATION
+    // ═══════════════════════════════════════════
+    var wsRef = null;
+    var lastKnownHeight = 0;
+
+    function fmtS(b) {
+        if (b >= 1048576) return (b / 1048576).toFixed(1) + ' MB';
+        if (b >= 1024) return (b / 1024).toFixed(0) + ' KB';
+        return b + ' B';
+    }
+
+    async function apiFetch(path, timeout) {
+        timeout = timeout || 8000;
+        var order = activeHost ? [activeHost].concat(HOSTS.filter(function(h) { return h !== activeHost; })) : HOSTS;
+        for (var i = 0; i < order.length; i++) {
+            var urls = [order[i] + '/api' + path, order[i] + '/api/v1' + path];
+            for (var j = 0; j < urls.length; j++) {
+                try {
+                    var controller = new AbortController();
+                    var timer = setTimeout(function() { controller.abort(); }, timeout);
+                    var r = await fetch(urls[j], { signal: controller.signal });
+                    clearTimeout(timer);
+                    if (r.ok) {
+                        activeHost = order[i];
+                        return await r.json();
+                    }
+                } catch (e) { /* next */ }
+            }
+        }
+        return null;
+    }
+
+    // Populate fish from mempool recent transactions
+    async function fetchMempoolRecent() {
+        try {
+            var recent = await apiFetch('/mempool/recent', 6000);
+            if (recent && Array.isArray(recent) && recent.length > 0) {
+                var added = 0;
+                for (var i = 0; i < recent.length && fishes.length < MAX_FISH; i++) {
+                    var tx = recent[i];
+                    fishes.push(createFish({
+                        txid: tx.txid || ('tx_' + i),
+                        feeRate: tx.fee ? Math.max(1, Math.round(tx.fee / (tx.vsize || tx.weight / 4 || 200))) : (1 + Math.random() * 5),
+                        value: tx.value || Math.round(Math.random() * 5e8),
+                    }));
+                    added++;
+                }
+                console.log('[Aquarium] Added ' + added + ' fish from mempool/recent');
+                updateFishCount();
+                feedInfo('Loaded <span class="feed-val">' + added + '</span> pending transactions from mempool');
+                return true;
+            }
+        } catch (e) { console.warn('[Aquarium] mempool/recent error:', e); }
+        return false;
+    }
+
+    async function fetchMempoolStats() {
+        // Mempool stats
+        var mp = await apiFetch('/mempool');
+        if (mp) {
+            var txCount = mp.count || mp.size || 0;
+            var mSize = mp.vsize || mp.bytes || mp.usage || 0;
+            var el1 = document.getElementById('statTxCount');
+            var el2 = document.getElementById('statMempoolSize');
+            if (el1) el1.textContent = txCount.toLocaleString();
+            if (el2) el2.textContent = fmtS(mSize);
+        }
+
+        // Fees
+        var fees = await apiFetch('/v1/fees/recommended');
+        if (!fees) fees = await apiFetch('/fees/recommended');
+        if (fees) {
+            var el3 = document.getElementById('statLowFee');
+            var el4 = document.getElementById('statMedFee');
+            if (el3) el3.textContent = (fees.minimumFee || fees.economyFee || fees.hourFee || '—') + ' sat2/vB';
+            if (el4) el4.textContent = (fees.halfHourFee || fees.fastestFee || '—') + ' sat2/vB';
+        }
+
+        // Tip height
+        var blocks = await apiFetch('/blocks', 5000);
+        if (blocks && blocks.length) {
+            lastKnownHeight = blocks[0].height;
+            var el5 = document.getElementById('nextBlock');
+            if (el5) el5.textContent = '#' + (blocks[0].height + 1).toLocaleString();
+            var el6 = document.getElementById('lastBlockTime');
+            var el7 = document.getElementById('lastBlockStat');
+            if (el6 && el7) {
+                var ago = Math.floor(Date.now() / 1000) - blocks[0].timestamp;
+                el6.textContent = ago < 60 ? ago + 's ago' : Math.floor(ago / 60) + 'm ago';
+                el7.style.display = '';
+            }
+        }
+    }
+
+    // WebSocket for live tx and block events
+    function connectWS() {
+        if (!activeHost) return;
+        var wsUrl = activeHost.replace('https://', 'wss://') + '/api/v1/ws';
+        try {
+            var ws = new WebSocket(wsUrl);
+            var timeout = setTimeout(function() { ws.close(); }, 8000);
+
+            ws.onopen = function() {
+                clearTimeout(timeout);
+                wsRef = ws;
+                setStatus('live', 'Live · ' + activeHost.replace('https://', ''));
+                ws.send(JSON.stringify({ action: 'init' }));
+                ws.send(JSON.stringify({ action: 'want', data: ['blocks', 'mempool-blocks', 'stats'] }));
+                feedInfo('WebSocket connected to <span style="color:var(--biolum)">' + activeHost.replace('https://', '') + '</span>');
+            };
+
+            ws.onmessage = function(ev) {
+                try {
+                    var msg = JSON.parse(ev.data);
+
+                    // New transaction
+                    if (msg.tx && fishes.length < MAX_FISH) {
+                        var tx = msg.tx;
+                        var txFee = tx.feeRate || tx.fee || (1 + Math.random() * 5);
+                        var txVal = tx.value || Math.round(Math.random() * 5e8);
+                        var txId = tx.txid || 'ws_tx';
+                        fishes.push(createFish({
+                            txid: txId,
+                            feeRate: txFee,
+                            value: txVal,
+                        }));
+                        updateFishCount();
+                        feedTx(txVal, txFee, txId);
+                    }
+
+                    // New block — trigger whale!
+                    if (msg.block) {
+                        var b = msg.block;
+                        if (b.height && b.height > lastKnownHeight) {
+                            lastKnownHeight = b.height;
+                            var el = document.getElementById('nextBlock');
+                            if (el) el.textContent = '#' + (b.height + 1).toLocaleString();
+                            var scoopCount = b.tx_count || fishes.length;
+                            spawnWhale(b.height, scoopCount);
+                            feedBlock(b.height, scoopCount);
+                        }
+                    }
+
+                    // Mempool stats
+                    if (msg.mempoolInfo) {
+                        var mi = msg.mempoolInfo;
+                        var e1 = document.getElementById('statTxCount');
+                        var e2 = document.getElementById('statMempoolSize');
+                        if (e1 && mi.size) e1.textContent = mi.size.toLocaleString();
+                        if (e2 && mi.bytes) e2.textContent = fmtS(mi.bytes);
+                    }
+                } catch (e) { }
+            };
+
+            ws.onclose = function() {
+                wsRef = null;
+                setStatus('connecting', 'Reconnecting…');
+                setTimeout(connectWS, 5000);
+            };
+
+            ws.onerror = function() { ws.close(); };
+        } catch (e) {
+            setTimeout(connectWS, 5000);
+        }
+    }
+
+    // ═══════════════════════════════════════════
+    //  INITIALIZATION
+    // ═══════════════════════════════════════════
+    async function init() {
+        setStatus('connecting', 'Connecting to BC2…');
+        feedInfo('Connecting to BC2 network…');
+
+        // Try API
+        var gotData = await fetchMempoolRecent();
+        if (gotData) {
+            setStatus('live', 'Connected · ' + activeHost.replace('https://', ''));
+        } else {
+            setStatus('connecting', 'Waiting for data…');
+            feedInfo('Mempool API unavailable — waiting for WebSocket');
+        }
+
+        await fetchMempoolStats();
+
+        // Try WebSocket for live updates
+        connectWS();
+
+        // Periodic stats refresh
+        setInterval(fetchMempoolStats, 60000);
+
+        // Periodic mempool/recent refresh to keep fish population current
+        setInterval(async function() {
+            if (fishes.length < 30 && !whale) {
+                await fetchMempoolRecent();
+            }
+        }, 30000);
+    }
+
+    init();
+
+})();
+</script>
+</body>
+</html>
