@@ -1489,20 +1489,6 @@
             f.vy += yDiff * 0.0003 * dt;
             f.vy *= 0.98; // damping
 
-            // Mouse repel
-            if (mouseInTank) {
-                var mdx = f.x - mouseX;
-                var mdy = f.y - mouseY;
-                var mDist = Math.sqrt(mdx * mdx + mdy * mdy);
-                if (mDist < REPEL_RADIUS && mDist > 1) {
-                    var repelStrength = (1 - mDist / REPEL_RADIUS) * REPEL_FORCE * dt;
-                    f.x += (mdx / mDist) * repelStrength * 8;
-                    f.y += (mdy / mDist) * repelStrength * 5;
-                    // Speed up tail wiggle when startled
-                    f.tailPhase += repelStrength * 2;
-                }
-            }
-
             // Move
             f.x += f.vx * dt;
             f.y += f.vy * dt;
