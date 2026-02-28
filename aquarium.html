@@ -913,6 +913,8 @@
     // ═══════════════════════════════════════════
     var whale = null;
     var whaleCleanupPending = false;
+    var lastBlockMinedAt = 0; // Timestamp of last block — used to delay re-fetch so mempool API can update
+    var POST_BLOCK_COOLDOWN = 10000; // 10s grace period before re-fetching mempool after a block
 
     // ═══════════════════════════════════════════
     //  RBF — Replace-By-Fee predator system
@@ -1169,9 +1171,12 @@
                 if (tideChange) tideChange = null;
                 whale = null;
                 whaleCleanupPending = false;
+                lastBlockMinedAt = Date.now();
                 updateFishCount();
-                // Re-populate from mempool
-                fetchMempoolRecent();
+                // Delay re-populate so the mempool API has time to drop confirmed txns
+                setTimeout(function() {
+                    fetchMempoolRecent();
+                }, POST_BLOCK_COOLDOWN);
             }, 1200);
         }
     }
@@ -6185,6 +6190,9 @@
 
     // Populate fish from mempool — recent + full txid list
     async function fetchMempoolRecent() {
+        // Don't re-fetch during post-block cooldown — API may still return confirmed txns
+        if (whale || whaleCleanupPending) return false;
+
         var totalAdded = 0;
         var existing = {};
         for (var f = 0; f < fishes.length; f++) {
@@ -6404,7 +6412,7 @@
 
         // Periodic mempool sync to keep fish population current
         setInterval(async function() {
-            if (!whale && !whaleCleanupPending) {
+            if (!whale && !whaleCleanupPending && (Date.now() - lastBlockMinedAt > POST_BLOCK_COOLDOWN)) {
                 await fetchMempoolRecent();
             }
         }, 15000);
