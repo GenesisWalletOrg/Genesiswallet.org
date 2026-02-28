@@ -139,6 +139,45 @@
         .back-link:hover { color: var(--gold); }
         .back-link svg { width: 16px; height: 16px; }
 
+        .fs-btn {
+            display: flex; align-items: center; justify-content: center;
+            width: 32px; height: 32px; border-radius: 8px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            color: var(--t2); cursor: pointer;
+            transition: all 0.25s;
+        }
+        .fs-btn:hover { background: rgba(255,255,255,0.08); color: var(--gold); border-color: rgba(247,147,26,0.3); }
+        .fs-btn svg { width: 16px; height: 16px; }
+
+        /* Fullscreen mode */
+        :fullscreen .aquarium-header { display: none; }
+        :fullscreen .tank-wrapper { max-width: 100%; padding: 0; height: 100vh; }
+        :fullscreen .tank { height: 100vh; max-height: 100vh; border-radius: 0; border: none; }
+        :fullscreen .stats-bar { position: fixed; bottom: 0; left: 0; right: 0; z-index: 50; border-radius: 0; margin: 0; opacity: 0.85; }
+        :fullscreen .stats-bar:hover { opacity: 1; }
+        :fullscreen .feed-panel { position: fixed; top: 0.5rem; right: 0.5rem; z-index: 50; opacity: 0.7; max-height: 35vh; }
+        :fullscreen .feed-panel:hover { opacity: 1; }
+        :fullscreen .fs-exit-hint {
+            display: flex; position: fixed; top: 0.5rem; left: 50%; transform: translateX(-50%);
+            z-index: 60; font-family: 'JetBrains Mono', monospace; font-size: 0.6rem;
+            color: var(--t3); background: rgba(0,0,0,0.5); padding: 0.25rem 0.75rem;
+            border-radius: 100px; opacity: 0; animation: hintFade 4s ease-in-out;
+            pointer-events: none;
+        }
+        /* Webkit prefix for Safari */
+        :-webkit-full-screen .aquarium-header { display: none; }
+        :-webkit-full-screen .tank-wrapper { max-width: 100%; padding: 0; height: 100vh; }
+        :-webkit-full-screen .tank { height: 100vh; max-height: 100vh; border-radius: 0; border: none; }
+        :-webkit-full-screen .stats-bar { position: fixed; bottom: 0; left: 0; right: 0; z-index: 50; border-radius: 0; margin: 0; opacity: 0.85; }
+        :-webkit-full-screen .feed-panel { position: fixed; top: 0.5rem; right: 0.5rem; z-index: 50; opacity: 0.7; max-height: 35vh; }
+        :-webkit-full-screen .fs-exit-hint {
+            display: flex; position: fixed; top: 0.5rem; left: 50%; transform: translateX(-50%);
+            z-index: 60; pointer-events: none;
+        }
+        @keyframes hintFade { 0% { opacity: 0; } 10% { opacity: 0.8; } 70% { opacity: 0.8; } 100% { opacity: 0; } }
+        .fs-exit-hint { display: none; }
+
         /* ════ Main Tank ════ */
         .tank-wrapper {
             position: relative; z-index: 5;
@@ -645,8 +684,13 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
             <span>GenesisWallet</span>
         </a>
+        <button class="fs-btn" id="fsBtn" title="Toggle fullscreen">
+            <svg id="fsIconExpand" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3"/></svg>
+            <svg id="fsIconShrink" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none"><path d="M4 14h4v4m12-4h-4v4M4 10h4V6m12 4h-4V6"/></svg>
+        </button>
     </div>
 </header>
+<div class="fs-exit-hint" id="fsHint">Press ESC to exit fullscreen</div>
 
 <!-- Tank -->
 <div class="tank-wrapper">
@@ -2076,7 +2120,12 @@
     var predator = null;
 
     function spawnPredatorChase() {
-        if (predator || whale || fishes.length < 5) return;
+        // Count active (non-scooped, alive) fish — not raw array length
+        var activeFishCount = 0;
+        for (var fi = 0; fi < fishes.length; fi++) {
+            if (fishes[fi].alive && !fishes[fi].scooped && !fishes[fi].rbfEaten) activeFishCount++;
+        }
+        if (predator || whale || activeFishCount < 5) return;
 
         var enterSide = Math.random() > 0.5 ? 1 : -1;
         predator = {
@@ -2665,9 +2714,12 @@
         e.lastFired = performance.now();
         e.nextFire = e.lastFired + e.interval + (Math.random() - 0.5) * 2 * e.variance;
     }
-    // Initialize with staggered starts
+    // Initialize with staggered starts — cap delay so rare creatures don't wait forever
     Object.keys(eventTimers).forEach(function(name, idx) {
-        eventTimers[name].nextFire = performance.now() + 5000 + idx * 8000 + Math.random() * 10000;
+        var baseDelay = 5000 + idx * 4000 + Math.random() * 8000;
+        // Cap initial delay: common at ~30s, uncommon at ~60s, rare at ~90s
+        var maxInitial = eventTimers[name].interval * 0.5;
+        eventTimers[name].nextFire = performance.now() + Math.min(baseDelay, maxInitial);
     });
 
     // ── 6) ANGLERFISH — deep-sea lure from the abyss ──
@@ -4106,11 +4158,11 @@
         if (seaTurtle) return;
         var dir = Math.random() > 0.5 ? 1 : -1;
         seaTurtle = {
-            x: dir > 0 ? -80 : W + 80,
+            x: dir > 0 ? -50 : W + 50,
             y: H * 0.25 + Math.random() * H * 0.3,
             dir: dir,
             size: 55 + Math.random() * 20,
-            speed: 0.45 + Math.random() * 0.2,
+            speed: 0.6 + Math.random() * 0.25,
             flipperPhase: 0,
             flipperSpeed: 0.06,
             headBob: 0,
@@ -4663,11 +4715,11 @@
         if (mantaRay) return;
         var dir = Math.random() > 0.5 ? 1 : -1;
         mantaRay = {
-            x: dir > 0 ? -200 : W + 200,
-            y: H * 0.1 + Math.random() * H * 0.12,
+            x: dir > 0 ? -120 : W + 120,
+            y: H * 0.12 + Math.random() * H * 0.15,
             dir: dir,
             size: 140 + Math.random() * 60,
-            speed: 0.45 + Math.random() * 0.25,
+            speed: 0.7 + Math.random() * 0.3,
             wingPhase: 0,
             wingSpeed: 0.008,
             startTime: performance.now(),
@@ -4686,9 +4738,9 @@
         m.y += Math.sin(now * 0.0005) * 0.05 * dt;
 
         // Fade in/out — much higher max alpha
-        if (elapsed < 2000) m.alpha = Math.min(0.85, elapsed / 2000 * 0.85);
-        if ((m.dir > 0 && m.x > W + 150) || (m.dir < 0 && m.x < -150)) {
-            m.alpha -= 0.005 * dt;
+        if (elapsed < 1500) m.alpha = Math.min(0.9, elapsed / 1500 * 0.9);
+        if ((m.dir > 0 && m.x > W + 100) || (m.dir < 0 && m.x < -100)) {
+            m.alpha -= 0.008 * dt;
         }
         if (m.alpha <= 0) { mantaRay = null; return; }
 
@@ -4763,19 +4815,19 @@
         ctx.closePath();
 
         var bodyGrad = ctx.createLinearGradient(0, -s * 0.4, 0, s * 0.4);
-        bodyGrad.addColorStop(0, 'rgba(45,65,90,0.8)');
-        bodyGrad.addColorStop(0.5, 'rgba(60,85,110,0.7)');
-        bodyGrad.addColorStop(1, 'rgba(45,65,90,0.8)');
+        bodyGrad.addColorStop(0, 'rgba(70,100,140,0.85)');
+        bodyGrad.addColorStop(0.5, 'rgba(90,125,160,0.8)');
+        bodyGrad.addColorStop(1, 'rgba(70,100,140,0.85)');
         ctx.fillStyle = bodyGrad;
         ctx.fill();
-        ctx.strokeStyle = 'rgba(80,120,160,0.25)';
+        ctx.strokeStyle = 'rgba(120,170,210,0.35)';
         ctx.lineWidth = 1.5;
         ctx.stroke();
 
         // White belly markings — more visible
         ctx.beginPath();
         ctx.ellipse(s * 0.08, 0, s * 0.18, s * 0.1, 0, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(200,220,240,0.15)';
+        ctx.fillStyle = 'rgba(200,220,240,0.25)';
         ctx.fill();
         // Gill slits
         for (var gi = 0; gi < 3; gi++) {
@@ -4821,6 +4873,17 @@
         ctx.strokeStyle = 'rgba(50,75,100,0.3)';
         ctx.lineWidth = 1;
         ctx.stroke();
+
+        // Bioluminescent edge glow — makes manta visible against deep water
+        ctx.shadowColor = 'rgba(74,234,188,0.3)';
+        ctx.shadowBlur = 15;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, s * 0.45, s * 0.35, 0, 0, Math.PI * 2);
+        ctx.strokeStyle = 'rgba(74,234,188,' + (0.08 + Math.sin(now * 0.001) * 0.04).toFixed(3) + ')';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.shadowColor = 'transparent';
+        ctx.shadowBlur = 0;
 
         ctx.restore();
     }
@@ -5368,7 +5431,12 @@
 
         if (now > eventTimers.predatorChase.nextFire && !predator) {
             spawnPredatorChase();
-            scheduleNextFire('predatorChase');
+            // Only push the timer out if spawn succeeded — otherwise retry sooner
+            if (predator) {
+                scheduleNextFire('predatorChase');
+            } else {
+                eventTimers.predatorChase.nextFire = now + 5000; // retry in 5s
+            }
         }
         if (now > eventTimers.bubbleVent.nextFire) {
             triggerBubbleVent();
@@ -6512,6 +6580,54 @@
             } catch (e) { /* RBF endpoint may not exist */ }
         }, 20000);
     }
+
+    // ═══════════════════════════════════════════
+    //  FULLSCREEN TOGGLE
+    // ═══════════════════════════════════════════
+    var fsBtn = document.getElementById('fsBtn');
+    var fsIconExpand = document.getElementById('fsIconExpand');
+    var fsIconShrink = document.getElementById('fsIconShrink');
+    var fsHint = document.getElementById('fsHint');
+
+    function updateFsIcon() {
+        var isFs = !!(document.fullscreenElement || document.webkitFullscreenElement);
+        fsIconExpand.style.display = isFs ? 'none' : '';
+        fsIconShrink.style.display = isFs ? '' : 'none';
+    }
+
+    fsBtn.addEventListener('click', function() {
+        var fsEl = document.fullscreenElement || document.webkitFullscreenElement;
+        if (!fsEl) {
+            var el = document.documentElement;
+            (el.requestFullscreen || el.webkitRequestFullscreen).call(el).then(function() {
+                fsHint.style.display = 'flex';
+                setTimeout(function() { resize(); }, 100);
+            }).catch(function() {});
+        } else {
+            (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+        }
+    });
+
+    document.addEventListener('fullscreenchange', function() {
+        updateFsIcon();
+        setTimeout(function() {
+            resize();
+            generateGodRays();
+            generateOrbs();
+            generateKelp();
+            generateSeabed();
+        }, 50);
+    });
+    document.addEventListener('webkitfullscreenchange', function() {
+        updateFsIcon();
+        setTimeout(function() {
+            resize();
+            generateGodRays();
+            generateOrbs();
+            generateKelp();
+            generateSeabed();
+        }, 50);
+    });
 
     init();
 
