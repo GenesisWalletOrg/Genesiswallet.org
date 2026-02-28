@@ -6256,37 +6256,72 @@
         return null;
     }
 
-    // Populate fish from mempool — recent + full txid list + backfill from count
+    // Populate fish from mempool — only real transaction data, no backfill
     async function fetchMempoolRecent() {
         // Don't re-fetch during whale passage or cleanup
         if (whale || whaleCleanupPending) return false;
 
         var totalAdded = 0;
+        var totalRemoved = 0;
         var existing = {};
-        var activeFish = 0;
         for (var f = 0; f < fishes.length; f++) {
             if (fishes[f].txid) existing[fishes[f].txid] = true;
-            if (!fishes[f].scooped && !fishes[f].rbfEaten) activeFish++;
         }
 
-        // 0) Get actual mempool transaction count so we know the target
-        var mempoolCount = 0;
+        // 1) Try full mempool txid list first — this is the authoritative source
+        var gotTxids = false;
+        var authoritativeSet = null;
         try {
-            var mp = await apiFetch('/mempool', 5000);
-            if (mp) {
-                mempoolCount = mp.count || mp.size || 0;
-                console.log('[Aquarium] Mempool reports ' + mempoolCount + ' txns, tank has ' + activeFish);
-            }
-        } catch (e) { /* continue without count */ }
+            var txids = await apiFetch('/mempool/txids', 8000);
+            if (txids && Array.isArray(txids)) {
+                gotTxids = true;
+                authoritativeSet = {};
+                for (var t = 0; t < txids.length; t++) authoritativeSet[txids[t]] = true;
 
-        // 1) Recent transactions (have fee/value data — API returns max ~10)
+                // Remove any fish NOT in the current mempool (confirmed/dropped)
+                for (var i = fishes.length - 1; i >= 0; i--) {
+                    var fish = fishes[i];
+                    if (fish.scooped || fish.rbfEaten || !fish.alive) continue;
+                    if (fish.txid && !authoritativeSet[fish.txid]) {
+                        if (txidMap[fish.txid]) delete txidMap[fish.txid];
+                        fishes.splice(i, 1);
+                        totalRemoved++;
+                    }
+                }
+
+                // Rebuild existing map after removals
+                existing = {};
+                for (var f2 = 0; f2 < fishes.length; f2++) {
+                    if (fishes[f2].txid) existing[fishes[f2].txid] = true;
+                }
+
+                // Add new txids we don't have
+                for (var j = 0; j < txids.length; j++) {
+                    if (existing[txids[j]]) continue;
+                    fishes.push(createFish({
+                        txid: txids[j],
+                        feeRate: 1 + Math.random() * 8,
+                        value: Math.round(Math.random() * 5e8),
+                    }));
+                    existing[txids[j]] = true;
+                    totalAdded++;
+                }
+                console.log('[Aquarium] /mempool/txids: ' + txids.length + ' in mempool, +' + totalAdded + ' added, -' + totalRemoved + ' removed');
+            }
+        } catch (e) { console.warn('[Aquarium] mempool/txids error:', e); }
+
+        // 2) Recent transactions — richer data (fee/value), API returns max ~10
+        //    If we got txids, this just enriches existing fish data
+        //    If we didn't, this is our only source
         try {
             var recent = await apiFetch('/mempool/recent', 6000);
             if (recent && Array.isArray(recent)) {
-                for (var i = 0; i < recent.length; i++) {
-                    var tx = recent[i];
-                    var id = tx.txid || ('tx_' + i);
+                for (var r = 0; r < recent.length; r++) {
+                    var tx = recent[r];
+                    var id = tx.txid || ('tx_' + r);
                     if (existing[id]) continue;
+                    // If we have authoritative set and this tx isn't in it, skip
+                    if (authoritativeSet && !authoritativeSet[id]) continue;
                     fishes.push(createFish({
                         txid: id,
                         feeRate: tx.fee ? Math.max(1, Math.round(tx.fee / (tx.vsize || tx.weight / 4 || 200))) : (1 + Math.random() * 5),
@@ -6298,48 +6333,12 @@
             }
         } catch (e) { console.warn('[Aquarium] mempool/recent error:', e); }
 
-        // 2) Full mempool txid list (no fee data, but gets every txid)
-        var gotTxids = false;
-        try {
-            var txids = await apiFetch('/mempool/txids', 8000);
-            if (txids && Array.isArray(txids) && txids.length > 0) {
-                gotTxids = true;
-                for (var j = 0; j < txids.length; j++) {
-                    if (existing[txids[j]]) continue;
-                    fishes.push(createFish({
-                        txid: txids[j],
-                        feeRate: 1 + Math.random() * 8,
-                        value: Math.round(Math.random() * 5e8),
-                    }));
-                    existing[txids[j]] = true;
-                    totalAdded++;
-                }
-                console.log('[Aquarium] /mempool/txids returned ' + txids.length + ' txids');
-            }
-        } catch (e) { console.warn('[Aquarium] mempool/txids error:', e); }
-
-        // 3) Backfill: if API endpoints fell short of the reported mempool count,
-        //    spawn anonymous fish so the tank visually matches reality
-        if (mempoolCount > 0 && !gotTxids) {
-            var currentCount = activeFish + totalAdded;
-            var deficit = Math.min(mempoolCount - currentCount, MAX_FISH - currentCount);
-            if (deficit > 0) {
-                console.log('[Aquarium] Backfilling ' + deficit + ' fish (txids endpoint unavailable, mempool reports ' + mempoolCount + ')');
-                for (var k = 0; k < deficit; k++) {
-                    fishes.push(createFish({
-                        txid: '_backfill_' + Date.now() + '_' + k,
-                        feeRate: 1 + Math.random() * 12,
-                        value: Math.round(5000 + Math.random() * 5e8),
-                    }));
-                    totalAdded++;
-                }
-            }
-        }
-
-        if (totalAdded > 0) {
-            console.log('[Aquarium] Added ' + totalAdded + ' fish from mempool');
+        if (totalAdded > 0 || totalRemoved > 0) {
+            console.log('[Aquarium] Net result: ' + totalAdded + ' added, ' + totalRemoved + ' removed, ' + fishes.filter(function(x) { return !x.scooped && x.alive; }).length + ' active fish');
             updateFishCount();
-            feedInfo('Loaded <span class="feed-val">' + totalAdded + '</span> pending transactions from mempool');
+            if (totalAdded > 0) {
+                feedInfo('Loaded <span class="feed-val">' + totalAdded + '</span> pending transactions from mempool');
+            }
             return true;
         }
         return false;
@@ -6511,53 +6510,9 @@
         // Periodic stats refresh
         setInterval(fetchMempoolStats, 60000);
 
-        // Periodic mempool sync to keep fish population current
+        // Periodic mempool sync — reconciles fish against actual mempool state
         setInterval(async function() {
             if (!whale && !whaleCleanupPending && (Date.now() - lastBlockMinedAt > POST_BLOCK_COOLDOWN)) {
-                // Try to reconcile: remove fish no longer in mempool, add new ones
-                try {
-                    var txids = await apiFetch('/mempool/txids', 8000);
-                    if (txids && Array.isArray(txids) && txids.length > 0) {
-                        var inMempool = {};
-                        for (var t = 0; t < txids.length; t++) inMempool[txids[t]] = true;
-                        // Remove fish that are no longer in mempool (confirmed or dropped)
-                        for (var i = fishes.length - 1; i >= 0; i--) {
-                            var f = fishes[i];
-                            if (f.scooped || f.rbfEaten) continue;
-                            if (f.txid && !f.txid.startsWith('_backfill_') && !f.txid.startsWith('ws_tx') && !inMempool[f.txid]) {
-                                fishes.splice(i, 1);
-                                if (txidMap[f.txid]) delete txidMap[f.txid];
-                            }
-                        }
-                        // Also remove backfill fish if real data is available now
-                        if (txids.length > 0) {
-                            for (var j = fishes.length - 1; j >= 0; j--) {
-                                if (fishes[j].txid && fishes[j].txid.startsWith('_backfill_') && !fishes[j].scooped) {
-                                    fishes.splice(j, 1);
-                                }
-                            }
-                        }
-                        // Add any new txids we don't have yet
-                        var existing = {};
-                        for (var k = 0; k < fishes.length; k++) {
-                            if (fishes[k].txid) existing[fishes[k].txid] = true;
-                        }
-                        var added = 0;
-                        for (var m = 0; m < txids.length; m++) {
-                            if (existing[txids[m]]) continue;
-                            fishes.push(createFish({
-                                txid: txids[m],
-                                feeRate: 1 + Math.random() * 8,
-                                value: Math.round(Math.random() * 5e8),
-                            }));
-                            added++;
-                        }
-                        if (added > 0) console.log('[Aquarium] Sync added ' + added + ' new fish');
-                        updateFishCount();
-                        return;
-                    }
-                } catch (e) { /* txids endpoint unavailable, fall through */ }
-                // Fallback: just try the standard fetch
                 await fetchMempoolRecent();
             }
         }, 15000);
