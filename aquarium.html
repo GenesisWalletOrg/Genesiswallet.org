@@ -833,32 +833,7 @@
     // ═══════════════════════════════════════════
     var HOSTS = ['https://bc2.live', 'https://bitcoinii.space'];
     var activeHost = null;
-    var MAX_FISH = 850;
-    var SOFT_MAX_FISH = 800;
-    var MAX_BUBBLES = 200;
-    var MAX_SEDIMENTS = 100;
-
-    // Check if we can add more fish
-    function canAddFish() {
-        return fishes.length < MAX_FISH;
-    }
-
-    // Cull oldest low-priority fish when over soft cap
-    function cullExcessFish() {
-        while (fishes.length > SOFT_MAX_FISH) {
-            var cullIdx = -1;
-            var oldestAge = -1;
-            for (var ci = 0; ci < fishes.length; ci++) {
-                var cf = fishes[ci];
-                if (cf.scooped || cf.rbfEaten || cf.isRbf || cf._schooling || cf._scared || cf.isUser) continue;
-                if (cf.age > oldestAge) { oldestAge = cf.age; cullIdx = ci; }
-            }
-            if (cullIdx < 0) break;
-            unregisterFish(fishes[cullIdx]);
-            fishes[cullIdx] = fishes[fishes.length - 1];
-            fishes.pop();
-        }
-    }
+    var MAX_FISH = 2000;
     var WHALE_DURATION = 6500;
 
     // ═══════════════════════════════════════════
@@ -899,13 +874,12 @@
         return { r: 220, g: 38, b: 38, hex: '#DC2626' };                        // deep red
     }
 
-    // Value → fish size (log curve with gentle sqrt spread for big txns)
-    // ≤1 BC2 = small (4-12px), 100-10000 = normal-big (19-32px), cap at 32px
+    // Value → fish size (logarithmic)
     function valueToSize(valueSat) {
         var btc = valueSat / 1e8;
-        if (btc <= 0) btc = 0.00001;
-        var s = 12 + Math.log10(btc + 0.0001) * 3 + Math.sqrt(Math.max(0, btc)) * 0.08;
-        return Math.max(4, Math.min(40, s));
+        if (btc <= 0) btc = 0.001;
+        var s = 8 + Math.log10(btc + 0.001) * 8 + Math.sqrt(btc) * 3;
+        return Math.max(6, Math.min(40, s));
     }
 
     // Fee → speed
@@ -1380,34 +1354,29 @@
     }
 
     // ═══════════════════════════════════════════
-    //  FISH RENDERING (with LOD optimization)
+    //  FISH RENDERING
     // ═══════════════════════════════════════════
-    // LOD threshold scales with fish count — more fish = more get simplified rendering
-    function getLODThreshold() {
-        var n = fishes.length;
-        if (n > 600) return 20;
-        if (n > 400) return 17;
-        if (n > 200) return 14;
-        return 10;
-    }
-
     function drawFish(f, now) {
         var s = f.size;
         var col = f.color;
 
         if (f.scooped) {
+            // Animate being scooped toward whale's mouth
             var st = (now - f.scoopTime) / 1000;
             if (st > 1) return;
             var alpha = 1 - st;
             ctx.globalAlpha = alpha * alpha;
+            // Shrink and drift toward whale mouth (right side of whale)
             var targetX = whale ? whale.x + whale.width * 0.9 : f.x + 50;
             var targetY = whale ? whale.y : f.y;
             f.x += (targetX - f.x) * 0.06;
             f.y += (targetY - f.y) * 0.04;
+            // Shrink the fish
             s *= (1 - st * 0.7);
             if (s < 1) { ctx.globalAlpha = 1; return; }
         }
 
+        // RBF eaten — shrink toward predator then vanish
         if (f.rbfEaten) {
             var rt = (now - f.rbfEatTime) / 1000;
             if (rt > 0.6) { ctx.globalAlpha = 1; return; }
@@ -1415,42 +1384,33 @@
             ctx.globalAlpha = alpha2 * alpha2;
             s *= (1 - rt * 1.2);
             if (s < 1) { ctx.globalAlpha = 1; return; }
+            // Flash red tint as being consumed
             col = { r: Math.min(255, col.r + 120), g: Math.max(0, col.g - 60), b: Math.max(0, col.b - 60) };
         }
 
         if (!f.alive) { ctx.globalAlpha = 1; return; }
-
-        var isLOD = s < getLODThreshold();
 
         ctx.save();
         ctx.translate(f.x, f.y);
         if (f.dir < 0) ctx.scale(-1, 1);
         ctx.rotate(f.tilt || 0);
 
+        // Tail wiggle
         var tailAngle = Math.sin(f.tailPhase) * 0.3;
+
+        // Bioluminescent glow (boosted during pulse wave)
         var biolumBoost = f._biolumBoost || 0;
         var glowPulse = 0.5 + Math.sin(f.glowPhase) * 0.3 + biolumBoost;
+        var glowRadius = s * (1.8 + glowPulse * 0.5 + biolumBoost * 2);
+        var glow = ctx.createRadialGradient(0, 0, s * 0.2, 0, 0, glowRadius);
+        glow.addColorStop(0, 'rgba(' + col.r + ',' + col.g + ',' + col.b + ',' + (0.12 * glowPulse).toFixed(3) + ')');
+        glow.addColorStop(1, 'rgba(' + col.r + ',' + col.g + ',' + col.b + ',0)');
+        ctx.fillStyle = glow;
+        ctx.beginPath();
+        ctx.arc(0, 0, glowRadius, 0, Math.PI * 2);
+        ctx.fill();
 
-        // Bioluminescent glow — simplified for tiny fish
-        if (isLOD) {
-            var glowA = (0.06 * glowPulse + biolumBoost * 0.1);
-            if (glowA > 0.01) {
-                ctx.beginPath();
-                ctx.arc(0, 0, s * 1.5, 0, Math.PI * 2);
-                ctx.fillStyle = 'rgba(' + col.r + ',' + col.g + ',' + col.b + ',' + glowA.toFixed(3) + ')';
-                ctx.fill();
-            }
-        } else {
-            var glowRadius = s * (1.8 + glowPulse * 0.5 + biolumBoost * 2);
-            var glow = ctx.createRadialGradient(0, 0, s * 0.2, 0, 0, glowRadius);
-            glow.addColorStop(0, 'rgba(' + col.r + ',' + col.g + ',' + col.b + ',' + (0.12 * glowPulse).toFixed(3) + ')');
-            glow.addColorStop(1, 'rgba(' + col.r + ',' + col.g + ',' + col.b + ',0)');
-            ctx.fillStyle = glow;
-            ctx.beginPath();
-            ctx.arc(0, 0, glowRadius, 0, Math.PI * 2);
-            ctx.fill();
-        }
-
+        // User-spawned ring
         if (f.isUser) {
             var ringPulse = 0.4 + Math.sin(f.glowPhase * 1.5) * 0.3;
             ctx.beginPath();
@@ -1460,7 +1420,8 @@
             ctx.stroke();
         }
 
-        if (!isLOD && f.isRbf && f.huntPhase < 2) {
+        // RBF predator — pulsing red aura
+        if (f.isRbf && f.huntPhase < 2) {
             var rbfPulse = 0.5 + Math.sin(f.glowPhase * 2.5) * 0.4;
             var rbfGlow = ctx.createRadialGradient(0, 0, s * 0.3, 0, 0, s * 2.2);
             rbfGlow.addColorStop(0, 'rgba(230,70,50,' + (0.15 * rbfPulse).toFixed(3) + ')');
@@ -1480,23 +1441,18 @@
         ctx.bezierCurveTo(-s * 0.3, s * 0.4, s * 0.7, s * 0.45, s * 0.9, 0);
         ctx.closePath();
 
-        if (isLOD) {
-            ctx.fillStyle = 'rgba(' + col.r + ',' + col.g + ',' + col.b + ',' + (0.7 + glowPulse * 0.15).toFixed(2) + ')';
-        } else {
-            var bodyGrad = ctx.createLinearGradient(-s * 0.5, -s * 0.3, s * 0.5, s * 0.3);
-            bodyGrad.addColorStop(0, 'rgba(' + col.r + ',' + col.g + ',' + col.b + ',' + (0.7 + glowPulse * 0.2).toFixed(2) + ')');
-            bodyGrad.addColorStop(0.6, 'rgba(' + col.r + ',' + col.g + ',' + col.b + ',0.5)');
-            bodyGrad.addColorStop(1, 'rgba(' + Math.round(col.r * 0.6) + ',' + Math.round(col.g * 0.6) + ',' + Math.round(col.b * 0.6) + ',0.4)');
-            ctx.fillStyle = bodyGrad;
-        }
+        var bodyGrad = ctx.createLinearGradient(-s * 0.5, -s * 0.3, s * 0.5, s * 0.3);
+        bodyGrad.addColorStop(0, 'rgba(' + col.r + ',' + col.g + ',' + col.b + ',' + (0.7 + glowPulse * 0.2).toFixed(2) + ')');
+        bodyGrad.addColorStop(0.6, 'rgba(' + col.r + ',' + col.g + ',' + col.b + ',0.5)');
+        bodyGrad.addColorStop(1, 'rgba(' + Math.round(col.r * 0.6) + ',' + Math.round(col.g * 0.6) + ',' + Math.round(col.b * 0.6) + ',0.4)');
+        ctx.fillStyle = bodyGrad;
         ctx.fill();
 
-        if (!isLOD) {
-            ctx.beginPath();
-            ctx.ellipse(s * 0.15, -s * 0.12, s * 0.35, s * 0.1, -0.2, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(255,255,255,0.08)';
-            ctx.fill();
-        }
+        // Body highlight
+        ctx.beginPath();
+        ctx.ellipse(s * 0.15, -s * 0.12, s * 0.35, s * 0.1, -0.2, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255,255,255,0.08)';
+        ctx.fill();
 
         // Tail
         ctx.save();
@@ -1509,18 +1465,17 @@
         ctx.closePath();
         ctx.fillStyle = 'rgba(' + col.r + ',' + col.g + ',' + col.b + ',0.35)';
         ctx.fill();
-        if (!isLOD) {
-            ctx.beginPath();
-            ctx.moveTo(-s * 0.05, -s * 0.02);
-            ctx.lineTo(-s * 0.4, -s * 0.26);
-            ctx.strokeStyle = 'rgba(247,147,26,0.4)';
-            ctx.lineWidth = Math.max(0.5, s * 0.03);
-            ctx.stroke();
-            ctx.beginPath();
-            ctx.moveTo(-s * 0.05, s * 0.02);
-            ctx.lineTo(-s * 0.4, s * 0.26);
-            ctx.stroke();
-        }
+        // BC2 amber accent lines on tail
+        ctx.beginPath();
+        ctx.moveTo(-s * 0.05, -s * 0.02);
+        ctx.lineTo(-s * 0.4, -s * 0.26);
+        ctx.strokeStyle = 'rgba(247,147,26,0.4)';
+        ctx.lineWidth = Math.max(0.5, s * 0.03);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(-s * 0.05, s * 0.02);
+        ctx.lineTo(-s * 0.4, s * 0.26);
+        ctx.stroke();
         ctx.restore();
 
         // Eye
@@ -1530,14 +1485,12 @@
         ctx.arc(eyeX, eyeY, s * 0.09, 0, Math.PI * 2);
         ctx.fillStyle = 'rgba(255,255,255,0.85)';
         ctx.fill();
-        if (!isLOD) {
-            ctx.beginPath();
-            ctx.arc(eyeX + s * 0.02, eyeY, s * 0.04, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(0,0,0,0.8)';
-            ctx.fill();
-        }
+        ctx.beginPath();
+        ctx.arc(eyeX + s * 0.02, eyeY, s * 0.04, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(0,0,0,0.8)';
+        ctx.fill();
 
-        // Dorsal fin
+        // Fin (dorsal)
         ctx.beginPath();
         ctx.moveTo(s * 0.1, -s * 0.3);
         ctx.quadraticCurveTo(s * 0.05, -s * 0.6, -s * 0.15, -s * 0.35);
@@ -1545,14 +1498,13 @@
         ctx.closePath();
         ctx.fillStyle = 'rgba(' + col.r + ',' + col.g + ',' + col.b + ',0.25)';
         ctx.fill();
-        if (!isLOD) {
-            ctx.beginPath();
-            ctx.moveTo(s * 0.08, -s * 0.32);
-            ctx.quadraticCurveTo(s * 0.03, -s * 0.55, -s * 0.12, -s * 0.36);
-            ctx.strokeStyle = 'rgba(247,147,26,0.35)';
-            ctx.lineWidth = Math.max(0.5, s * 0.025);
-            ctx.stroke();
-        }
+        // BC2 amber accent line on dorsal
+        ctx.beginPath();
+        ctx.moveTo(s * 0.08, -s * 0.32);
+        ctx.quadraticCurveTo(s * 0.03, -s * 0.55, -s * 0.12, -s * 0.36);
+        ctx.strokeStyle = 'rgba(247,147,26,0.35)';
+        ctx.lineWidth = Math.max(0.5, s * 0.025);
+        ctx.stroke();
 
         ctx.restore();
         ctx.globalAlpha = 1;
@@ -1566,7 +1518,6 @@
     function spawnBubble(x, y, intensity) {
         var count = Math.floor(2 + intensity * 3);
         for (var i = 0; i < count; i++) {
-            if (bubbles.length >= MAX_BUBBLES) break;
             bubbles.push({
                 x: x + (Math.random() - 0.5) * 20,
                 y: y + (Math.random() - 0.5) * 10,
@@ -1587,9 +1538,7 @@
             b.vy *= 0.99;
             b.life -= b.decay;
             if (b.life <= 0 || b.y < 0) {
-                // Swap-and-pop: O(1) instead of splice O(n)
-                bubbles[i] = bubbles[bubbles.length - 1];
-                bubbles.pop();
+                bubbles.splice(i, 1);
             }
         }
     }
@@ -2004,7 +1953,7 @@
             b.wake[i].x += b.wake[i].vx * dt;
             b.wake[i].life -= 0.008 * dt;
             b.wake[i].size += 0.01 * dt;
-            if (b.wake[i].life <= 0) { b.wake[i] = b.wake[b.wake.length - 1]; b.wake.pop(); }
+            if (b.wake[i].life <= 0) b.wake.splice(i, 1);
         }
         if ((b.dir > 0 && b.x > W + b.size * 2) || (b.dir < 0 && b.x < -b.size * 2)) {
             boat = null; return;
@@ -2114,7 +2063,6 @@
     function spawnSediment(x) {
         var count = 8 + Math.floor(Math.random() * 8);
         for (var i = 0; i < count; i++) {
-            if (sediments.length >= MAX_SEDIMENTS) break;
             sediments.push({
                 x: x + (Math.random() - 0.5) * 60,
                 y: H - 12 - Math.random() * 8,
@@ -2139,8 +2087,7 @@
             s.vx *= 0.995;
             s.life -= s.decay;
             if (s.life <= 0 || s.y > H + 5) {
-                sediments[i] = sediments[sediments.length - 1];
-                sediments.pop();
+                sediments.splice(i, 1);
             }
         }
     }
@@ -2149,10 +2096,13 @@
         for (var i = 0; i < sediments.length; i++) {
             var s = sediments[i];
             var a = s.life * 0.35;
-            // Simple glow fill instead of per-particle gradient
+            // Glow
+            var glow = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, s.r * 3);
+            glow.addColorStop(0, 'rgba(' + s.cr + ',' + s.cg + ',' + s.cb + ',' + (a * 0.3).toFixed(3) + ')');
+            glow.addColorStop(1, 'rgba(' + s.cr + ',' + s.cg + ',' + s.cb + ',0)');
+            ctx.fillStyle = glow;
             ctx.beginPath();
             ctx.arc(s.x, s.y, s.r * 3, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(' + s.cr + ',' + s.cg + ',' + s.cb + ',' + (a * 0.15).toFixed(3) + ')';
             ctx.fill();
             // Core
             ctx.beginPath();
@@ -3041,7 +2991,7 @@
             var sp = tr.sparkles[k];
             sp.life -= sp.decay;
             if (sp.vx) { sp.x += (sp.vx || 0); sp.y += (sp.vy || 0); sp.vy += 0.01; }
-            if (sp.life <= 0) { tr.sparkles[k] = tr.sparkles[tr.sparkles.length - 1]; tr.sparkles.pop(); }
+            if (sp.life <= 0) tr.sparkles.splice(k, 1);
         }
     }
 
@@ -4621,8 +4571,7 @@
                     sf.vx = sf._preStunVx || (sf.baseVx || ((Math.random() > 0.5 ? 1 : -1) * 0.5));
                     sf.vy = (Math.random() - 0.5) * 0.3;
                     sf.tailSpeed = sf.baseTailSpeed || (3 + Math.abs(sf.vx) * 2);
-                    e.stunned[k] = e.stunned[e.stunned.length - 1];
-                    e.stunned.pop();
+                    e.stunned.splice(k, 1);
                     spawnBubble(sf.x, sf.y, 0.8);
                 }
             }
@@ -4633,7 +4582,7 @@
             for (var m = e.sparkles.length - 1; m >= 0; m--) {
                 var sp = e.sparkles[m];
                 sp.life -= sp.decay;
-                if (sp.life <= 0) { e.sparkles[m] = e.sparkles[e.sparkles.length - 1]; e.sparkles.pop(); }
+                if (sp.life <= 0) e.sparkles.splice(m, 1);
             }
         }
     }
@@ -5385,8 +5334,7 @@
                     // Tiny satisfaction bubble
                     spawnBubble(p.x, p.y, 0.4);
                 }
-                foodPellets[i] = foodPellets[foodPellets.length - 1];
-                foodPellets.pop();
+                foodPellets.splice(i, 1);
                 continue;
             }
 
@@ -5576,7 +5524,17 @@
     var REPEL_RADIUS = 90;
     var REPEL_FORCE = 0.35;
 
-    // Mouse tracking is handled in the tooltip section below
+    canvas.addEventListener('mousemove', function(e) {
+        var rect = canvas.getBoundingClientRect();
+        mouseX = e.clientX - rect.left;
+        mouseY = e.clientY - rect.top;
+        mouseInTank = true;
+    });
+    canvas.addEventListener('mouseleave', function() {
+        mouseInTank = false;
+        mouseX = -999;
+        mouseY = -999;
+    });
 
     // ═══════════════════════════════════════════
     //  UPDATE LOOP
@@ -5589,19 +5547,11 @@
         lastTime = now;
         if (dt > 3) dt = 3; // cap lag spikes
 
-        // Periodic culling of excess fish
-        if (fishes.length > SOFT_MAX_FISH && !whale) cullExcessFish();
-
         for (var i = fishes.length - 1; i >= 0; i--) {
             var f = fishes[i];
 
-            // Remove fully dead fish — swap-and-pop to avoid O(n) splice
-            if (!f.alive) {
-                unregisterFish(f);
-                fishes[i] = fishes[fishes.length - 1];
-                fishes.pop();
-                continue;
-            }
+            // Remove fully dead fish
+            if (!f.alive) { fishes.splice(i, 1); continue; }
             if (f.scooped) continue;
             if (f.rbfEaten) {
                 // Still animate phases for the shrink render
@@ -5610,8 +5560,7 @@
                 // Remove after eat animation completes
                 if ((now - f.rbfEatTime) / 1000 > 0.7) {
                     unregisterFish(f);
-                    fishes[i] = fishes[fishes.length - 1];
-                    fishes.pop();
+                    fishes.splice(i, 1);
                 }
                 continue;
             }
@@ -5662,8 +5611,8 @@
                 targetTilt = Math.max(-0.7, Math.min(0.7, targetTilt));
                 f.tilt += (targetTilt - f.tilt) * 0.06 * dt;
                 // Boundary
-                if (f.y < f.size) { f.y = f.size; f.vy = Math.abs(f.vy) * 0.15; }
-                if (f.y > H - 22 - f.size) { f.y = H - 22 - f.size; f.vy = -Math.abs(f.vy) * 0.15; }
+                if (f.y < f.size) { f.y = f.size; f.vy = Math.abs(f.vy) * 0.3; }
+                if (f.y > H - 22 - f.size) { f.y = H - 22 - f.size; f.vy = -Math.abs(f.vy) * 0.3; }
                 if (f.x < -50) f.x = W + 50;
                 if (f.x > W + 50) f.x = -50;
                 continue;
@@ -5683,31 +5632,17 @@
 
             // Steering toward yTarget
             var yDiff = f.yTarget - f.y;
-            f.vy += yDiff * 0.001 * dt;
+            f.vy += yDiff * 0.0003 * dt;
+            f.vy *= 0.98; // damping
 
-            // Progressive vertical damping — high vy decays fast, low vy stays natural
-            var absVy = Math.abs(f.vy);
-            if (absVy > 1.0) {
-                // Heavy damping for post-event momentum (tide, vent, etc)
-                f.vy *= Math.pow(0.92, dt);
-            } else if (absVy > 0.4) {
-                // Moderate damping — settling down
-                f.vy *= Math.pow(0.96, dt);
-            } else {
-                // Light damping — normal gentle drift
-                f.vy *= 0.98;
-            }
-
-            // ── ORGANIC FLOCKING (boids-lite) — throttled to reduce O(n²) ──
-            // Only run boids every 3rd frame for this fish
+            // ── ORGANIC FLOCKING (boids-lite) ──
+            // Fish naturally cluster with similar-sized nearby fish
+            // then break off after a while
             if (!f._flockCooldown) f._flockCooldown = 0;
             if (!f._flockTime) f._flockTime = 0;
-            if (!f._flockFrame) f._flockFrame = f.id % 6;
-            var flockMod = fishes.length > 400 ? 6 : fishes.length > 200 ? 4 : 3;
-            var doFlock = (f._flockFrame % flockMod === (mainLoop._frameCount || 0) % flockMod);
             if (f._flockCooldown > 0) {
                 f._flockCooldown -= dt;
-            } else if (doFlock) {
+            } else {
                 var alignX = 0, alignY = 0;
                 var cohX = 0, cohY = 0;
                 var sepX = 0, sepY = 0;
@@ -5776,7 +5711,7 @@
                         // Break off — dart away with a small burst
                         f._flockCooldown = 200 + Math.random() * 300; // solo time
                         f._flockTime = 0;
-                        f.vy += (Math.random() - 0.5) * 0.8;
+                        f.vy += (Math.random() - 0.5) * 1.5;
                         f.wanderAngle += (Math.random() - 0.5) * 2;
                         // New Y target away from the group
                         f.yTarget = f.y + (Math.random() > 0.5 ? 1 : -1) * (H * 0.1 + Math.random() * H * 0.15);
@@ -5810,9 +5745,6 @@
             }
 
             // Move
-            // Hard vy clamp — prevent runaway vertical oscillation
-            if (f.vy > 2.0) f.vy = 2.0;
-            if (f.vy < -2.0) f.vy = -2.0;
             f.x += f.vx * dt;
             f.y += f.vy * dt;
 
@@ -5846,9 +5778,9 @@
                 f.x = W + f.size * 2;
             }
 
-            // Vertical bounds — absorb most momentum on bounce
-            if (f.y < f.size) { f.y = f.size; f.vy = Math.abs(f.vy) * 0.15; }
-            if (f.y > H - 22 - f.size) { f.y = H - 22 - f.size; f.vy = -Math.abs(f.vy) * 0.15; }
+            // Vertical bounds
+            if (f.y < f.size) { f.y = f.size; f.vy = Math.abs(f.vy) * 0.5; }
+            if (f.y > H - 22 - f.size) { f.y = H - 22 - f.size; f.vy = -Math.abs(f.vy) * 0.5; }
 
             // Occasional bubbles from fast fish
             frameBubbleTimer += dt;
@@ -5894,8 +5826,6 @@
 
     // Separate update and draw into one RAF
     function mainLoop(now) {
-        if (!mainLoop._frameCount) mainLoop._frameCount = 0;
-        mainLoop._frameCount++;
         update(now);
         ctx.clearRect(0, 0, W, H);
 
@@ -5995,19 +5925,10 @@
 
         // Layer 6.9: Surface debris — background pieces (fish swim in front)
 
-        // Layer 7: Fish — reuse buffer to avoid per-frame allocation
-        if (!mainLoop._sortBuf) mainLoop._sortBuf = [];
-        var sb = mainLoop._sortBuf;
-        sb.length = fishes.length;
-        for (var sbi = 0; sbi < fishes.length; sbi++) sb[sbi] = fishes[sbi];
-        // Insertion sort — O(n) for nearly-sorted data, zero allocation
-        for (var si = 1; si < sb.length; si++) {
-            var sk = sb[si], sj = si - 1;
-            while (sj >= 0 && sb[sj].size > sk.size) { sb[sj + 1] = sb[sj]; sj--; }
-            sb[sj + 1] = sk;
-        }
-        for (var i = 0; i < sb.length; i++) {
-            drawFish(sb[i], now);
+        // Layer 7: Fish (sorted small→large for depth)
+        var sorted = fishes.slice().sort(function(a, b) { return a.size - b.size; });
+        for (var i = 0; i < sorted.length; i++) {
+            drawFish(sorted[i], now);
         }
 
         // Layer 7.15: Electric eel (among fish)
@@ -6073,12 +5994,7 @@
     // ═══════════════════════════════════════════
     function updateFishCount() {
         var el = document.getElementById('fishCount');
-        if (!el) return;
-        var count = 0;
-        for (var i = 0; i < fishes.length; i++) {
-            if (!fishes[i].scooped) count++;
-        }
-        el.textContent = count;
+        if (el) el.textContent = fishes.filter(function(f) { return !f.scooped; }).length;
     }
 
     function setStatus(state, text) {
@@ -6244,10 +6160,6 @@
         var rect = canvas.getBoundingClientRect();
         var mx = e.clientX - rect.left;
         var my = e.clientY - rect.top;
-        // Track mouse for fish repulsion
-        mouseX = mx;
-        mouseY = my;
-        mouseInTank = true;
 
         // Find closest fish
         var closest = null;
@@ -6287,9 +6199,6 @@
     canvas.addEventListener('mouseleave', function() {
         hoveredFish = null;
         tooltip.classList.remove('visible');
-        mouseInTank = false;
-        mouseX = -999;
-        mouseY = -999;
     });
 
     // ═══════════════════════════════════════════
@@ -6374,9 +6283,8 @@
                     var fish = fishes[i];
                     if (fish.scooped || fish.rbfEaten || !fish.alive) continue;
                     if (fish.txid && !authoritativeSet[fish.txid]) {
-                        unregisterFish(fish);
-                        fishes[i] = fishes[fishes.length - 1];
-                        fishes.pop();
+                        if (txidMap[fish.txid]) delete txidMap[fish.txid];
+                        fishes.splice(i, 1);
                         totalRemoved++;
                     }
                 }
@@ -6389,7 +6297,6 @@
 
                 // Add new txids we don't have
                 for (var j = 0; j < txids.length; j++) {
-                    if (fishes.length >= MAX_FISH) break;
                     if (existing[txids[j]]) continue;
                     fishes.push(createFish({
                         txid: txids[j],
@@ -6412,7 +6319,6 @@
                 for (var r = 0; r < recent.length; r++) {
                     var tx = recent[r];
                     var id = tx.txid || ('tx_' + r);
-                    if (fishes.length >= MAX_FISH) break;
                     if (existing[id]) continue;
                     // If we have authoritative set and this tx isn't in it, skip
                     if (authoritativeSet && !authoritativeSet[id]) continue;
@@ -6428,7 +6334,7 @@
         } catch (e) { console.warn('[Aquarium] mempool/recent error:', e); }
 
         if (totalAdded > 0 || totalRemoved > 0) {
-            console.log('[Aquarium] Net result: ' + totalAdded + ' added, ' + totalRemoved + ' removed, ' + fishes.length + ' fish');
+            console.log('[Aquarium] Net result: ' + totalAdded + ' added, ' + totalRemoved + ' removed, ' + fishes.filter(function(x) { return !x.scooped && x.alive; }).length + ' active fish');
             updateFishCount();
             if (totalAdded > 0) {
                 feedInfo('Loaded <span class="feed-val">' + totalAdded + '</span> pending transactions from mempool');
@@ -6500,9 +6406,7 @@
                     // New transaction
                     if (msg.tx) {
                         // Don't add fish during whale (block) passage or cleanup
-                        if (whale || whaleCleanupPending) { /* skip */ }
-                        else if (fishes.length >= MAX_FISH) { /* at cap */ }
-                        else {
+                        if (whale || whaleCleanupPending) { /* skip */ } else {
                         var tx = msg.tx;
                         var txFee = tx.feeRate || tx.fee || (1 + Math.random() * 5);
                         var txVal = tx.value || Math.round(Math.random() * 5e8);
@@ -6605,17 +6509,6 @@
 
         // Periodic stats refresh
         setInterval(fetchMempoolStats, 60000);
-
-        // Periodic txidMap cleanup — remove stale entries not in fish pool
-        setInterval(function() {
-            var activeTxids = {};
-            for (var i = 0; i < fishes.length; i++) {
-                if (fishes[i].txid) activeTxids[fishes[i].txid] = true;
-            }
-            for (var k in txidMap) {
-                if (!activeTxids[k]) delete txidMap[k];
-            }
-        }, 30000);
 
         // Periodic mempool sync — reconciles fish against actual mempool state
         setInterval(async function() {
