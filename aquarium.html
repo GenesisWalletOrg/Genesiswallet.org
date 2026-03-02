@@ -899,12 +899,13 @@
         return { r: 220, g: 38, b: 38, hex: '#DC2626' };                        // deep red
     }
 
-    // Value → fish size (logarithmic)
+    // Value → fish size (log curve with gentle sqrt spread for big txns)
+    // ≤1 BC2 = small (4-12px), 100-10000 = normal-big (19-32px), cap at 32px
     function valueToSize(valueSat) {
         var btc = valueSat / 1e8;
-        if (btc <= 0) btc = 0.001;
-        var s = 8 + Math.log10(btc + 0.001) * 8 + Math.sqrt(btc) * 3;
-        return Math.max(6, Math.min(40, s));
+        if (btc <= 0) btc = 0.00001;
+        var s = 12 + Math.log10(btc + 0.0001) * 3 + Math.sqrt(Math.max(0, btc)) * 0.08;
+        return Math.max(4, Math.min(40, s));
     }
 
     // Fee → speed
@@ -5661,8 +5662,8 @@
                 targetTilt = Math.max(-0.7, Math.min(0.7, targetTilt));
                 f.tilt += (targetTilt - f.tilt) * 0.06 * dt;
                 // Boundary
-                if (f.y < f.size) { f.y = f.size; f.vy = Math.abs(f.vy) * 0.3; }
-                if (f.y > H - 22 - f.size) { f.y = H - 22 - f.size; f.vy = -Math.abs(f.vy) * 0.3; }
+                if (f.y < f.size) { f.y = f.size; f.vy = Math.abs(f.vy) * 0.15; }
+                if (f.y > H - 22 - f.size) { f.y = H - 22 - f.size; f.vy = -Math.abs(f.vy) * 0.15; }
                 if (f.x < -50) f.x = W + 50;
                 if (f.x > W + 50) f.x = -50;
                 continue;
@@ -5682,8 +5683,20 @@
 
             // Steering toward yTarget
             var yDiff = f.yTarget - f.y;
-            f.vy += yDiff * 0.0003 * dt;
-            f.vy *= 0.98; // damping
+            f.vy += yDiff * 0.001 * dt;
+
+            // Progressive vertical damping — high vy decays fast, low vy stays natural
+            var absVy = Math.abs(f.vy);
+            if (absVy > 1.0) {
+                // Heavy damping for post-event momentum (tide, vent, etc)
+                f.vy *= Math.pow(0.92, dt);
+            } else if (absVy > 0.4) {
+                // Moderate damping — settling down
+                f.vy *= Math.pow(0.96, dt);
+            } else {
+                // Light damping — normal gentle drift
+                f.vy *= 0.98;
+            }
 
             // ── ORGANIC FLOCKING (boids-lite) — throttled to reduce O(n²) ──
             // Only run boids every 3rd frame for this fish
@@ -5763,7 +5776,7 @@
                         // Break off — dart away with a small burst
                         f._flockCooldown = 200 + Math.random() * 300; // solo time
                         f._flockTime = 0;
-                        f.vy += (Math.random() - 0.5) * 1.5;
+                        f.vy += (Math.random() - 0.5) * 0.8;
                         f.wanderAngle += (Math.random() - 0.5) * 2;
                         // New Y target away from the group
                         f.yTarget = f.y + (Math.random() > 0.5 ? 1 : -1) * (H * 0.1 + Math.random() * H * 0.15);
@@ -5797,6 +5810,9 @@
             }
 
             // Move
+            // Hard vy clamp — prevent runaway vertical oscillation
+            if (f.vy > 2.0) f.vy = 2.0;
+            if (f.vy < -2.0) f.vy = -2.0;
             f.x += f.vx * dt;
             f.y += f.vy * dt;
 
@@ -5830,9 +5846,9 @@
                 f.x = W + f.size * 2;
             }
 
-            // Vertical bounds
-            if (f.y < f.size) { f.y = f.size; f.vy = Math.abs(f.vy) * 0.5; }
-            if (f.y > H - 22 - f.size) { f.y = H - 22 - f.size; f.vy = -Math.abs(f.vy) * 0.5; }
+            // Vertical bounds — absorb most momentum on bounce
+            if (f.y < f.size) { f.y = f.size; f.vy = Math.abs(f.vy) * 0.15; }
+            if (f.y > H - 22 - f.size) { f.y = H - 22 - f.size; f.vy = -Math.abs(f.vy) * 0.15; }
 
             // Occasional bubbles from fast fish
             frameBubbleTimer += dt;
