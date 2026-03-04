@@ -865,8 +865,6 @@
 
     var fishes = [];
     var nextFishId = 0;
-    var sortBuf = []; // reusable buffer for draw-order sorting (avoids per-frame allocation)
-    function fishSizeSort(a, b) { return a.size - b.size; }
 
     // Fee rate → color
     function feeColor(feeRate) {
@@ -876,20 +874,12 @@
         return { r: 220, g: 38, b: 38, hex: '#DC2626' };                        // deep red
     }
 
-    // Value → fish size (logarithmic — scales across full BC2 range)
-    // Each order of magnitude adds ~6px of visible difference:
-    //   100 sats → 4px (dust minnow)      10k sats → 16px
-    //   0.001 BC2 → 23px                  0.01 BC2  → 29px
-    //   0.1 BC2   → 35px                  1 BC2     → 41px
-    //   10 BC2    → 48px                  100 BC2   → 54px
-    //   1000+ BC2 → 60px (maximum)
+    // Value → fish size (logarithmic)
     function valueToSize(valueSat) {
-        if (valueSat <= 0) valueSat = 1;
-        var logVal = Math.log10(valueSat);
-        // log10 range: 100 sats=2 … 1000 BC2=11
-        // Map [2, 11] → [4, 60] — each magnitude ≈ +6.2px
-        var s = 4 + Math.max(0, logVal - 2) * (56 / 9);
-        return Math.max(4, Math.min(60, s));
+        var btc = valueSat / 1e8;
+        if (btc <= 0) btc = 0.001;
+        var s = 8 + Math.log10(btc + 0.001) * 8 + Math.sqrt(btc) * 3;
+        return Math.max(6, Math.min(40, s));
     }
 
     // Fee → speed
@@ -969,6 +959,30 @@
     var whaleCleanupPending = false;
     var lastBlockMinedAt = 0; // Timestamp of last block — used to delay re-fetch so mempool API can update
     var POST_BLOCK_COOLDOWN = 10000; // 10s grace period before re-fetching mempool after a block
+
+    // Confirmed tx blacklist — prevents respawn of transactions from cleared blocks
+    // Entries auto-expire after CONFIRMED_TTL so the set doesn't grow forever
+    var confirmedTxids = {};     // txid → timestamp when confirmed
+    var CONFIRMED_TTL = 120000;  // 2 minutes — plenty of time for API to catch up
+
+    function markConfirmed(txid) {
+        confirmedTxids[txid] = Date.now();
+    }
+    function isConfirmed(txid) {
+        if (!confirmedTxids[txid]) return false;
+        // Auto-expire stale entries on read
+        if (Date.now() - confirmedTxids[txid] > CONFIRMED_TTL) {
+            delete confirmedTxids[txid];
+            return false;
+        }
+        return true;
+    }
+    function pruneConfirmed() {
+        var now = Date.now();
+        for (var txid in confirmedTxids) {
+            if (now - confirmedTxids[txid] > CONFIRMED_TTL) delete confirmedTxids[txid];
+        }
+    }
 
     // ═══════════════════════════════════════════
     //  RBF — Replace-By-Fee predator system
@@ -1194,6 +1208,8 @@
             // Small delay then wipe tank clean and re-fetch
             whaleCleanupPending = true;
             setTimeout(function() {
+                // Stamp all current fish txids as confirmed before wiping
+                stampFishAsConfirmed();
                 // Nuclear cleanup — remove ALL fish
                 fishes.length = 0;
                 // Clear txid lookup
@@ -1232,6 +1248,15 @@
                     fetchMempoolRecent();
                 }, POST_BLOCK_COOLDOWN);
             }, 1200);
+        }
+    }
+
+    // Helper: stamp all current fish txids as confirmed (called before whale wipe)
+    function stampFishAsConfirmed() {
+        for (var i = 0; i < fishes.length; i++) {
+            if (fishes[i].txid && !fishes[i].txid.startsWith('sim_')) {
+                markConfirmed(fishes[i].txid);
+            }
         }
     }
 
@@ -2143,7 +2168,7 @@
             y: H * 0.2 + Math.random() * H * 0.5,
             vx: 0, vy: 0,
             dir: enterSide > 0 ? 1 : -1,
-            size: 28 + Math.random() * 12,
+            size: 38 + Math.random() * 10,
             prey: null,
             phase: 0, // 0=entering, 1=chasing, 2=switching, 3=tiring, 4=fleeing
             startTime: performance.now(),
@@ -2171,7 +2196,7 @@
 
         // Find small fish, preferring ones nearby
         var candidates = fishes.filter(function(f) {
-            return f.alive && !f.scooped && !f.rbfEaten && !f.rbfHunted && !f.isRbf && f.size < 18
+            return f.alive && !f.scooped && !f.rbfEaten && !f.rbfHunted && !f.isRbf && f.size < 28
                 && f !== p.prey; // don't re-pick same fish
         });
         if (!candidates.length) { p.prey = null; return; }
@@ -2776,15 +2801,10 @@
             var lureWorldX = a.x + a.dir * a.size * 0.3;
             var lureWorldY = a.y + a.lureY;
 
-            // Prune dead/scooped refs to prevent memory leak
-            for (var lf = a.luredFish.length - 1; lf >= 0; lf--) {
-                if (!a.luredFish[lf].alive || a.luredFish[lf].scooped) a.luredFish.splice(lf, 1);
-            }
-
             // Attract nearby small fish toward lure
             for (var i = 0; i < fishes.length; i++) {
                 var f = fishes[i];
-                if (f.scooped || f.rbfEaten || f.isRbf || f.size > 14 || f._scared) continue;
+                if (f.scooped || f.rbfEaten || f.isRbf || f.size > 25 || f._scared) continue;
                 var dx = lureWorldX - f.x;
                 var dy = lureWorldY - f.y;
                 var dist = Math.sqrt(dx * dx + dy * dy);
@@ -2804,10 +2824,7 @@
             var snapT = (now - a._snapStart) / 600;
             a.jawOpen = snapT < 0.3 ? snapT / 0.3 : Math.max(0, 1 - (snapT - 0.3) / 0.3);
             if (snapT > 0.3 && snapT < 0.5) {
-                // Scatter lured fish (prune dead refs first)
-                for (var lf = a.luredFish.length - 1; lf >= 0; lf--) {
-                    if (!a.luredFish[lf].alive || a.luredFish[lf].scooped) a.luredFish.splice(lf, 1);
-                }
+                // Scatter lured fish
                 a.luredFish.forEach(function(f) {
                     if (!f.alive || f.scooped) return;
                     var dx = f.x - a.x;
@@ -3119,7 +3136,7 @@
         }
         for (var i = 0; i < fishes.length; i++) {
             var f = fishes[i];
-            if (f.size < 20 || f.scooped) continue;
+            if (f.size < 32 || f.scooped) continue;
             var fdx = f.x - bb.x;
             var fdy = f.y - bb.y;
             if (Math.sqrt(fdx * fdx + fdy * fdy) < 120) { threat = true; break; }
@@ -3840,7 +3857,7 @@
         // Fish attracted to bloom center — strong pull
         for (var j = 0; j < fishes.length; j++) {
             var f = fishes[j];
-            if (f.scooped || f.rbfEaten || f.size > 25) continue;
+            if (f.scooped || f.rbfEaten || f.size > 35) continue;
             var fdx = pb.cx - f.x;
             var fdy = pb.cy - f.y;
             var dist = Math.sqrt(fdx * fdx + fdy * fdy);
@@ -5636,14 +5653,18 @@
                 continue;
             }
 
-            // Wander behavior
+            // Wander behavior — scaled by size
+            // Large fish: longer intervals, gentler turns (stately cruisers)
+            // Small fish: shorter intervals, sharper turns (darty minnows)
             f.wanderTimer -= dt;
             if (f.wanderTimer <= 0) {
-                f.wanderTimer = 80 + Math.random() * 200;
-                f.wanderAngle += (Math.random() - 0.5) * 1.2;
-                // Occasionally change Y target
-                if (Math.random() < 0.3) {
-                    f.yTarget = f.y + (Math.random() - 0.5) * H * 0.25;
+                var sizeFactor = Math.min(1, (f.size - 4) / 36); // 0=tiny, 1=huge
+                f.wanderTimer = (60 + sizeFactor * 200) + Math.random() * (120 + sizeFactor * 200);
+                f.wanderAngle += (Math.random() - 0.5) * (1.6 - sizeFactor * 1.2);
+                // Occasionally change Y target — big fish drift less vertically
+                if (Math.random() < (0.35 - sizeFactor * 0.2)) {
+                    var yRange = (0.3 - sizeFactor * 0.15) * H;
+                    f.yTarget = f.y + (Math.random() - 0.5) * yRange;
                     f.yTarget = Math.max(H * 0.05, Math.min(H * 0.9, f.yTarget));
                 }
             }
@@ -5742,24 +5763,81 @@
                 }
             }
 
-            // Gradually restore speed to base after event boosts/drains
+            // ── PILOT FISH — small fish follow nearby large fish ──
+            // Small fish occasionally drift toward a nearby big fish
+            // like remoras following a shark — gentle, not constant
+            if (f.size < 25 && !f._scared && !f._stunned) {
+                if (!f._pilotCooldown) f._pilotCooldown = 0;
+                if (!f._pilotTarget) f._pilotTarget = null;
+
+                if (f._pilotCooldown > 0) {
+                    f._pilotCooldown -= dt;
+                } else if (f._pilotTarget && f._pilotTarget.alive && !f._pilotTarget.scooped) {
+                    // Following — gentle drift toward the big fish's flank
+                    var ptx = f._pilotTarget.x - f._pilotTarget.dir * f._pilotTarget.size * 1.5;
+                    var pty = f._pilotTarget.y + (f._pilotOffset || 10);
+                    var pdx = ptx - f.x;
+                    var pdy = pty - f.y;
+                    var pdist = Math.sqrt(pdx * pdx + pdy * pdy) || 1;
+                    if (pdist < 180) {
+                        var pull = 0.008 * (1 - pdist / 180);
+                        f.vx += (pdx / pdist) * pull * dt;
+                        f.vy += (pdy / pdist) * pull * 0.6 * dt;
+                    }
+                    // Lose interest over time
+                    f._pilotTime = (f._pilotTime || 0) + dt;
+                    if (f._pilotTime > 400 + Math.random() * 300 || pdist > 250) {
+                        f._pilotTarget = null;
+                        f._pilotTime = 0;
+                        f._pilotCooldown = 300 + Math.random() * 500;
+                    }
+                } else {
+                    // Look for a large fish to follow (check sparse subset)
+                    f._pilotTarget = null;
+                    f._pilotTime = 0;
+                    if (Math.random() < 0.008) {
+                        var bestBig = null, bestDist = 200;
+                        for (var bi = i % 4; bi < fishes.length; bi += 4) {
+                            var bg = fishes[bi];
+                            if (bg === f || bg.scooped || bg.rbfEaten || bg.size < 30) continue;
+                            var bdx = bg.x - f.x;
+                            var bdy = bg.y - f.y;
+                            var bd = Math.sqrt(bdx * bdx + bdy * bdy);
+                            if (bd < bestDist) { bestBig = bg; bestDist = bd; }
+                        }
+                        if (bestBig) {
+                            f._pilotTarget = bestBig;
+                            f._pilotOffset = (Math.random() - 0.5) * bestBig.size * 1.5;
+                        }
+                    }
+                }
+            }
+            // Gradually restore speed to base — continuous gentle pull
             // Skip if fish is being chased by predator (needs to flee fast)
             if (f.baseSpeed && !f._scared) {
                 var curSpeed = Math.abs(f.vx);
                 var baseSpd = f.baseSpeed;
                 var targetVx = f.dir * baseSpd;
 
-                // If boosted above base, gently pull back down
-                if (curSpeed > baseSpd * 1.3) {
-                    f.vx += (targetVx - f.vx) * 0.015 * dt;
-                }
-                // If drained below base, gently push back up
-                else if (curSpeed < baseSpd * 0.5) {
-                    f.vx += (targetVx - f.vx) * 0.008 * dt;
-                }
+                // Always pull toward base — stronger the further off we are
+                var drift = curSpeed / baseSpd;
+                var restoreRate;
+                if (drift > 1.5)      restoreRate = 0.025;  // way too fast
+                else if (drift > 1.1) restoreRate = 0.012;  // moderately fast
+                else if (drift < 0.4) restoreRate = 0.015;  // way too slow
+                else if (drift < 0.8) restoreRate = 0.006;  // a bit slow
+                else                  restoreRate = 0.003;   // close to base — light touch
+                f.vx += (targetVx - f.vx) * restoreRate * dt;
+
+                // Damp vertical velocity — fish shouldn't accumulate upward/downward drift
+                f.vy *= (1 - 0.008 * dt);
+                // Hard cap vertical speed at 40% of horizontal base
+                var vyMax = baseSpd * 0.4;
+                if (f.vy > vyMax) f.vy = vyMax;
+                if (f.vy < -vyMax) f.vy = -vyMax;
 
                 // Restore tailSpeed
-                f.tailSpeed += (f.baseTailSpeed - f.tailSpeed) * 0.01 * dt;
+                f.tailSpeed += (f.baseTailSpeed - f.tailSpeed) * 0.015 * dt;
             }
 
             // Move
@@ -5944,12 +6022,9 @@
         // Layer 6.9: Surface debris — background pieces (fish swim in front)
 
         // Layer 7: Fish (sorted small→large for depth)
-        // Reuse buffer to avoid per-frame allocation (GC pressure fix)
-        sortBuf.length = 0;
-        for (var si = 0; si < fishes.length; si++) sortBuf.push(fishes[si]);
-        sortBuf.sort(fishSizeSort);
-        for (var i = 0; i < sortBuf.length; i++) {
-            drawFish(sortBuf[i], now);
+        var sorted = fishes.slice().sort(function(a, b) { return a.size - b.size; });
+        for (var i = 0; i < sorted.length; i++) {
+            drawFish(sorted[i], now);
         }
 
         // Layer 7.15: Electric eel (among fish)
@@ -6015,13 +6090,7 @@
     // ═══════════════════════════════════════════
     function updateFishCount() {
         var el = document.getElementById('fishCount');
-        if (el) {
-            var count = 0;
-            for (var i = 0; i < fishes.length; i++) {
-                if (!fishes[i].scooped) count++;
-            }
-            el.textContent = count;
-        }
+        if (el) el.textContent = fishes.filter(function(f) { return !f.scooped; }).length;
     }
 
     function setStatus(state, text) {
@@ -6233,13 +6302,7 @@
     // ═══════════════════════════════════════════
     var snowContainer = document.getElementById('marineSnow');
 
-    var SNOW_MAX = 60; // prevent DOM buildup if animationend doesn't fire (backgrounded tabs)
-
     function spawnSnow() {
-        // Cap total snow particles to prevent DOM leak
-        if (snowContainer.children.length >= SNOW_MAX) {
-            snowContainer.removeChild(snowContainer.firstChild);
-        }
         var p = document.createElement('div');
         p.className = 'snow-particle';
         var size = 1 + Math.random() * 2;
@@ -6283,7 +6346,7 @@
                         activeHost = order[i];
                         return await r.json();
                     }
-                } catch (e) { clearTimeout(timer); /* next */ }
+                } catch (e) { /* next */ }
             }
         }
         return null;
@@ -6328,54 +6391,16 @@
                     if (fishes[f2].txid) existing[fishes[f2].txid] = true;
                 }
 
-                // Add new txids we don't have — fetch real tx data in batches
-                var newTxids = [];
+                // Add new txids we don't have
                 for (var j = 0; j < txids.length; j++) {
-                    if (!existing[txids[j]]) newTxids.push(txids[j]);
-                }
-                // Batch-fetch real transaction details (BC2 mempool is small, this is feasible)
-                var BATCH_SIZE = 15;
-                for (var batch = 0; batch < newTxids.length; batch += BATCH_SIZE) {
-                    var chunk = newTxids.slice(batch, batch + BATCH_SIZE);
-                    var fetches = chunk.map(function(txid) {
-                        return apiFetch('/tx/' + txid, 6000).catch(function() { return null; });
-                    });
-                    var results = await Promise.all(fetches);
-                    for (var ri = 0; ri < results.length; ri++) {
-                        var txData = results[ri];
-                        var txid = chunk[ri];
-                        if (existing[txid]) continue;
-                        var realFee = 1 + Math.random() * 5;
-                        var realValue = 0;
-                        if (txData) {
-                            // Extract real value: sum of outputs
-                            if (txData.vout && Array.isArray(txData.vout)) {
-                                for (var vo = 0; vo < txData.vout.length; vo++) {
-                                    realValue += (txData.vout[vo].value || 0);
-                                }
-                            } else if (txData.value != null) {
-                                realValue = txData.value;
-                            }
-                            // Extract real fee rate
-                            if (txData.fee && (txData.vsize || txData.weight)) {
-                                var vsize = txData.vsize || Math.ceil(txData.weight / 4) || 200;
-                                realFee = Math.max(1, Math.round(txData.fee / vsize));
-                            } else if (txData.feeRate) {
-                                realFee = txData.feeRate;
-                            } else if (txData.fee) {
-                                realFee = txData.fee;
-                            }
-                        }
-                        // Only use placeholder if API returned nothing
-                        if (realValue <= 0) realValue = Math.round(Math.random() * 5e8);
-                        fishes.push(createFish({
-                            txid: txid,
-                            feeRate: realFee,
-                            value: realValue,
-                        }));
-                        existing[txid] = true;
-                        totalAdded++;
-                    }
+                    if (existing[txids[j]] || isConfirmed(txids[j])) continue;
+                    fishes.push(createFish({
+                        txid: txids[j],
+                        feeRate: 1 + Math.random() * 8,
+                        value: Math.round(Math.random() * 5e8),
+                    }));
+                    existing[txids[j]] = true;
+                    totalAdded++;
                 }
                 console.log('[Aquarium] /mempool/txids: ' + txids.length + ' in mempool, +' + totalAdded + ' added, -' + totalRemoved + ' removed');
             }
@@ -6390,7 +6415,7 @@
                 for (var r = 0; r < recent.length; r++) {
                     var tx = recent[r];
                     var id = tx.txid || ('tx_' + r);
-                    if (existing[id]) continue;
+                    if (existing[id] || isConfirmed(id)) continue;
                     // If we have authoritative set and this tx isn't in it, skip
                     if (authoritativeSet && !authoritativeSet[id]) continue;
                     fishes.push(createFish({
@@ -6405,11 +6430,7 @@
         } catch (e) { console.warn('[Aquarium] mempool/recent error:', e); }
 
         if (totalAdded > 0 || totalRemoved > 0) {
-            var activeCount = 0;
-            for (var ac = 0; ac < fishes.length; ac++) {
-                if (!fishes[ac].scooped && fishes[ac].alive) activeCount++;
-            }
-            console.log('[Aquarium] Net result: ' + totalAdded + ' added, ' + totalRemoved + ' removed, ' + activeCount + ' active fish');
+            console.log('[Aquarium] Net result: ' + totalAdded + ' added, ' + totalRemoved + ' removed, ' + fishes.filter(function(x) { return !x.scooped && x.alive; }).length + ' active fish');
             updateFishCount();
             if (totalAdded > 0) {
                 feedInfo('Loaded <span class="feed-val">' + totalAdded + '</span> pending transactions from mempool');
@@ -6486,6 +6507,7 @@
                         var txFee = tx.feeRate || tx.fee || (1 + Math.random() * 5);
                         var txVal = tx.value || Math.round(Math.random() * 5e8);
                         var txId = tx.txid || 'ws_tx';
+                        if (!isConfirmed(txId)) {
                         fishes.push(createFish({
                             txid: txId,
                             feeRate: txFee,
@@ -6493,6 +6515,7 @@
                         }));
                         updateFishCount();
                         feedTx(txVal, txFee, txId);
+                        }
                         }
                     }
 
@@ -6584,6 +6607,7 @@
 
         // Periodic stats refresh
         setInterval(fetchMempoolStats, 60000);
+        setInterval(pruneConfirmed, 60000); // Clean expired confirmed-tx blacklist entries
 
         // Periodic mempool sync — reconciles fish against actual mempool state
         setInterval(async function() {
