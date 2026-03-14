@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BC2 vs BTC — Days Since Launch</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0f0f0f; color: #e0e0e0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; padding: 2rem 1.5rem; max-width: 1000px; margin: 0 auto; }
+  h1 { font-size: 20px; font-weight: 500; color: #fff; margin-bottom: 4px; }
+  .subtitle { font-size: 13px; color: #888; margin-bottom: 1.5rem; }
+  .mg { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 1.25rem; }
+  .mc { background: #1a1a1a; border-radius: 8px; padding: .7rem 1rem; }
+  .ml { font-size: 11px; color: #888; margin: 0 0 3px; }
+  .mv { font-size: 17px; font-weight: 500; color: #fff; margin: 0; }
+  .ms { font-size: 11px; color: #555; margin: 2px 0 0; }
+  .leg { display: flex; gap: 14px; margin-bottom: 10px; font-size: 12px; color: #888; flex-wrap: wrap; align-items: center; }
+  .leg span { display: flex; align-items: center; gap: 7px; }
+  .ld { width: 22px; height: 3px; border-radius: 1px; flex-shrink: 0; }
+  .trow { display: flex; gap: 8px; margin-bottom: 1rem; flex-wrap: wrap; }
+  .tb { font-size: 12px; padding: 5px 13px; border: 0.5px solid #333; border-radius: 8px; background: transparent; color: #888; cursor: pointer; }
+  .tb.active { background: #222; color: #fff; font-weight: 500; }
+  .tb:hover { background: #1a1a1a; }
+  .note { font-size: 11px; color: #555; margin-top: 10px; padding-top: 8px; border-top: 1px solid #222; line-height: 1.6; }
+  .source { font-size: 11px; color: #444; margin-top: 1rem; padding-top: 8px; border-top: 1px solid #1a1a1a; }
+  @media (max-width: 600px) { .mg { grid-template-columns: repeat(2, 1fr); } body { padding: 1rem; } }
+</style>
+</head>
+<body>
+
+<h1>BC2 vs BTC — Days Since Launch</h1>
+<p class="subtitle">Both coins indexed to 1× at their own first trade. X-axis = days elapsed since each coin's genesis.</p>
+
+<div class="mg">
+  <div class="mc"><p class="ml">BTC day 1 price</p><p class="mv">$0.00099</p><p class="ms">Oct 2009, first trade</p></div>
+  <div class="mc"><p class="ml">BC2 day 1 price</p><p class="mv">~$0.08</p><p class="ms">Sep 1, 2025</p></div>
+  <div class="mc"><p class="ml">BC2 at day ~194</p><p class="mv">10.5×</p><p class="ms">Mar 13, 2026</p></div>
+  <div class="mc"><p class="ml">BTC at day ~194</p><p class="mv">&lt;0.1×</p><p class="ms">still pre-$1 era</p></div>
+</div>
+
+<div class="trow">
+  <button class="tb active" id="btn-norm" onclick="setMode('norm')">Normalised (day 1 = 1×)</button>
+  <button class="tb" id="btn-zoom" onclick="setMode('zoom')">Zoom — first 500 days</button>
+</div>
+
+<div class="leg">
+  <span><span class="ld" style="background:#EF9F27;"></span>BC2 — days since Sep 1 2025</span>
+  <span><span class="ld" style="background:#F7931A;"></span>BTC — days since Oct 12 2009</span>
+  <span style="font-size:11px;color:#555">both indexed to 1× at own launch · log scale</span>
+</div>
+
+<div style="position:relative;width:100%;height:460px"><canvas id="cc"></canvas></div>
+
+<p class="note">X-axis = days elapsed since each coin's first trade. Both indexed to 1× at day 0. BTC day 0 = Oct 12 2009 at $0.00099 (New Liberty Standard). BC2 day 0 = Sep 1 2025 at ~$0.08 (first LiveCoinWatch data). BC2 history digitised from LiveCoinWatch; 4 datapoints confirmed against LCW stats (ATH $2.369, 90d $0.722, 30d $0.587, current $0.841). BTC history from Bankrate, CoinCodex, CoinMarketCap, Statista, CoinGecko.</p>
+<p class="source">BC2: bitcoin-ii.org &nbsp;·&nbsp; Data: LiveCoinWatch, CoinGecko &nbsp;·&nbsp; Not financial advice</p>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const AMBER='#EF9F27', AMBER_F='rgba(239,159,39,0.18)';
+const ORANGE='#F7931A', ORANGE_F='rgba(247,147,26,0.1)';
+const GRID='rgba(255,255,255,0.05)';
+const TK={color:'#666',font:{size:11}};
+
+const bc2Points=[
+  {day:0,p:0.080},{day:3,p:0.095},{day:6,p:0.120},{day:9,p:0.150},
+  {day:13,p:0.180},{day:16,p:0.220},{day:19,p:0.280},{day:22,p:0.380},
+  {day:24,p:0.450},{day:26,p:0.580},{day:27,p:0.700},{day:28,p:0.900},
+  {day:29,p:1.100},{day:30,p:1.400},{day:31,p:1.900},{day:32,p:2.200},
+  {day:33,p:2.369},{day:34,p:2.100},{day:35,p:1.750},{day:37,p:1.400},
+  {day:39,p:1.200},{day:41,p:1.050},{day:43,p:1.300},{day:45,p:1.450},
+  {day:47,p:1.200},{day:50,p:1.000},{day:53,p:0.880},{day:56,p:0.820},
+  {day:59,p:0.780},{day:63,p:0.750},{day:67,p:0.730},{day:72,p:0.710},
+  {day:77,p:0.690},{day:82,p:0.670},{day:87,p:0.650},{day:91,p:0.630},
+  {day:97,p:0.610},{day:103,p:0.722},{day:109,p:0.610},{day:115,p:0.580},
+  {day:122,p:0.570},{day:129,p:0.560},{day:136,p:0.575},{day:143,p:0.570},
+  {day:150,p:0.578},{day:156,p:0.582},{day:163,p:0.587},{day:169,p:0.610},
+  {day:174,p:0.650},{day:179,p:0.700},{day:183,p:0.730},{day:187,p:0.780},
+  {day:190,p:0.810},{day:193,p:0.841},
+];
+
+const btcPoints=[
+  {day:0,p:0.00099},{day:90,p:0.0015},{day:180,p:0.003},{day:270,p:0.008},
+  {day:365,p:0.05},{day:395,p:0.08},{day:425,p:0.15},{day:456,p:0.30},
+  {day:487,p:0.75},{day:510,p:1.00},{day:540,p:3.50},{day:556,p:8.00},
+  {day:578,p:29.6},{day:600,p:12.0},{day:640,p:5.0},{day:680,p:4.70},
+  {day:730,p:5.50},{day:800,p:7.50},{day:860,p:12.56},{day:900,p:20.0},
+  {day:950,p:100.0},{day:1000,p:198.51},{day:1030,p:946.92},{day:1060,p:805.0},
+  {day:1120,p:600.0},{day:1200,p:378.64},{day:1380,p:362.73},{day:1500,p:600.0},
+  {day:1600,p:900.0},{day:2000,p:2500.0},{day:2200,p:10000.0},{day:2250,p:19800.0},
+  {day:2350,p:8000.0},{day:2500,p:3800.0},{day:2700,p:7500.0},{day:2900,p:28000.0},
+  {day:3000,p:58000.0},{day:3050,p:64000.0},{day:3150,p:30000.0},{day:3200,p:67000.0},
+  {day:3400,p:16000.0},{day:3600,p:42000.0},{day:3700,p:68000.0},{day:3800,p:57200.0},
+  {day:3830,p:126272.0},{day:3900,p:87000.0},{day:3950,p:78725.0},{day:3988,p:70861.0},
+];
+
+const BC2_LAUNCH=0.080, BTC_LAUNCH=0.00099;
+
+function interp(points,day){
+  if(day<=points[0].day) return points[0].p;
+  if(day>=points[points.length-1].day) return points[points.length-1].p;
+  for(let i=0;i<points.length-1;i++){
+    if(day>=points[i].day&&day<=points[i+1].day){
+      const f=(day-points[i].day)/(points[i+1].day-points[i].day);
+      return points[i].p+f*(points[i+1].p-points[i].p);
+    }
+  }
+  return points[points.length-1].p;
+}
+
+let chart=null,mode='norm';
+
+function drawOverlays(axis,days,m){
+  const ctx=axis.chart.ctx;
+  const {top,bottom}=axis.chart.chartArea;
+  const events=m==='zoom'?[
+    {day:33,label:'BC2 ATH\nday 33',color:'rgba(239,159,39,0.5)'},
+    {day:193,label:'BC2\nnow',color:'rgba(239,159,39,0.3)'},
+    {day:365,label:'BTC\n$0.05',color:'rgba(247,147,26,0.3)'},
+  ]:[
+    {day:33,label:'BC2 ATH',color:'rgba(239,159,39,0.5)'},
+    {day:193,label:'BC2 now',color:'rgba(239,159,39,0.3)'},
+    {day:510,label:'BTC $1',color:'rgba(247,147,26,0.35)'},
+    {day:1030,label:'BTC $947',color:'rgba(247,147,26,0.35)'},
+    {day:2250,label:'BTC $19.8k',color:'rgba(247,147,26,0.35)'},
+    {day:3830,label:'BTC ATH',color:'rgba(247,147,26,0.5)'},
+  ];
+  events.forEach(({day,label,color})=>{
+    if(day>days[days.length-1]) return;
+    const px=axis.getPixelForValue(day);
+    if(!px) return;
+    ctx.save();
+    ctx.strokeStyle=color;ctx.lineWidth=1;ctx.setLineDash([4,4]);
+    ctx.beginPath();ctx.moveTo(px,top);ctx.lineTo(px,bottom);ctx.stroke();
+    ctx.fillStyle=color.replace(/[\d.]+\)$/,'0.8)');
+    ctx.font='500 9px -apple-system,sans-serif';ctx.textAlign='center';
+    label.split('\n').forEach((ln,i)=>ctx.fillText(ln,px,top+10+i*11));
+    ctx.restore();
+  });
+}
+
+function setMode(m){
+  mode=m;
+  document.querySelectorAll('.tb').forEach(b=>b.classList.remove('active'));
+  document.getElementById('btn-'+m).classList.add('active');
+  const maxDay=m==='zoom'?500:3988;
+  const days=[];
+  for(let d=0;d<=maxDay;d++) days.push(d);
+  const bc2Norm=days.map(d=>d>193?null:parseFloat((interp(bc2Points,d)/BC2_LAUNCH).toFixed(4)));
+  const btcNorm=days.map(d=>parseFloat((interp(btcPoints,d)/BTC_LAUNCH).toFixed(4)));
+
+  if(chart) chart.destroy();
+  chart=new Chart(document.getElementById('cc').getContext('2d'),{
+    type:'line',
+    data:{labels:days,datasets:[
+      {label:'BTC',data:btcNorm,borderColor:ORANGE,borderWidth:2,backgroundColor:ORANGE_F,
+        fill:true,pointRadius:0,tension:0.3,borderDash:[5,3],order:2},
+      {label:'BC2',data:bc2Norm,borderColor:AMBER,borderWidth:2.5,backgroundColor:AMBER_F,
+        fill:true,pointRadius:0,tension:0.3,order:1},
+    ]},
+    options:{
+      responsive:true,maintainAspectRatio:false,animation:{duration:400},
+      plugins:{legend:{display:false},tooltip:{
+        backgroundColor:'#111',titleColor:'#eee',bodyColor:'#aaa',
+        padding:11,cornerRadius:6,mode:'index',intersect:false,
+        callbacks:{
+          title:i=>`Day ${i[0].label} since launch`,
+          label:item=>{
+            const v=item.raw; if(v===null||v===undefined) return null;
+            if(item.dataset.label==='BC2'){
+              return `BC2: ${parseFloat(v).toFixed(2)}× (~$${(v*BC2_LAUNCH).toFixed(3)})`;
+            }
+            const usd=v*BTC_LAUNCH;
+            return `BTC: ${parseFloat(v).toFixed(0)}× (${usd>=1?'$'+Math.round(usd).toLocaleString():'$'+usd.toFixed(4)})`;
+          },
+          filter:i=>i.raw!==null&&i.raw!==undefined
+        }
+      }},
+      scales:{
+        x:{grid:{color:GRID},ticks:{...TK,maxTicksLimit:12,
+          callback:v=>{
+            const ms=m==='zoom'?[0,33,100,193,365,500]:[0,193,365,1000,2000,3000,3830,3988];
+            return ms.includes(v)?'day '+v:null;
+          }
+        },afterDraw:axis=>drawOverlays(axis,days,m),
+          title:{display:true,text:"days since each coin's first trade",color:'#555',font:{size:10}}},
+        y:{type:'logarithmic',grid:{color:GRID},min:0.5,
+          ticks:{color:'#666',font:{size:11},callback:v=>{
+            const s=[1,2,5,10,50,100,1000,10000,100000,1000000,10000000,100000000];
+            for(const n of s) if(Math.abs(v-n)/n<0.02){
+              if(v>=1000000) return (v/1000000).toFixed(0)+'M×';
+              if(v>=1000) return (v/1000).toFixed(0)+'k×';
+              return v+'×';
+            }
+            return null;
+          }},
+          title:{display:true,text:'× gain from own launch price  (log scale)',color:'#555',font:{size:10}}}
+      }
+    }
+  });
+}
+setMode('norm');
+</script>
+</body>
+</html>
